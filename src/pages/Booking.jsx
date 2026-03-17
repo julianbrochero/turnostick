@@ -21,16 +21,20 @@ const generateSlots = (openTime, closeTime, interval = 30) => {
 }
 
 // Devuelve los slots disponibles para una fecha concreta
-const getSlotsForDate = (date, schedules, overrides) => {
+const getSlotsForDate = (date, schedules, overrides, blockedSlots = []) => {
   const override = overrides.find(o => o.date === date)
+  let slots
   if (override) {
     if (!override.is_open) return []
-    return generateSlots(override.open_time, override.close_time)
+    slots = generateSlots(override.open_time, override.close_time)
+  } else {
+    const dow = new Date(date + 'T12:00').getDay()
+    const sch = schedules.find(s => s.day_of_week === dow)
+    if (!sch || !sch.is_open) return []
+    slots = generateSlots(sch.open_time, sch.close_time)
   }
-  const dow = new Date(date + 'T12:00').getDay()
-  const sch = schedules.find(s => s.day_of_week === dow)
-  if (!sch || !sch.is_open) return []
-  return generateSlots(sch.open_time, sch.close_time)
+  const blocked = blockedSlots.filter(b => b.date === date).map(b => b.time)
+  return slots.filter(s => !blocked.includes(s))
 }
 
 export default function Booking() {
@@ -39,8 +43,9 @@ export default function Booking() {
 
   const [business, setBusiness]   = useState(null)
   const [services, setServices]   = useState([])
-  const [schedules, setSchedules] = useState([])
-  const [overrides, setOverrides] = useState([])
+  const [schedules, setSchedules]   = useState([])
+  const [overrides, setOverrides]   = useState([])
+  const [blockedSlots, setBlockedSlots] = useState([])
   const [notFound, setNotFound]   = useState(false)
   const [loading, setLoading]     = useState(true)
 
@@ -72,14 +77,16 @@ export default function Booking() {
     if (error || !biz) { setNotFound(true); setLoading(false); return }
     setBusiness(biz)
 
-    const [svcsRes, schRes, ovRes] = await Promise.all([
+    const [svcsRes, schRes, ovRes, blRes] = await Promise.all([
       supabase.from('services').select('*').eq('business_id', biz.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', biz.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', biz.id).gte('date', today()),
+      supabase.from('blocked_slots').select('*').eq('business_id', biz.id).gte('date', today()),
     ])
     setServices(svcsRes.data || [])
     setSchedules(schRes.data || [])
     setOverrides(ovRes.data || [])
+    setBlockedSlots(blRes.data || [])
     setLoading(false)
   }
 
@@ -232,7 +239,7 @@ export default function Booking() {
 
           {/* Step 2 — Fecha y hora */}
           {step === 2 && (() => {
-            const slots = getSlotsForDate(selected.date, schedules, overrides)
+            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots)
             const isClosedDay = slots.length === 0
             return (
               <div>
@@ -241,7 +248,7 @@ export default function Booking() {
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
                   {days.map(d => {
                     const { day, num, month } = fmtDay(d)
-                    const daySlots = getSlotsForDate(d, schedules, overrides)
+                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots)
                     const closed   = daySlots.length === 0
                     return (
                       <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}

@@ -50,6 +50,8 @@ export default function Admin() {
   const [schedule, setSchedule]       = useState(DEFAULT_SCHEDULE)
   const [overrides, setOverrides]     = useState([])
   const [newOverride, setNewOverride] = useState({ date: '', is_open: true, open_time: '09:00', close_time: '18:00' })
+  const [blockedSlots, setBlockedSlots] = useState([])
+  const [newBlock, setNewBlock]         = useState({ date: today(), time: '14:00' })
 
   useEffect(() => {
     if (business) {
@@ -68,11 +70,12 @@ export default function Admin() {
   }, [business])
 
   const fetchAll = async () => {
-    const [bRes, sRes, schRes, ovRes] = await Promise.all([
+    const [bRes, sRes, schRes, ovRes, blRes] = await Promise.all([
       supabase.from('bookings').select('*').eq('business_id', business.id).order('date', { ascending: true }),
       supabase.from('services').select('*').eq('business_id', business.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', business.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', business.id).gte('date', today()).order('date'),
+      supabase.from('blocked_slots').select('*').eq('business_id', business.id).gte('date', today()).order('date').order('time'),
     ])
     setBookings(bRes.data || [])
     setServices(sRes.data || [])
@@ -80,6 +83,7 @@ export default function Admin() {
       setSchedule(DEFAULT_SCHEDULE.map(def => schRes.data.find(s => s.day_of_week === def.day_of_week) || def))
     }
     setOverrides(ovRes.data || [])
+    setBlockedSlots(blRes.data || [])
     setLoadingData(false)
   }
 
@@ -176,6 +180,23 @@ export default function Admin() {
     await supabase.from('schedule_overrides').delete().eq('id', id)
     setOverrides(prev => prev.filter(o => o.id !== id))
     notify('Excepción eliminada')
+  }
+
+  const addBlock = async () => {
+    if (!newBlock.date || !newBlock.time) return
+    const { data, error } = await supabase.from('blocked_slots')
+      .upsert({ business_id: business.id, date: newBlock.date, time: newBlock.time }, { onConflict: 'business_id,date,time' })
+      .select().single()
+    if (error) { notify('Error al bloquear turno'); return }
+    setBlockedSlots(prev => [...prev.filter(b => !(b.date === data.date && b.time === data.time)), data]
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)))
+    notify('Turno bloqueado')
+  }
+
+  const deleteBlock = async (id) => {
+    await supabase.from('blocked_slots').delete().eq('id', id)
+    setBlockedSlots(prev => prev.filter(b => b.id !== id))
+    notify('Bloqueo eliminado')
   }
 
   // ── Settings ────────────────────────────────────────────────────────────────
@@ -669,49 +690,57 @@ export default function Admin() {
 
           {/* ── HORARIOS ── */}
           {view === 'horarios' && (
-            <div>
-              <div className="mb-5">
+            <div className="space-y-4">
+              <div>
                 <h1 className="text-xl font-bold text-slate-900">Horarios</h1>
-                <p className="text-sm text-slate-500 mb-4">Configurá cuándo abrís cada día</p>
-                <button onClick={saveSchedule}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-3 rounded-xl hover:bg-indigo-700 transition-colors">
-                  <Icon d={Icons.check} size={15} stroke="white" /> Guardar horarios
-                </button>
+                <p className="text-sm text-slate-500">Configurá cuándo abrís cada día</p>
               </div>
 
-              {/* Horario semanal */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-                <div className="px-5 py-4 border-b border-slate-100">
+              {/* ── Horario semanal ── */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
+                  <button onClick={saveSchedule}
+                    className="flex items-center gap-1.5 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <Icon d={Icons.check} size={13} stroke="white" /> Guardar
+                  </button>
                 </div>
                 <div className="divide-y divide-slate-50">
                   {DAYS.map(({ dow, label }) => {
                     const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
                     return (
                       <div key={dow} className="px-4 py-3">
-                        {/* Row 1: toggle + day name + "Cerrado" label */}
+                        {/* Fila 1: toggle + nombre */}
                         <div className="flex items-center gap-3">
-                          <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
-                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
+                          <button
+                            onClick={() => updateDay(dow, 'is_open', !day.is_open)}
+                            className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                          >
+                            <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
                           </button>
-                          <span className={`text-sm font-semibold flex-1 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
-                          {!day.is_open && <span className="text-xs text-slate-400 italic">Cerrado</span>}
+                          <span className={`text-sm font-semibold flex-1 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>
+                            {label}
+                          </span>
+                          {!day.is_open && <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Cerrado</span>}
                         </div>
-                        {/* Row 2: time selects (only when open) */}
+                        {/* Fila 2: selectores de hora (solo si está abierto) */}
                         {day.is_open && (
-                          <div className="flex items-center gap-2 mt-2 pl-13">
-                            <div className="ml-[52px] flex items-center gap-2 flex-1">
-                              <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
-                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <span className="text-slate-400 text-xs font-medium">→</span>
-                              <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
-                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                            </div>
+                          <div className="flex items-center gap-2 mt-2.5 pl-14">
+                            <select
+                              value={day.open_time}
+                              onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                              className="flex-1 min-w-0 px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            >
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <span className="text-slate-400 text-xs shrink-0">→</span>
+                            <select
+                              value={day.close_time}
+                              onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                              className="flex-1 min-w-0 px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            >
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
                           </div>
                         )}
                       </div>
@@ -720,71 +749,116 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Excepciones por fecha */}
+              {/* ── Bloquear turno puntual ── */}
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-100">
-                  <h3 className="font-semibold text-slate-900 text-sm">Excepciones por fecha</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Para días especiales: feriados, horarios distintos, etc.</p>
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-900 text-sm">Bloquear turno puntual</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Inhabilitá un horario específico sin cerrar el día entero</p>
                 </div>
+                <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
+                      <input type="date" value={newBlock.date} min={today()}
+                        onChange={e => setNewBlock(p => ({ ...p, date: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Hora</label>
+                      <select value={newBlock.time} onChange={e => setNewBlock(p => ({ ...p, time: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={addBlock}
+                    className="w-full py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors">
+                    🚫 Bloquear ese turno
+                  </button>
+                </div>
+                {blockedSlots.length === 0
+                  ? <div className="text-center py-6 text-slate-400 text-sm">No hay turnos bloqueados</div>
+                  : <div className="divide-y divide-slate-50">
+                      {blockedSlots.map(b => (
+                        <div key={b.id} className="flex items-center justify-between px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🚫</span>
+                            <div>
+                              <div className="text-sm font-medium text-slate-900">
+                                {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                              </div>
+                              <div className="text-xs text-slate-500">{b.time} hs — bloqueado</div>
+                            </div>
+                          </div>
+                          <button onClick={() => deleteBlock(b.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors">
+                            <Icon d={Icons.trash} size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                }
+              </div>
 
-                {/* Formulario nueva excepción */}
-                <div className="px-4 py-4 border-b border-slate-100 bg-slate-50 space-y-3">
-                  {/* Fecha + toggle */}
+              {/* ── Excepciones por día ── */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-900 text-sm">Cerrar o cambiar horario de un día</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Feriados, días especiales o con horario distinto</p>
+                </div>
+                <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
                   <div className="flex items-end gap-3">
                     <div className="flex-1">
                       <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
                       <input type="date" value={newOverride.date} min={today()}
                         onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
                     </div>
                     <div className="flex items-center gap-2 pb-0.5">
                       <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
-                        className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
+                        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
                       </button>
-                      <span className="text-sm text-slate-600 whitespace-nowrap">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
+                      <span className="text-sm text-slate-700 whitespace-nowrap font-medium">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
                     </div>
                   </div>
-                  {/* Time selects (only if open) */}
                   {newOverride.is_open && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
                         <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                           {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
                         <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                           {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                     </div>
                   )}
                   <button onClick={addOverride}
-                    className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
-                    + Agregar excepción
+                    className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
+                    + Agregar
                   </button>
                 </div>
-
-                {/* Lista de excepciones */}
                 {overrides.length === 0
-                  ? <div className="text-center py-8 text-slate-400 text-sm">No hay excepciones configuradas</div>
+                  ? <div className="text-center py-6 text-slate-400 text-sm">No hay excepciones configuradas</div>
                   : <div className="divide-y divide-slate-50">
                       {overrides.map(o => (
-                        <div key={o.id} className="flex items-center justify-between px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${o.is_open ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                        <div key={o.id} className="flex items-center justify-between px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${o.is_open ? 'bg-emerald-500' : 'bg-red-400'}`} />
                             <div>
-                              <span className="text-sm font-medium text-slate-900">
-                                {new Date(o.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                              </span>
-                              <span className="text-xs text-slate-500 ml-2">
-                                {o.is_open ? `${o.open_time} → ${o.close_time}` : 'Cerrado'}
-                              </span>
+                              <div className="text-sm font-medium text-slate-900">
+                                {new Date(o.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {o.is_open ? `${o.open_time} → ${o.close_time}` : 'Cerrado todo el día'}
+                              </div>
                             </div>
                           </div>
                           <button onClick={() => deleteOverride(o.id)}
