@@ -31,6 +31,7 @@ export default function Admin() {
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
+  const [payForm, setPayForm] = useState({ sena_amount: 0, mp_access_token: '', bank_cbu: '', bank_alias: '', bank_holder: '', bank_bank: '', notification_email: '' })
 
   // Horarios
   const DAYS = [
@@ -54,6 +55,15 @@ export default function Admin() {
     if (business) {
       fetchAll()
       setSettingsForm({ name: business.name || '', address: business.address || '', phone: business.phone || '', email: business.email || '' })
+      setPayForm({
+        sena_amount:        business.sena_amount        || 0,
+        mp_access_token:    business.mp_access_token    || '',
+        bank_cbu:           business.bank_cbu           || '',
+        bank_alias:         business.bank_alias         || '',
+        bank_holder:        business.bank_holder        || '',
+        bank_bank:          business.bank_bank          || '',
+        notification_email: business.notification_email || '',
+      })
     }
   }, [business])
 
@@ -136,10 +146,15 @@ export default function Admin() {
 
   // ── Schedule ────────────────────────────────────────────────────────────────
   const saveSchedule = async () => {
-    const rows = schedule.map(s => ({ ...s, business_id: business.id }))
-    const { error } = await supabase.from('schedules').upsert(rows, { onConflict: 'business_id,day_of_week' })
+    // delete + insert is more reliable than upsert when rows may lack id
+    const { error: delErr } = await supabase.from('schedules').delete().eq('business_id', business.id)
+    if (delErr) { notify('Error al guardar'); return }
+    const rows = schedule.map(({ day_of_week, is_open, open_time, close_time }) => ({
+      business_id: business.id, day_of_week, is_open, open_time, close_time,
+    }))
+    const { error } = await supabase.from('schedules').insert(rows)
     if (error) notify('Error al guardar')
-    else notify('Horarios guardados')
+    else notify('Horarios guardados ✓')
   }
 
   const updateDay = (dow, field, value) => {
@@ -165,10 +180,46 @@ export default function Admin() {
 
   // ── Settings ────────────────────────────────────────────────────────────────
   const saveSettings = async () => {
+    try { await updateBusiness(settingsForm); notify('Cambios guardados') }
+    catch { notify('Error al guardar') }
+  }
+
+  const savePaySettings = async () => {
+    try { await updateBusiness({ ...payForm, sena_amount: Number(payForm.sena_amount) }); notify('Configuración de pagos guardada') }
+    catch { notify('Error al guardar') }
+  }
+
+  const confirmAndNotify = async (booking) => {
+    await updateStatus(booking.id, 'confirmed')
+    const svc = services.find(s => s.id === booking.service_id)
     try {
-      await updateBusiness(settingsForm)
-      notify('Cambios guardados')
-    } catch { notify('Error al guardar') }
+      await supabase.functions.invoke('send-confirmation', {
+        body: {
+          to:               booking.client_email,
+          client_name:      booking.client_name,
+          service:          svc?.name || '-',
+          date:             booking.date,
+          time:             booking.time,
+          amount:           booking.amount,
+          business_name:    business.name,
+          business_phone:   business.phone,
+          business_address: business.address,
+          payment_method:   booking.payment_method || 'venue',
+        },
+      })
+      notify('Turno confirmado y email enviado ✉️')
+    } catch {
+      notify('Confirmado, pero no se pudo enviar el email')
+    }
+  }
+
+  const whatsappLink = (booking) => {
+    if (!booking.client_phone) return null
+    const svc  = services.find(s => s.id === booking.service_id)
+    const date = new Date(booking.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+    const msg  = encodeURIComponent(`Hola ${booking.client_name}! 👋 Te confirmamos tu turno en *${business.name}*:\n📋 *${svc?.name}*\n📅 ${date} a las ${booking.time} hs\n\n¡Te esperamos!`)
+    const phone = booking.client_phone.replace(/\D/g, '')
+    return `https://wa.me/${phone}?text=${msg}`
   }
 
   const handleLogout = async () => { await signOut(); navigate('/') }
@@ -365,49 +416,71 @@ export default function Admin() {
                   </button>
                 ))}
               </div>
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                      <tr>{['Cliente','Servicio','Fecha','Hora','Estado','Pago','Acciones'].map(h =>
-                        <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
-                      )}</tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {filteredBookings.map(b => (
-                        <tr key={b.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0">{b.client_name?.[0]}</div>
-                              <div>
-                                <div className="font-medium text-slate-900 text-xs">{b.client_name}</div>
-                                <div className="text-xs text-slate-400">{b.client_email}</div>
-                              </div>
+              {filteredBookings.length === 0
+                ? <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center text-slate-400 text-sm">No hay turnos para mostrar</div>
+                : <div className="space-y-3">
+                    {filteredBookings.map(b => (
+                      <div key={b.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${b.status === 'cancelled' ? 'border-red-100 opacity-70' : 'border-slate-100'}`}>
+                        {/* Top row: avatar + name + status */}
+                        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">{b.client_name?.[0]?.toUpperCase()}</div>
+                            <div>
+                              <div className="font-semibold text-slate-900 text-sm">{b.client_name}</div>
+                              <div className="text-xs text-slate-400">{b.client_email}</div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap text-xs">{svcName(b.service_id)}</td>
-                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">{new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</td>
-                          <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">{b.time}</td>
-                          <td className="px-4 py-3"><StatusBadge status={b.status} /></td>
-                          <td className="px-4 py-3">
+                          </div>
+                          <StatusBadge status={b.status} />
+                        </div>
+
+                        {/* Middle: service + date/time + amount */}
+                        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 mx-3 rounded-xl mb-3">
+                          <div>
+                            <div className="text-xs font-medium text-slate-700">{svcName(b.service_id)}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })} · {b.time} hs
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-bold text-slate-900">{fmt(b.amount)}</div>
                             {b.paid
-                              ? <span className="text-xs text-emerald-600 font-medium flex items-center gap-1"><Icon d={Icons.check} size={11} stroke="#10b981" /> {fmt(b.amount)}</span>
-                              : <button onClick={() => markPaid(b.id)} className="text-xs text-amber-600 font-medium border border-amber-200 px-2 py-1 rounded-lg hover:bg-amber-50 transition-colors whitespace-nowrap">Marcar pagado</button>}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-1">
-                              {b.status !== 'confirmed' && <button onClick={() => updateStatus(b.id, 'confirmed')} className="p-1.5 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600" title="Confirmar"><Icon d={Icons.check} size={14} /></button>}
-                              {b.status !== 'cancelled' && <button onClick={() => updateStatus(b.id, 'cancelled')} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500"    title="Cancelar"><Icon d={Icons.x} size={14} /></button>}
-                              <button onClick={() => deleteBooking(b.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500" title="Eliminar"><Icon d={Icons.trash} size={14} /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {filteredBookings.length === 0 && <div className="text-center py-12 text-slate-400 text-sm">No hay turnos para mostrar</div>}
-                </div>
-              </div>
+                              ? <span className="text-xs text-emerald-600 font-medium">✓ Pagado</span>
+                              : b.status !== 'cancelled' && (
+                                  <button onClick={() => markPaid(b.id)} className="text-xs text-amber-600 font-medium hover:underline">Marcar pagado</button>
+                                )
+                            }
+                          </div>
+                        </div>
+
+                        {/* Actions row */}
+                        <div className="flex items-center gap-2 px-4 pb-3">
+                          {b.status !== 'confirmed' && b.status !== 'cancelled' && (
+                            <button onClick={() => confirmAndNotify(b)}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition-colors">
+                              <Icon d={Icons.check} size={13} stroke="#047857" /> Confirmar
+                            </button>
+                          )}
+                          {b.status !== 'cancelled' && (
+                            <button onClick={() => updateStatus(b.id, 'cancelled')}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 transition-colors">
+                              <Icon d={Icons.x} size={13} stroke="#dc2626" /> Anular turno
+                            </button>
+                          )}
+                          {whatsappLink(b) && (
+                            <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
+                              className="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors flex-shrink-0">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            </a>
+                          )}
+                          <button onClick={() => deleteBooking(b.id)}
+                            className="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0">
+                            <Icon d={Icons.trash} size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              }
 
               {/* Modal nuevo turno */}
               {showNewBooking && (
@@ -597,13 +670,11 @@ export default function Admin() {
           {/* ── HORARIOS ── */}
           {view === 'horarios' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900">Horarios</h1>
-                  <p className="text-sm text-slate-500">Configurá cuándo abrís cada día</p>
-                </div>
+              <div className="mb-5">
+                <h1 className="text-xl font-bold text-slate-900">Horarios</h1>
+                <p className="text-sm text-slate-500 mb-4">Configurá cuándo abrís cada día</p>
                 <button onClick={saveSchedule}
-                  className="flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors">
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-3 rounded-xl hover:bg-indigo-700 transition-colors">
                   <Icon d={Icons.check} size={15} stroke="white" /> Guardar horarios
                 </button>
               </div>
@@ -617,30 +688,31 @@ export default function Admin() {
                   {DAYS.map(({ dow, label }) => {
                     const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
                     return (
-                      <div key={dow} className="flex items-center gap-4 px-5 py-3.5">
-                        {/* Toggle */}
-                        <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
-                          className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
-                        </button>
-
-                        {/* Día */}
-                        <span className={`w-24 text-sm font-medium flex-shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
-
-                        {day.is_open ? (
-                          <div className="flex items-center gap-2 flex-1">
-                            <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                            <span className="text-slate-400 text-sm">→</span>
-                            <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
+                      <div key={dow} className="px-4 py-3">
+                        {/* Row 1: toggle + day name + "Cerrado" label */}
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
+                            className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
+                          </button>
+                          <span className={`text-sm font-semibold flex-1 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
+                          {!day.is_open && <span className="text-xs text-slate-400 italic">Cerrado</span>}
+                        </div>
+                        {/* Row 2: time selects (only when open) */}
+                        {day.is_open && (
+                          <div className="flex items-center gap-2 mt-2 pl-13">
+                            <div className="ml-[52px] flex items-center gap-2 flex-1">
+                              <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                                className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <span className="text-slate-400 text-xs font-medium">→</span>
+                              <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                                className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                            </div>
                           </div>
-                        ) : (
-                          <span className="text-sm text-slate-400 italic">Cerrado</span>
                         )}
                       </div>
                     )
@@ -656,44 +728,46 @@ export default function Admin() {
                 </div>
 
                 {/* Formulario nueva excepción */}
-                <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
-                  <div className="flex flex-wrap items-end gap-3">
-                    <div>
+                <div className="px-4 py-4 border-b border-slate-100 bg-slate-50 space-y-3">
+                  {/* Fecha + toggle */}
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1">
                       <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
                       <input type="date" value={newOverride.date} min={today()}
                         onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
-                        className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 pb-0.5">
                       <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
                         className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                         <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
                       </button>
-                      <span className="text-sm text-slate-600">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
+                      <span className="text-sm text-slate-600 whitespace-nowrap">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
                     </div>
-                    {newOverride.is_open && (
-                      <>
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
-                          <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
-                            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
-                          <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
-                            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                      </>
-                    )}
-                    <button onClick={addOverride}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-                      + Agregar
-                    </button>
                   </div>
+                  {/* Time selects (only if open) */}
+                  {newOverride.is_open && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
+                        <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                          {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
+                        <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                          {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={addOverride}
+                    className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
+                    + Agregar excepción
+                  </button>
                 </div>
 
                 {/* Lista de excepciones */}
@@ -763,6 +837,55 @@ export default function Admin() {
                   <button onClick={() => navigate(`/b/${business?.slug}`)}
                     className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 transition-colors">
                     <Icon d={Icons.eye} size={13} /> Ver página de reservas
+                  </button>
+                </div>
+
+                {/* Configuración de pagos */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-1 text-sm">Cobros y pagos</h3>
+                  <p className="text-xs text-slate-400 mb-4">Configurá cómo cobrar la seña de tus turnos</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Monto de la seña (ARS)</label>
+                      <input type="number" value={payForm.sena_amount} placeholder="Ej: 900"
+                        onChange={e => setPayForm(p => ({ ...p, sena_amount: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                      <p className="text-xs text-slate-400 mt-0.5">Ponés 0 para no cobrar seña</p>
+                    </div>
+                    <div className="border-t border-slate-100 pt-3">
+                      <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">MercadoPago</p>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Access Token de producción</label>
+                      <input type="password" value={payForm.mp_access_token} placeholder="APP_USR-..."
+                        onChange={e => setPayForm(p => ({ ...p, mp_access_token: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                      <p className="text-xs text-slate-400 mt-0.5">mercadopago.com/developers → Mis aplicaciones → Access Token</p>
+                    </div>
+                    <div className="border-t border-slate-100 pt-3">
+                      <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Transferencia bancaria</p>
+                      {[
+                        { label: 'CBU / CVU', key: 'bank_cbu',    placeholder: '0000003100012345678901' },
+                        { label: 'Alias',     key: 'bank_alias',  placeholder: 'mi.alias.mp' },
+                        { label: 'Titular',   key: 'bank_holder', placeholder: 'María García' },
+                        { label: 'Banco',     key: 'bank_bank',   placeholder: 'Mercado Pago / Banco Nación...' },
+                      ].map(({ label, key, placeholder }) => (
+                        <div key={key} className="mb-2">
+                          <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+                          <input type="text" value={payForm[key]} placeholder={placeholder}
+                            onChange={e => setPayForm(p => ({ ...p, [key]: e.target.value }))}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-slate-100 pt-3">
+                      <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Notificaciones</p>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Email para alertas de nuevos turnos</label>
+                      <input type="email" value={payForm.notification_email} placeholder="vos@email.com"
+                        onChange={e => setPayForm(p => ({ ...p, notification_email: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                    </div>
+                  </div>
+                  <button onClick={savePaySettings} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors">
+                    Guardar configuración de pagos
                   </button>
                 </div>
 

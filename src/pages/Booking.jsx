@@ -44,9 +44,21 @@ export default function Booking() {
   const [notFound, setNotFound]   = useState(false)
   const [loading, setLoading]     = useState(true)
 
-  const [step, setStep]       = useState(1)
-  const [selected, setSelected] = useState({ service: null, date: today(), time: null, name: '', email: '', phone: '', payOnline: false })
+  const [step, setStep]         = useState(1)
+  const [selected, setSelected] = useState({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [mpLoading, setMpLoading]   = useState(false)
+
+  // Check MP redirect callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const payment = params.get('payment')
+    const bid     = params.get('bid')
+    if (payment === 'success' && bid) {
+      setStep(5)
+      setSelected(p => ({ ...p, payMethod: 'mercadopago', confirmedBid: bid }))
+    }
+  }, [])
 
   useEffect(() => { fetchBusiness() }, [slug])
 
@@ -84,26 +96,44 @@ export default function Booking() {
     if (step === 1) return !!selected.service
     if (step === 2) return !!(selected.date && selected.time)
     if (step === 3) return !!(selected.name && selected.email)
+    if (step === 4) return !!selected.payMethod
     return true
   }
 
   const confirmBooking = async () => {
     setSubmitting(true)
     const svc = services.find(s => s.id === selected.service)
-    const { error } = await supabase.from('bookings').insert({
-      business_id:  business.id,
-      service_id:   selected.service,
-      client_name:  selected.name,
-      client_email: selected.email,
-      client_phone: selected.phone,
-      date:   selected.date,
-      time:   selected.time,
-      status: 'pending',
-      paid:   selected.payOnline,
-      amount: svc?.price || 0,
-    })
+    const isMp = selected.payMethod === 'mercadopago'
+
+    const { data: booking, error } = await supabase.from('bookings').insert({
+      business_id:    business.id,
+      service_id:     selected.service,
+      client_name:    selected.name,
+      client_email:   selected.email,
+      client_phone:   selected.phone,
+      date:           selected.date,
+      time:           selected.time,
+      status:         isMp ? 'pending_payment' : 'pending',
+      paid:           false,
+      amount:         svc?.price || 0,
+      payment_method: selected.payMethod,
+      payment_status: isMp ? 'pending' : 'unpaid',
+    }).select().single()
+
     setSubmitting(false)
-    if (!error) setStep(5)
+    if (error) { alert('Error al reservar, intentá de nuevo'); return }
+
+    if (isMp) {
+      setMpLoading(true)
+      const { data, error: fnErr } = await supabase.functions.invoke('create-mp-preference', {
+        body: { booking_id: booking.id, business_id: business.id },
+      })
+      setMpLoading(false)
+      if (fnErr || !data?.init_point) { alert('Error al iniciar pago, intentá de nuevo'); return }
+      window.location.href = data.init_point
+    } else {
+      setStep(5)
+    }
   }
 
   const svc = services.find(s => s.id === selected.service)
@@ -266,40 +296,94 @@ export default function Booking() {
           )}
 
           {/* Step 4 — Pago */}
-          {step === 4 && svc && (
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Método de pago</h2>
-              <p className="text-sm text-slate-500 mb-5">Podés pagar ahora o al momento del turno</p>
-              <div className="bg-slate-50 rounded-xl p-4 mb-5 text-sm">
-                <div className="font-semibold text-slate-900 mb-2">Resumen del turno</div>
-                <div className="flex justify-between text-slate-600 mb-1"><span>{svc.name}</span><span>{fmt(svc.price)}</span></div>
-                <div className="flex justify-between text-slate-500 text-xs">
-                  <span>{new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                  <span>{selected.time} hs</span>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { id: true,  icon: '💳', label: 'Pagar online ahora', desc: 'Tarjeta de crédito / débito' },
-                  { id: false, icon: '🏦', label: 'Pagar en el local',  desc: 'Efectivo o transferencia' },
-                ].map(({ id, icon, label, desc }) => (
-                  <button key={String(id)} onClick={() => setSelected(p => ({ ...p, payOnline: id }))}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected.payOnline === id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                    <span className="text-2xl">{icon}</span>
-                    <div className="text-left">
-                      <div className="font-semibold text-slate-900 text-sm">{label}</div>
-                      <div className="text-xs text-slate-500">{desc}</div>
+          {step === 4 && svc && (() => {
+            const hasMp       = business.sena_amount > 0 && business.mp_access_token
+            const hasTransfer = business.bank_cbu || business.bank_alias
+            return (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Método de pago</h2>
+                <p className="text-sm text-slate-500 mb-5">Elegí cómo querés pagar</p>
+
+                {/* Resumen */}
+                <div className="bg-slate-50 rounded-xl p-4 mb-5 text-sm">
+                  <div className="font-semibold text-slate-900 mb-2">Resumen del turno</div>
+                  <div className="flex justify-between text-slate-600 mb-1"><span>{svc.name}</span><span>{fmt(svc.price)}</span></div>
+                  <div className="flex justify-between text-slate-500 text-xs">
+                    <span>{new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                    <span>{selected.time} hs</span>
+                  </div>
+                  {hasMp && (
+                    <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between text-slate-700">
+                      <span className="text-xs">Seña a pagar ahora</span>
+                      <span className="font-semibold text-xs">{fmt(business.sena_amount)}</span>
                     </div>
-                    {selected.payOnline === id && (
-                      <div className="ml-auto w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {/* MercadoPago */}
+                  {hasMp && (
+                    <button onClick={() => setSelected(p => ({ ...p, payMethod: 'mercadopago' }))}
+                      className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'mercadopago' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                      <span className="text-2xl">💳</span>
+                      <div className="text-left flex-1">
+                        <div className="font-semibold text-slate-900 text-sm">Pagar seña con MercadoPago</div>
+                        <div className="text-xs text-slate-500">Tarjeta de crédito / débito · {fmt(business.sena_amount)}</div>
+                      </div>
+                      {selected.payMethod === 'mercadopago' && (
+                        <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                          <Icon d={Icons.check} size={11} stroke="white" />
+                        </div>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Transferencia */}
+                  {hasTransfer && (
+                    <button onClick={() => setSelected(p => ({ ...p, payMethod: 'transfer' }))}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'transfer' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl">🏦</span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-slate-900 text-sm">Transferencia bancaria</div>
+                          <div className="text-xs text-slate-500">Enviá la seña antes del turno</div>
+                        </div>
+                        {selected.payMethod === 'transfer' && (
+                          <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                            <Icon d={Icons.check} size={11} stroke="white" />
+                          </div>
+                        )}
+                      </div>
+                      {selected.payMethod === 'transfer' && (
+                        <div className="mt-3 bg-white rounded-lg p-3 space-y-1.5 border border-slate-100">
+                          {business.bank_alias  && <div className="flex justify-between text-xs"><span className="text-slate-500">Alias</span><span className="font-semibold text-slate-800">{business.bank_alias}</span></div>}
+                          {business.bank_cbu    && <div className="flex justify-between text-xs"><span className="text-slate-500">CBU</span><span className="font-mono text-slate-800">{business.bank_cbu}</span></div>}
+                          {business.bank_holder && <div className="flex justify-between text-xs"><span className="text-slate-500">Titular</span><span className="font-semibold text-slate-800">{business.bank_holder}</span></div>}
+                          {business.bank_bank   && <div className="flex justify-between text-xs"><span className="text-slate-500">Banco</span><span className="text-slate-800">{business.bank_bank}</span></div>}
+                          {hasMp && <div className="flex justify-between text-xs pt-1 border-t border-slate-100"><span className="text-slate-500">Monto de seña</span><span className="font-semibold text-indigo-600">{fmt(business.sena_amount)}</span></div>}
+                        </div>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Pagar en el local */}
+                  <button onClick={() => setSelected(p => ({ ...p, payMethod: 'local' }))}
+                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'local' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                    <span className="text-2xl">🏠</span>
+                    <div className="text-left flex-1">
+                      <div className="font-semibold text-slate-900 text-sm">Pagar en el local</div>
+                      <div className="text-xs text-slate-500">Efectivo o como prefieras el día del turno</div>
+                    </div>
+                    {selected.payMethod === 'local' && (
+                      <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
                         <Icon d={Icons.check} size={11} stroke="white" />
                       </div>
                     )}
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Step 5 — Confirmado */}
           {step === 5 && svc && (
@@ -316,7 +400,7 @@ export default function Booking() {
                   ['Fecha',       new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })],
                   ['Hora',        selected.time + ' hs'],
                   ['Total',       fmt(svc.price)],
-                  ['Estado pago', selected.payOnline ? '✅ Pagado online' : '⏳ Pagar en el local'],
+                  ['Estado pago', selected.payMethod === 'mercadopago' ? '✅ Seña pagada con MercadoPago' : selected.payMethod === 'transfer' ? '🏦 Seña por transferencia — pendiente confirmación' : '🏠 Pago en el local'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between text-sm">
                     <span className="text-slate-500">{k}</span>
@@ -324,7 +408,7 @@ export default function Booking() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setStep(1); setSelected({ service: null, date: today(), time: null, name: '', email: '', phone: '', payOnline: false }) }}
+              <button onClick={() => { setStep(1); setSelected({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' }) }}
                 className="w-full py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
                 Reservar otro turno
               </button>
@@ -342,9 +426,9 @@ export default function Booking() {
               )}
               <button
                 onClick={() => step < 4 ? setStep(s => s + 1) : confirmBooking()}
-                disabled={!canNext() || submitting}
-                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
-                {submitting ? 'Confirmando...' : step === 4 ? (selected.payOnline ? 'Confirmar y pagar' : 'Confirmar reserva') : 'Continuar →'}
+                disabled={!canNext() || submitting || mpLoading}
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                {submitting || mpLoading ? (mpLoading ? 'Redirigiendo a MercadoPago...' : 'Confirmando...') : step === 4 ? (selected.payMethod === 'mercadopago' ? 'Confirmar y pagar seña →' : 'Confirmar reserva →') : 'Continuar →'}
               </button>
             </div>
           )}
