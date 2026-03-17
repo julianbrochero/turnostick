@@ -3,18 +3,46 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Icon, Icons } from '../components/Icon'
 
-const TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00']
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 const today = () => new Date().toISOString().split('T')[0]
+
+// Genera slots cada `interval` minutos entre open y close
+const generateSlots = (openTime, closeTime, interval = 30) => {
+  const slots = []
+  const [oh, om] = openTime.split(':').map(Number)
+  const [ch, cm] = closeTime.split(':').map(Number)
+  let cur = oh * 60 + om
+  const end = ch * 60 + cm
+  while (cur < end) {
+    slots.push(`${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`)
+    cur += interval
+  }
+  return slots
+}
+
+// Devuelve los slots disponibles para una fecha concreta
+const getSlotsForDate = (date, schedules, overrides) => {
+  const override = overrides.find(o => o.date === date)
+  if (override) {
+    if (!override.is_open) return []
+    return generateSlots(override.open_time, override.close_time)
+  }
+  const dow = new Date(date + 'T12:00').getDay()
+  const sch = schedules.find(s => s.day_of_week === dow)
+  if (!sch || !sch.is_open) return []
+  return generateSlots(sch.open_time, sch.close_time)
+}
 
 export default function Booking() {
   const { slug }   = useParams()
   const navigate   = useNavigate()
 
-  const [business, setBusiness] = useState(null)
-  const [services, setServices] = useState([])
-  const [notFound, setNotFound] = useState(false)
-  const [loading, setLoading]   = useState(true)
+  const [business, setBusiness]   = useState(null)
+  const [services, setServices]   = useState([])
+  const [schedules, setSchedules] = useState([])
+  const [overrides, setOverrides] = useState([])
+  const [notFound, setNotFound]   = useState(false)
+  const [loading, setLoading]     = useState(true)
 
   const [step, setStep]       = useState(1)
   const [selected, setSelected] = useState({ service: null, date: today(), time: null, name: '', email: '', phone: '', payOnline: false })
@@ -32,13 +60,14 @@ export default function Booking() {
     if (error || !biz) { setNotFound(true); setLoading(false); return }
     setBusiness(biz)
 
-    const { data: svcs } = await supabase
-      .from('services')
-      .select('*')
-      .eq('business_id', biz.id)
-      .eq('active', true)
-      .order('name')
-    setServices(svcs || [])
+    const [svcsRes, schRes, ovRes] = await Promise.all([
+      supabase.from('services').select('*').eq('business_id', biz.id).eq('active', true).order('name'),
+      supabase.from('schedules').select('*').eq('business_id', biz.id),
+      supabase.from('schedule_overrides').select('*').eq('business_id', biz.id).gte('date', today()),
+    ])
+    setServices(svcsRes.data || [])
+    setSchedules(schRes.data || [])
+    setOverrides(ovRes.data || [])
     setLoading(false)
   }
 
@@ -172,33 +201,47 @@ export default function Booking() {
           )}
 
           {/* Step 2 — Fecha y hora */}
-          {step === 2 && (
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Elegí fecha y hora</h2>
-              <p className="text-sm text-slate-500 mb-5">Seleccioná cuándo querés tu turno</p>
-              <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
-                {days.map(d => {
-                  const { day, num, month } = fmtDay(d)
-                  return (
-                    <button key={d} onClick={() => setSelected(p => ({ ...p, date: d, time: null }))}
-                      className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all ${selected.date === d ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                      <span className="text-xs text-slate-500 capitalize">{day}</span>
-                      <span className={`text-lg font-bold ${selected.date === d ? 'text-indigo-600' : 'text-slate-900'}`}>{num}</span>
-                      <span className="text-xs text-slate-400 capitalize">{month}</span>
-                    </button>
-                  )
-                })}
+          {step === 2 && (() => {
+            const slots = getSlotsForDate(selected.date, schedules, overrides)
+            const isClosedDay = slots.length === 0
+            return (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Elegí fecha y hora</h2>
+                <p className="text-sm text-slate-500 mb-5">Seleccioná cuándo querés tu turno</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
+                  {days.map(d => {
+                    const { day, num, month } = fmtDay(d)
+                    const daySlots = getSlotsForDate(d, schedules, overrides)
+                    const closed   = daySlots.length === 0
+                    return (
+                      <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}
+                        disabled={closed}
+                        className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all ${closed ? 'border-slate-100 opacity-40 cursor-not-allowed' : selected.date === d ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                        <span className="text-xs text-slate-500 capitalize">{day}</span>
+                        <span className={`text-lg font-bold ${selected.date === d ? 'text-indigo-600' : 'text-slate-900'}`}>{num}</span>
+                        <span className="text-xs text-slate-400 capitalize">{month}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {isClosedDay
+                  ? <div className="text-center py-8 bg-slate-50 rounded-xl">
+                      <div className="text-2xl mb-2">🔒</div>
+                      <p className="text-slate-500 text-sm font-medium">No hay turnos disponibles este día</p>
+                      <p className="text-slate-400 text-xs mt-1">Seleccioná otra fecha</p>
+                    </div>
+                  : <div className="grid grid-cols-4 gap-2">
+                      {slots.map(t => (
+                        <button key={t} onClick={() => setSelected(p => ({ ...p, time: t }))}
+                          className={`py-2 rounded-lg text-sm font-medium border transition-all ${selected.time === t ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50'}`}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                }
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {TIMES.map(t => (
-                  <button key={t} onClick={() => setSelected(p => ({ ...p, time: t }))}
-                    className={`py-2 rounded-lg text-sm font-medium border transition-all ${selected.time === t ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* Step 3 — Datos */}
           {step === 3 && (

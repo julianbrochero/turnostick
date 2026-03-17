@@ -32,6 +32,24 @@ export default function Admin() {
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
 
+  // Horarios
+  const DAYS = [
+    { dow: 1, label: 'Lunes' }, { dow: 2, label: 'Martes' }, { dow: 3, label: 'Miércoles' },
+    { dow: 4, label: 'Jueves' }, { dow: 5, label: 'Viernes' }, { dow: 6, label: 'Sábado' },
+    { dow: 0, label: 'Domingo' },
+  ]
+  const DEFAULT_SCHEDULE = DAYS.map(d => ({
+    day_of_week: d.dow, is_open: d.dow >= 1 && d.dow <= 6,
+    open_time: '09:00', close_time: '18:00',
+  }))
+  const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
+    const total = 480 + i * 30  // 08:00 a 21:30
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+  })
+  const [schedule, setSchedule]       = useState(DEFAULT_SCHEDULE)
+  const [overrides, setOverrides]     = useState([])
+  const [newOverride, setNewOverride] = useState({ date: '', is_open: true, open_time: '09:00', close_time: '18:00' })
+
   useEffect(() => {
     if (business) {
       fetchAll()
@@ -40,12 +58,18 @@ export default function Admin() {
   }, [business])
 
   const fetchAll = async () => {
-    const [bRes, sRes] = await Promise.all([
+    const [bRes, sRes, schRes, ovRes] = await Promise.all([
       supabase.from('bookings').select('*').eq('business_id', business.id).order('date', { ascending: true }),
       supabase.from('services').select('*').eq('business_id', business.id).eq('active', true).order('name'),
+      supabase.from('schedules').select('*').eq('business_id', business.id),
+      supabase.from('schedule_overrides').select('*').eq('business_id', business.id).gte('date', today()).order('date'),
     ])
     setBookings(bRes.data || [])
     setServices(sRes.data || [])
+    if (schRes.data?.length) {
+      setSchedule(DEFAULT_SCHEDULE.map(def => schRes.data.find(s => s.day_of_week === def.day_of_week) || def))
+    }
+    setOverrides(ovRes.data || [])
     setLoadingData(false)
   }
 
@@ -110,6 +134,35 @@ export default function Admin() {
     notify('Servicio eliminado')
   }
 
+  // ── Schedule ────────────────────────────────────────────────────────────────
+  const saveSchedule = async () => {
+    const rows = schedule.map(s => ({ ...s, business_id: business.id }))
+    const { error } = await supabase.from('schedules').upsert(rows, { onConflict: 'business_id,day_of_week' })
+    if (error) notify('Error al guardar')
+    else notify('Horarios guardados')
+  }
+
+  const updateDay = (dow, field, value) => {
+    setSchedule(prev => prev.map(s => s.day_of_week === dow ? { ...s, [field]: value } : s))
+  }
+
+  const addOverride = async () => {
+    if (!newOverride.date) return
+    const row = { ...newOverride, business_id: business.id }
+    const { data, error } = await supabase.from('schedule_overrides')
+      .upsert(row, { onConflict: 'business_id,date' }).select().single()
+    if (error) { notify('Error al guardar excepción'); return }
+    setOverrides(prev => [...prev.filter(o => o.date !== data.date), data].sort((a, b) => a.date.localeCompare(b.date)))
+    setNewOverride({ date: '', is_open: true, open_time: '09:00', close_time: '18:00' })
+    notify('Excepción guardada')
+  }
+
+  const deleteOverride = async (id) => {
+    await supabase.from('schedule_overrides').delete().eq('id', id)
+    setOverrides(prev => prev.filter(o => o.id !== id))
+    notify('Excepción eliminada')
+  }
+
   // ── Settings ────────────────────────────────────────────────────────────────
   const saveSettings = async () => {
     try {
@@ -121,11 +174,12 @@ export default function Admin() {
   const handleLogout = async () => { await signOut(); navigate('/') }
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard',      icon: Icons.chart    },
-    { id: 'bookings',  label: 'Turnos',          icon: Icons.calendar },
-    { id: 'services',  label: 'Servicios',        icon: Icons.scissors },
-    { id: 'payments',  label: 'Pagos',            icon: Icons.dollar   },
-    { id: 'settings',  label: 'Configuración',   icon: Icons.settings },
+    { id: 'dashboard', label: 'Dashboard',     icon: Icons.chart    },
+    { id: 'bookings',  label: 'Turnos',         icon: Icons.calendar },
+    { id: 'services',  label: 'Servicios',      icon: Icons.scissors },
+    { id: 'horarios',  label: 'Horarios',       icon: Icons.clock    },
+    { id: 'payments',  label: 'Pagos',          icon: Icons.dollar   },
+    { id: 'settings',  label: 'Configuración',  icon: Icons.settings },
   ]
 
   const filteredBookings = filterStatus === 'all' ? bookings : bookings.filter(b => b.status === filterStatus)
@@ -536,6 +590,137 @@ export default function Admin() {
                     ))
                   }
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── HORARIOS ── */}
+          {view === 'horarios' && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900">Horarios</h1>
+                  <p className="text-sm text-slate-500">Configurá cuándo abrís cada día</p>
+                </div>
+                <button onClick={saveSchedule}
+                  className="flex items-center gap-2 bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors">
+                  <Icon d={Icons.check} size={15} stroke="white" /> Guardar horarios
+                </button>
+              </div>
+
+              {/* Horario semanal */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
+                </div>
+                <div className="divide-y divide-slate-50">
+                  {DAYS.map(({ dow, label }) => {
+                    const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
+                    return (
+                      <div key={dow} className="flex items-center gap-4 px-5 py-3.5">
+                        {/* Toggle */}
+                        <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
+                          className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
+                        </button>
+
+                        {/* Día */}
+                        <span className={`w-24 text-sm font-medium flex-shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
+
+                        {day.is_open ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <span className="text-slate-400 text-sm">→</span>
+                            <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400 italic">Cerrado</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Excepciones por fecha */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-900 text-sm">Excepciones por fecha</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Para días especiales: feriados, horarios distintos, etc.</p>
+                </div>
+
+                {/* Formulario nueva excepción */}
+                <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
+                      <input type="date" value={newOverride.date} min={today()}
+                        onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
+                        className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
+                        className={`relative w-10 h-6 rounded-full transition-colors flex-shrink-0 ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                      <span className="text-sm text-slate-600">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
+                    </div>
+                    {newOverride.is_open && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
+                          <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
+                            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
+                          <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
+                            className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </>
+                    )}
+                    <button onClick={addOverride}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                      + Agregar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lista de excepciones */}
+                {overrides.length === 0
+                  ? <div className="text-center py-8 text-slate-400 text-sm">No hay excepciones configuradas</div>
+                  : <div className="divide-y divide-slate-50">
+                      {overrides.map(o => (
+                        <div key={o.id} className="flex items-center justify-between px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${o.is_open ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                            <div>
+                              <span className="text-sm font-medium text-slate-900">
+                                {new Date(o.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                              </span>
+                              <span className="text-xs text-slate-500 ml-2">
+                                {o.is_open ? `${o.open_time} → ${o.close_time}` : 'Cerrado'}
+                              </span>
+                            </div>
+                          </div>
+                          <button onClick={() => deleteOverride(o.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors">
+                            <Icon d={Icons.trash} size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                }
               </div>
             </div>
           )}
