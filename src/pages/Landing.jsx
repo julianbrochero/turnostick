@@ -25,7 +25,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Icon d={Icons.scissors} size={16} stroke="white" />
+              <Icon d={Icons.calendarCheck} size={16} stroke="white" />
             </div>
             <span className="font-bold text-slate-900 text-lg tracking-tight">turnoStick</span>
           </div>
