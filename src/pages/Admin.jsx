@@ -9,6 +9,28 @@ const TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','14:00','
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 const today = () => new Date().toISOString().split('T')[0]
 
+const generateSlots = (openTime, closeTime, interval = 30) => {
+  const slots = []
+  const [oh, om] = openTime.split(':').map(Number)
+  const [ch, cm] = closeTime.split(':').map(Number)
+  let cur = oh * 60 + om
+  const end = ch * 60 + cm
+  while (cur < end) {
+    slots.push(`${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`)
+    cur += interval
+  }
+  return slots
+}
+
+const fmtDay = (d) => {
+  const dt = new Date(d + 'T12:00')
+  return {
+    day:   dt.toLocaleDateString('es-AR', { weekday: 'short' }),
+    num:   dt.getDate(),
+    month: dt.toLocaleDateString('es-AR', { month: 'short' }),
+  }
+}
+
 export default function Admin() {
   const { business, signOut, updateBusiness } = useAuth()
   const navigate = useNavigate()
@@ -50,8 +72,15 @@ export default function Admin() {
   const [schedule, setSchedule]       = useState(DEFAULT_SCHEDULE)
   const [overrides, setOverrides]     = useState([])
   const [newOverride, setNewOverride] = useState({ date: '', is_open: true, open_time: '09:00', close_time: '18:00' })
-  const [blockedSlots, setBlockedSlots] = useState([])
-  const [newBlock, setNewBlock]         = useState({ date: today(), time: '14:00' })
+  const [blockedSlots, setBlockedSlots]       = useState([])
+  const [recurringBlocked, setRecurringBlocked] = useState([])
+  const [blockMode, setBlockMode]             = useState('date')   // 'date' | 'recurring'
+  const [blockDate, setBlockDate]             = useState(today())
+  const [blockDow, setBlockDow]               = useState(1)        // 1=Lunes por defecto
+  const blockDays = [...Array(30)].map((_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i)
+    return d.toISOString().split('T')[0]
+  })
 
   useEffect(() => {
     if (business) {
@@ -70,12 +99,13 @@ export default function Admin() {
   }, [business])
 
   const fetchAll = async () => {
-    const [bRes, sRes, schRes, ovRes, blRes] = await Promise.all([
+    const [bRes, sRes, schRes, ovRes, blRes, rbRes] = await Promise.all([
       supabase.from('bookings').select('*').eq('business_id', business.id).order('date', { ascending: true }),
       supabase.from('services').select('*').eq('business_id', business.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', business.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', business.id).gte('date', today()).order('date'),
       supabase.from('blocked_slots').select('*').eq('business_id', business.id).gte('date', today()).order('date').order('time'),
+      supabase.from('recurring_blocked_slots').select('*').eq('business_id', business.id),
     ])
     setBookings(bRes.data || [])
     setServices(sRes.data || [])
@@ -84,6 +114,7 @@ export default function Admin() {
     }
     setOverrides(ovRes.data || [])
     setBlockedSlots(blRes.data || [])
+    setRecurringBlocked(rbRes.data || [])
     setLoadingData(false)
   }
 
@@ -182,21 +213,48 @@ export default function Admin() {
     notify('Excepción eliminada')
   }
 
-  const addBlock = async () => {
-    if (!newBlock.date || !newBlock.time) return
-    const { data, error } = await supabase.from('blocked_slots')
-      .upsert({ business_id: business.id, date: newBlock.date, time: newBlock.time }, { onConflict: 'business_id,date,time' })
-      .select().single()
-    if (error) { notify('Error al bloquear turno'); return }
-    setBlockedSlots(prev => [...prev.filter(b => !(b.date === data.date && b.time === data.time)), data]
-      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)))
-    notify('Turno bloqueado')
+  // Slots disponibles para una fecha (sin filtrar bloqueados, para poder gestionarlos)
+  const slotsForDate = (date) => {
+    const override = overrides.find(o => o.date === date)
+    if (override) {
+      if (!override.is_open) return []
+      return generateSlots(override.open_time, override.close_time)
+    }
+    const dow = new Date(date + 'T12:00').getDay()
+    const sch = schedule.find(s => s.day_of_week === dow)
+    if (!sch || !sch.is_open) return []
+    return generateSlots(sch.open_time, sch.close_time)
   }
 
-  const deleteBlock = async (id) => {
-    await supabase.from('blocked_slots').delete().eq('id', id)
-    setBlockedSlots(prev => prev.filter(b => b.id !== id))
-    notify('Bloqueo eliminado')
+  // Slots para un día de la semana (sin filtrar)
+  const slotsForDow = (dow) => {
+    const sch = schedule.find(s => s.day_of_week === dow)
+    if (!sch || !sch.is_open) return []
+    return generateSlots(sch.open_time, sch.close_time)
+  }
+
+  const toggleBlockSlot = async (date, time) => {
+    const existing = blockedSlots.find(b => b.date === date && b.time === time)
+    if (existing) {
+      await supabase.from('blocked_slots').delete().eq('id', existing.id)
+      setBlockedSlots(prev => prev.filter(b => b.id !== existing.id))
+    } else {
+      const { data } = await supabase.from('blocked_slots')
+        .insert({ business_id: business.id, date, time }).select().single()
+      if (data) setBlockedSlots(prev => [...prev, data])
+    }
+  }
+
+  const toggleRecurringBlock = async (dow, time) => {
+    const existing = recurringBlocked.find(b => b.day_of_week === dow && b.time === time)
+    if (existing) {
+      await supabase.from('recurring_blocked_slots').delete().eq('id', existing.id)
+      setRecurringBlocked(prev => prev.filter(b => b.id !== existing.id))
+    } else {
+      const { data } = await supabase.from('recurring_blocked_slots')
+        .insert({ business_id: business.id, day_of_week: dow, time }).select().single()
+      if (data) setRecurringBlocked(prev => [...prev, data])
+    }
   }
 
   // ── Settings ────────────────────────────────────────────────────────────────
@@ -279,9 +337,7 @@ export default function Admin() {
           <Icon d={Icons.menu} size={20} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Icon d={Icons.scissors} size={14} stroke="white" />
-          </div>
+          <img src="/logo.png" alt="turnoStick" className="w-7 h-7" />
           <span className="font-bold text-slate-900 text-sm">turnoStick</span>
           <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Admin</span>
         </div>
@@ -749,55 +805,116 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* ── Bloquear turno puntual ── */}
+              {/* ── Bloquear horarios ── */}
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-slate-100">
-                  <h3 className="font-semibold text-slate-900 text-sm">Bloquear turno puntual</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Inhabilitá un horario específico sin cerrar el día entero</p>
+                  <h3 className="font-semibold text-slate-900 text-sm">Bloquear horarios</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Tocá los turnos que querés inhabilitar — toca de nuevo para desbloquear</p>
                 </div>
-                <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
-                      <input type="date" value={newBlock.date} min={today()}
-                        onChange={e => setNewBlock(p => ({ ...p, date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Hora</label>
-                      <select value={newBlock.time} onChange={e => setNewBlock(p => ({ ...p, time: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <button onClick={addBlock}
-                    className="w-full py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors">
-                    🚫 Bloquear ese turno
+
+                {/* Modo: fecha puntual vs siempre ese día */}
+                <div className="px-4 pt-4 flex gap-2">
+                  <button onClick={() => setBlockMode('date')}
+                    className={`flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all ${blockMode === 'date' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                    📅 Fecha específica
+                  </button>
+                  <button onClick={() => setBlockMode('recurring')}
+                    className={`flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all ${blockMode === 'recurring' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                    🔁 Siempre ese día
                   </button>
                 </div>
-                {blockedSlots.length === 0
-                  ? <div className="text-center py-6 text-slate-400 text-sm">No hay turnos bloqueados</div>
-                  : <div className="divide-y divide-slate-50">
-                      {blockedSlots.map(b => (
-                        <div key={b.id} className="flex items-center justify-between px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">🚫</span>
-                            <div>
-                              <div className="text-sm font-medium text-slate-900">
-                                {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                              </div>
-                              <div className="text-xs text-slate-500">{b.time} hs — bloqueado</div>
+
+                {/* ── Modo: fecha específica ── */}
+                {blockMode === 'date' && (() => {
+                  const slots = slotsForDate(blockDate)
+                  return (
+                    <div className="px-4 py-4 space-y-4">
+                      {/* Scroll de días */}
+                      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                        {blockDays.map(d => {
+                          const { day, num, month } = fmtDay(d)
+                          const hasBlocks = blockedSlots.some(b => b.date === d)
+                          return (
+                            <button key={d} onClick={() => setBlockDate(d)}
+                              className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all shrink-0 ${blockDate === d ? 'border-red-500 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                              <span className="text-xs text-slate-500 capitalize">{day}</span>
+                              <span className={`text-lg font-bold ${blockDate === d ? 'text-red-600' : 'text-slate-900'}`}>{num}</span>
+                              <span className="text-xs text-slate-400 capitalize">{month}</span>
+                              {hasBlocks && <span className="w-1.5 h-1.5 bg-red-400 rounded-full mt-0.5" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {slots.length === 0
+                        ? <p className="text-center text-slate-400 text-sm py-4">Este día está cerrado</p>
+                        : <>
+                            <p className="text-xs text-slate-500">Tocá un turno para bloquearlo (rojo) o desbloquearlo</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {slots.map(t => {
+                                const isBlocked = blockedSlots.some(b => b.date === blockDate && b.time === t)
+                                return (
+                                  <button key={t} onClick={() => toggleBlockSlot(blockDate, t)}
+                                    className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500 shadow-sm' : 'border-slate-200 text-slate-700 hover:border-red-300 hover:bg-red-50'}`}>
+                                    {t}
+                                    {isBlocked && <div className="text-xs opacity-80">🚫</div>}
+                                  </button>
+                                )
+                              })}
                             </div>
-                          </div>
-                          <button onClick={() => deleteBlock(b.id)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors">
-                            <Icon d={Icons.trash} size={14} />
-                          </button>
-                        </div>
-                      ))}
+                          </>
+                      }
                     </div>
-                }
+                  )
+                })()}
+
+                {/* ── Modo: siempre ese día de la semana ── */}
+                {blockMode === 'recurring' && (() => {
+                  const slots = slotsForDow(blockDow)
+                  const dowLabel = DAYS.find(d => d.dow === blockDow)?.label || ''
+                  return (
+                    <div className="px-4 py-4 space-y-4">
+                      {/* Selector día de la semana */}
+                      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                        {DAYS.map(({ dow, label }) => {
+                          const hasBlocks = recurringBlocked.some(b => b.day_of_week === dow)
+                          return (
+                            <button key={dow} onClick={() => setBlockDow(dow)}
+                              className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all shrink-0 ${blockDow === dow ? 'border-red-500 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                              <span className={`text-xs font-semibold ${blockDow === dow ? 'text-red-600' : 'text-slate-700'}`}>{label.slice(0,3)}</span>
+                              {hasBlocks && <span className="w-1.5 h-1.5 bg-red-400 rounded-full mt-1" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {slots.length === 0
+                        ? <p className="text-center text-slate-400 text-sm py-4">{dowLabel} está cerrado en el horario semanal</p>
+                        : <>
+                            <p className="text-xs text-slate-500">Estos turnos quedarán bloqueados <strong>todos los {dowLabel}</strong></p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {slots.map(t => {
+                                const isBlocked = recurringBlocked.some(b => b.day_of_week === blockDow && b.time === t)
+                                return (
+                                  <button key={t} onClick={() => toggleRecurringBlock(blockDow, t)}
+                                    className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500 shadow-sm' : 'border-slate-200 text-slate-700 hover:border-red-300 hover:bg-red-50'}`}>
+                                    {t}
+                                    {isBlocked && <div className="text-xs opacity-80">🚫</div>}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                      }
+                    </div>
+                  )
+                })()}
+
+                {/* Leyenda */}
+                <div className="px-4 pb-4 flex items-center gap-4 text-xs text-slate-500 border-t border-slate-50 pt-3">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-500 inline-block" />Bloqueado</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded border-2 border-slate-200 inline-block" />Disponible</span>
+                </div>
               </div>
 
               {/* ── Excepciones por día ── */}

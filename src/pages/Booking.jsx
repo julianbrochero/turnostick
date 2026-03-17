@@ -21,7 +21,7 @@ const generateSlots = (openTime, closeTime, interval = 30) => {
 }
 
 // Devuelve los slots disponibles para una fecha concreta
-const getSlotsForDate = (date, schedules, overrides, blockedSlots = []) => {
+const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = []) => {
   const override = overrides.find(o => o.date === date)
   let slots
   if (override) {
@@ -33,8 +33,12 @@ const getSlotsForDate = (date, schedules, overrides, blockedSlots = []) => {
     if (!sch || !sch.is_open) return []
     slots = generateSlots(sch.open_time, sch.close_time)
   }
-  const blocked = blockedSlots.filter(b => b.date === date).map(b => b.time)
-  return slots.filter(s => !blocked.includes(s))
+  const dow = new Date(date + 'T12:00').getDay()
+  const blocked = new Set([
+    ...blockedSlots.filter(b => b.date === date).map(b => b.time),
+    ...recurringBlocked.filter(b => b.day_of_week === dow).map(b => b.time),
+  ])
+  return slots.filter(s => !blocked.has(s))
 }
 
 export default function Booking() {
@@ -45,7 +49,8 @@ export default function Booking() {
   const [services, setServices]   = useState([])
   const [schedules, setSchedules]   = useState([])
   const [overrides, setOverrides]   = useState([])
-  const [blockedSlots, setBlockedSlots] = useState([])
+  const [blockedSlots, setBlockedSlots]         = useState([])
+  const [recurringBlocked, setRecurringBlocked] = useState([])
   const [notFound, setNotFound]   = useState(false)
   const [loading, setLoading]     = useState(true)
 
@@ -77,16 +82,18 @@ export default function Booking() {
     if (error || !biz) { setNotFound(true); setLoading(false); return }
     setBusiness(biz)
 
-    const [svcsRes, schRes, ovRes, blRes] = await Promise.all([
+    const [svcsRes, schRes, ovRes, blRes, rbRes] = await Promise.all([
       supabase.from('services').select('*').eq('business_id', biz.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', biz.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', biz.id).gte('date', today()),
       supabase.from('blocked_slots').select('*').eq('business_id', biz.id).gte('date', today()),
+      supabase.from('recurring_blocked_slots').select('*').eq('business_id', biz.id),
     ])
     setServices(svcsRes.data || [])
     setSchedules(schRes.data || [])
     setOverrides(ovRes.data || [])
     setBlockedSlots(blRes.data || [])
+    setRecurringBlocked(rbRes.data || [])
     setLoading(false)
   }
 
@@ -169,9 +176,7 @@ export default function Booking() {
       {/* Header */}
       <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Icon d={Icons.scissors} size={14} stroke="white" />
-          </div>
+          <img src="/logo.png" alt="turnoStick" className="w-7 h-7" />
           <span className="font-bold text-slate-900">{business?.name}</span>
         </div>
         <button onClick={() => navigate('/')} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
@@ -239,7 +244,7 @@ export default function Booking() {
 
           {/* Step 2 — Fecha y hora */}
           {step === 2 && (() => {
-            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots)
+            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked)
             const isClosedDay = slots.length === 0
             return (
               <div>
@@ -248,7 +253,7 @@ export default function Booking() {
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
                   {days.map(d => {
                     const { day, num, month } = fmtDay(d)
-                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots)
+                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked)
                     const closed   = daySlots.length === 0
                     return (
                       <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}
