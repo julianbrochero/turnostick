@@ -40,9 +40,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-            <Icon d={Icons.calendarCheck} size={22} stroke="white" />
-          </div>
+          <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900">turnoStick</h1>
           <p className="text-sm text-slate-500 mt-1">Ingresá a tu panel de administración</p>
         </div>

@@ -24,9 +24,7 @@ export default function Landing() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Icon d={Icons.calendarCheck} size={16} stroke="white" />
-            </div>
+              <img src="/logo.png" alt="turnoStick" className="w-8 h-8" />
             <span className="font-bold text-slate-900 text-lg tracking-tight">turnoStick</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-slate-600">
