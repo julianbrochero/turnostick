@@ -304,122 +304,219 @@ export default function Booking() {
 
           {/* Step 4 — Pago */}
           {step === 4 && svc && (() => {
-            const hasMp       = business.sena_amount > 0 && business.mp_access_token
-            const hasTransfer = business.bank_cbu || business.bank_alias
+            const hasMp       = !!(business.sena_amount > 0 && business.mp_access_token)
+            const hasTransfer = !!(business.bank_cbu || business.bank_alias)
+            const senaAmt     = business.sena_amount || 0
+
+            const PayOption = ({ id, icon, title, desc }) => (
+              <button onClick={() => setSelected(p => ({ ...p, payMethod: id }))}
+                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${selected.payMethod === id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white hover:border-indigo-200'}`}>
+                <span className="text-2xl shrink-0">{icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-slate-900 text-sm">{title}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${selected.payMethod === id ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
+                  {selected.payMethod === id && <Icon d={Icons.check} size={10} stroke="white" />}
+                </div>
+              </button>
+            )
+
             return (
               <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Método de pago</h2>
-                <p className="text-sm text-slate-500 mb-5">Elegí cómo querés pagar</p>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">¿Cómo querés reservar?</h2>
+                <p className="text-sm text-slate-500 mb-4">Elegí el método de pago</p>
 
                 {/* Resumen */}
-                <div className="bg-slate-50 rounded-xl p-4 mb-5 text-sm">
-                  <div className="font-semibold text-slate-900 mb-2">Resumen del turno</div>
-                  <div className="flex justify-between text-slate-600 mb-1"><span>{svc.name}</span><span>{fmt(svc.price)}</span></div>
-                  <div className="flex justify-between text-slate-500 text-xs">
+                <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm space-y-1.5">
+                  <div className="flex justify-between font-semibold text-slate-900">
+                    <span>{svc.name}</span><span>{fmt(svc.price)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
                     <span>{new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                     <span>{selected.time} hs</span>
                   </div>
-                  {hasMp && (
-                    <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between text-slate-700">
-                      <span className="text-xs">Seña a pagar ahora</span>
-                      <span className="font-semibold text-xs">{fmt(business.sena_amount)}</span>
+                  {senaAmt > 0 && (
+                    <div className="flex justify-between text-xs pt-1.5 border-t border-slate-200 text-slate-700">
+                      <span>Seña requerida</span>
+                      <span className="font-bold text-indigo-600">{fmt(senaAmt)}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  {/* MercadoPago */}
-                  {hasMp && (
-                    <button onClick={() => setSelected(p => ({ ...p, payMethod: 'mercadopago' }))}
-                      className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'mercadopago' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                      <span className="text-2xl">💳</span>
-                      <div className="text-left flex-1">
-                        <div className="font-semibold text-slate-900 text-sm">Pagar seña con MercadoPago</div>
-                        <div className="text-xs text-slate-500">Tarjeta de crédito / débito · {fmt(business.sena_amount)}</div>
-                      </div>
-                      {selected.payMethod === 'mercadopago' && (
-                        <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
-                          <Icon d={Icons.check} size={11} stroke="white" />
-                        </div>
-                      )}
-                    </button>
-                  )}
-
                   {/* Transferencia */}
                   {hasTransfer && (
-                    <button onClick={() => setSelected(p => ({ ...p, payMethod: 'transfer' }))}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'transfer' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">🏦</span>
-                        <div className="flex-1">
-                          <div className="font-semibold text-slate-900 text-sm">Transferencia bancaria</div>
-                          <div className="text-xs text-slate-500">Enviá la seña antes del turno</div>
-                        </div>
-                        {selected.payMethod === 'transfer' && (
-                          <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
-                            <Icon d={Icons.check} size={11} stroke="white" />
+                    <PayOption id="transfer" icon="🏦" title="Transferencia bancaria"
+                      desc={`Enviá la seña${senaAmt > 0 ? ` de ${fmt(senaAmt)}` : ''} y el negocio confirma tu turno`} />
+                  )}
+
+                  {/* Datos bancarios — siempre visibles cuando está seleccionado */}
+                  {hasTransfer && selected.payMethod === 'transfer' && (
+                    <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50 p-4 space-y-2.5">
+                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Datos para transferir</p>
+                      {business.bank_alias && (
+                        <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-indigo-100">
+                          <div>
+                            <div className="text-xs text-slate-500">Alias</div>
+                            <div className="font-bold text-slate-900 text-sm">{business.bank_alias}</div>
                           </div>
-                        )}
-                      </div>
-                      {selected.payMethod === 'transfer' && (
-                        <div className="mt-3 bg-white rounded-lg p-3 space-y-1.5 border border-slate-100">
-                          {business.bank_alias  && <div className="flex justify-between text-xs"><span className="text-slate-500">Alias</span><span className="font-semibold text-slate-800">{business.bank_alias}</span></div>}
-                          {business.bank_cbu    && <div className="flex justify-between text-xs"><span className="text-slate-500">CBU</span><span className="font-mono text-slate-800">{business.bank_cbu}</span></div>}
-                          {business.bank_holder && <div className="flex justify-between text-xs"><span className="text-slate-500">Titular</span><span className="font-semibold text-slate-800">{business.bank_holder}</span></div>}
-                          {business.bank_bank   && <div className="flex justify-between text-xs"><span className="text-slate-500">Banco</span><span className="text-slate-800">{business.bank_bank}</span></div>}
-                          {hasMp && <div className="flex justify-between text-xs pt-1 border-t border-slate-100"><span className="text-slate-500">Monto de seña</span><span className="font-semibold text-indigo-600">{fmt(business.sena_amount)}</span></div>}
+                          <button onClick={() => navigator.clipboard?.writeText(business.bank_alias)}
+                            className="text-xs text-indigo-600 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50">
+                            Copiar
+                          </button>
                         </div>
                       )}
-                    </button>
+                      {business.bank_cbu && (
+                        <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-indigo-100">
+                          <div>
+                            <div className="text-xs text-slate-500">CBU</div>
+                            <div className="font-mono text-slate-900 text-xs tracking-tight">{business.bank_cbu}</div>
+                          </div>
+                          <button onClick={() => navigator.clipboard?.writeText(business.bank_cbu)}
+                            className="text-xs text-indigo-600 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50 shrink-0">
+                            Copiar
+                          </button>
+                        </div>
+                      )}
+                      {business.bank_holder && (
+                        <div className="flex justify-between text-xs px-1">
+                          <span className="text-slate-500">Titular</span>
+                          <span className="font-medium text-slate-800">{business.bank_holder}</span>
+                        </div>
+                      )}
+                      {business.bank_bank && (
+                        <div className="flex justify-between text-xs px-1">
+                          <span className="text-slate-500">Banco</span>
+                          <span className="font-medium text-slate-800">{business.bank_bank}</span>
+                        </div>
+                      )}
+                      {senaAmt > 0 && (
+                        <div className="flex justify-between text-xs px-1 pt-1 border-t border-indigo-200">
+                          <span className="text-slate-500">Monto a transferir</span>
+                          <span className="font-bold text-indigo-700">{fmt(senaAmt)}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-indigo-600 bg-white rounded-lg px-3 py-2 border border-indigo-100">
+                        📌 Después de confirmar tu reserva, hacé la transferencia y el negocio te confirmará el turno.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* MercadoPago */}
+                  {hasMp && (
+                    <PayOption id="mercadopago" icon="💳" title="Pagar con MercadoPago"
+                      desc={`Seña de ${fmt(senaAmt)} con tarjeta de crédito o débito`} />
                   )}
 
                   {/* Pagar en el local */}
-                  <button onClick={() => setSelected(p => ({ ...p, payMethod: 'local' }))}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selected.payMethod === 'local' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                    <span className="text-2xl">🏠</span>
-                    <div className="text-left flex-1">
-                      <div className="font-semibold text-slate-900 text-sm">Pagar en el local</div>
-                      <div className="text-xs text-slate-500">Efectivo o como prefieras el día del turno</div>
-                    </div>
-                    {selected.payMethod === 'local' && (
-                      <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
-                        <Icon d={Icons.check} size={11} stroke="white" />
-                      </div>
-                    )}
-                  </button>
+                  <PayOption id="local" icon="🏠" title="Pagar en el local"
+                    desc="Acordás el pago directamente con el negocio" />
                 </div>
               </div>
             )
           })()}
 
-          {/* Step 5 — Confirmado */}
-          {step === 5 && svc && (
-            <div className="text-center py-6">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon d={Icons.check} size={30} stroke="#10b981" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Turno confirmado!</h2>
-              <p className="text-slate-500 text-sm mb-6">Te enviamos los detalles a <strong>{selected.email}</strong></p>
-              <div className="bg-slate-50 rounded-xl p-5 text-left space-y-3 mb-6">
-                {[
-                  ['Negocio',     business.name],
-                  ['Servicio',    svc.name],
-                  ['Fecha',       new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })],
-                  ['Hora',        selected.time + ' hs'],
-                  ['Total',       fmt(svc.price)],
-                  ['Estado pago', selected.payMethod === 'mercadopago' ? '✅ Seña pagada con MercadoPago' : selected.payMethod === 'transfer' ? '🏦 Seña por transferencia — pendiente confirmación' : '🏠 Pago en el local'],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between text-sm">
-                    <span className="text-slate-500">{k}</span>
-                    <span className="font-medium text-slate-900">{v}</span>
+          {/* Step 5 — Resultado */}
+          {step === 5 && (
+            <div className="py-4">
+              {selected.payMethod === 'transfer' ? (
+                /* ── Transferencia: pendiente ── */
+                <div>
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-3xl">🏦</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 mb-1">¡Reserva recibida!</h2>
+                    <p className="text-slate-500 text-sm">Hacé la transferencia y el negocio confirmará tu turno</p>
                   </div>
-                ))}
-              </div>
+
+                  {/* Datos del turno */}
+                  <div className="bg-slate-50 rounded-xl p-4 text-sm space-y-2 mb-4">
+                    {svc && <>
+                      <div className="flex justify-between"><span className="text-slate-500">Servicio</span><span className="font-medium">{svc.name}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Fecha</span><span className="font-medium">{new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Hora</span><span className="font-medium">{selected.time} hs</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Total</span><span className="font-medium">{fmt(svc.price)}</span></div>
+                    </>}
+                  </div>
+
+                  {/* Datos bancarios destacados */}
+                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 space-y-2.5 mb-4">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Transferí la seña a:</p>
+                    {business.bank_alias && (
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-amber-100">
+                        <div>
+                          <div className="text-xs text-slate-500">Alias</div>
+                          <div className="font-bold text-slate-900">{business.bank_alias}</div>
+                        </div>
+                        <button onClick={() => navigator.clipboard?.writeText(business.bank_alias)}
+                          className="text-xs text-amber-700 font-semibold px-2 py-1 rounded-lg hover:bg-amber-50">
+                          Copiar
+                        </button>
+                      </div>
+                    )}
+                    {business.bank_cbu && (
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-amber-100">
+                        <div>
+                          <div className="text-xs text-slate-500">CBU</div>
+                          <div className="font-mono text-slate-900 text-xs">{business.bank_cbu}</div>
+                        </div>
+                        <button onClick={() => navigator.clipboard?.writeText(business.bank_cbu)}
+                          className="text-xs text-amber-700 font-semibold px-2 py-1 rounded-lg hover:bg-amber-50 shrink-0">
+                          Copiar
+                        </button>
+                      </div>
+                    )}
+                    {business.bank_holder && (
+                      <div className="flex justify-between text-xs px-1">
+                        <span className="text-slate-500">Titular</span>
+                        <span className="font-medium text-slate-800">{business.bank_holder}</span>
+                      </div>
+                    )}
+                    {business.sena_amount > 0 && (
+                      <div className="flex justify-between text-sm px-1 pt-1 border-t border-amber-200">
+                        <span className="text-slate-600">Monto de la seña</span>
+                        <span className="font-bold text-amber-700">{fmt(business.sena_amount)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 text-center mb-5">
+                    Una vez que recibamos la transferencia, te confirmamos el turno por email a <strong>{selected.email}</strong>
+                  </p>
+                </div>
+              ) : (
+                /* ── MP o local: confirmado ── */
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Icon d={Icons.check} size={30} stroke="#10b981" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-1">¡Turno reservado!</h2>
+                  <p className="text-slate-500 text-sm mb-5">
+                    {selected.payMethod === 'mercadopago'
+                      ? <>Seña pagada. Te enviamos los detalles a <strong>{selected.email}</strong></>
+                      : <>El negocio te confirma el turno. Detalles enviados a <strong>{selected.email}</strong></>
+                    }
+                  </p>
+                  {svc && (
+                    <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2 text-sm mb-5">
+                      <div className="flex justify-between"><span className="text-slate-500">Negocio</span><span className="font-medium">{business.name}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Servicio</span><span className="font-medium">{svc.name}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Fecha</span><span className="font-medium">{new Date(selected.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Hora</span><span className="font-medium">{selected.time} hs</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500">Total</span><span className="font-medium">{fmt(svc.price)}</span></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button onClick={() => { setStep(1); setSelected({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' }) }}
                 className="w-full py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
                 Reservar otro turno
               </button>
-              <button onClick={() => navigate('/')} className="text-sm text-indigo-600 hover:underline">Volver al inicio</button>
+              <button onClick={() => navigate('/')} className="text-sm text-indigo-600 hover:underline flex justify-center">
+                Volver al inicio
+              </button>
             </div>
           )}
 
