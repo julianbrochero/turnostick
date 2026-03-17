@@ -14,8 +14,8 @@ export default function Landing() {
   ]
 
   const plans = [
-    { name: 'Básico',   price: 'Gratis',  period: '',        highlight: false, features: ['30 reservas/mes', 'Calendarios ilimitados', 'Notificaciones email', 'Pagos online', 'Estadísticas básicas'] },
-    { name: 'Premium',  price: '$13.99',  period: '/mes USD', highlight: true,  features: ['Reservas ilimitadas', 'Calendarios ilimitados', 'Notificaciones email', 'Pagos online', 'Estadísticas avanzadas', 'Sin marca de agua', 'Soporte prioritario'] },
+    { name: 'Prueba',   price: 'Gratis',  period: '7 días',   highlight: false, features: ['7 días de prueba', 'Reservas ilimitadas', 'Notificaciones email', 'Pagos online', 'Estadísticas completas', 'Sin tarjeta de crédito'] },
+    { name: 'Premium',  price: '$14.999', period: '/mes ARS', highlight: true,  features: ['Reservas ilimitadas', 'Calendarios ilimitados', 'Notificaciones email', 'Pagos online', 'Estadísticas avanzadas', 'Sin marca de agua', 'Soporte prioritario'] },
   ]
 
   return (
@@ -65,7 +65,7 @@ export default function Landing() {
               Ver demo
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-4">Sin tarjeta de crédito · 30 turnos gratis · Configuración en 5 minutos</p>
+          <p className="text-xs text-slate-400 mt-4">Sin tarjeta de crédito · 7 días gratis · Configuración en 5 minutos</p>
         </div>
       </section>
 
@@ -128,7 +128,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <button onClick={() => navigate('/register')} className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${highlight ? 'bg-white text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
-                  {name === 'Básico' ? 'Comenzar gratis' : 'Comenzar ahora'}
+                  {name === 'Prueba' ? 'Probar 7 días gratis' : 'Suscribirme ahora'}
                 </button>
               </div>
             ))}
@@ -167,7 +167,7 @@ export default function Landing() {
       <section className="py-20 px-6 bg-indigo-600">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-4">¡Empezá gratis hoy mismo!</h2>
-          <p className="text-indigo-200 mb-8">30 turnos mensuales sin tarjeta de crédito. Actualizá cuando quieras.</p>
+          <p className="text-indigo-200 mb-8">7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
           <button onClick={() => navigate('/register')} className="bg-white text-indigo-600 font-bold px-8 py-4 rounded-xl hover:bg-indigo-50 transition-colors shadow-lg">
             Crear cuenta gratuita →
           </button>
