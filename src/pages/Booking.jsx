@@ -158,6 +158,31 @@ export default function Booking() {
     </div>
   )
 
+  // Verificar si la suscripción del negocio está activa
+  const isBusinessBlocked = () => {
+    if (!business) return false
+    const now = new Date()
+    const status = business.subscription_status || 'trial'
+    if (status === 'blocked') return true
+    if (status === 'active') {
+      const exp = new Date(business.subscription_expires_at)
+      return (exp - now) / 86400000 < -1
+    }
+    // trial
+    const trialEnd = business.trial_ends_at ? new Date(business.trial_ends_at) : new Date(Date.now() + 7 * 86400000)
+    return (trialEnd - now) / 86400000 < -1
+  }
+
+  if (isBusinessBlocked()) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="text-center">
+        <div className="text-5xl mb-4">🔒</div>
+        <h1 className="text-xl font-bold text-slate-900 mb-2">Reservas no disponibles</h1>
+        <p className="text-slate-500 text-sm">Este negocio tiene su cuenta suspendida temporalmente.</p>
+      </div>
+    </div>
+  )
+
   if (notFound) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="text-center">
@@ -222,8 +247,8 @@ export default function Booking() {
                       <button key={s.id} onClick={() => setSelected(p => ({ ...p, service: s.id }))}
                         className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${selected.service === s.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-300'}`}>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: s.color + '20' }}>
-                            <Icon d={Icons.scissors} size={18} stroke={s.color} />
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ backgroundColor: s.color + '20' }}>
+                            {s.emoji || '✂️'}
                           </div>
                           <div>
                             <div className="font-semibold text-slate-900 text-sm">{s.name}</div>

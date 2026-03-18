@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -49,7 +49,7 @@ export default function Admin() {
 
   // Service modal
   const [showNewService, setShowNewService] = useState(false)
-  const [newService, setNewService] = useState({ name: '', duration: 30, price: 0, color: '#6366f1' })
+  const [newService, setNewService] = useState({ name: '', duration: 30, price: 0, color: '#6366f1', emoji: '✂️' })
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
@@ -169,7 +169,7 @@ export default function Admin() {
     if (error) { notify('Error al crear servicio'); return }
     setServices(prev => [...prev, data])
     setShowNewService(false)
-    setNewService({ name: '', duration: 30, price: 0, color: '#6366f1' })
+    setNewService({ name: '', duration: 30, price: 0, color: '#6366f1', emoji: '✂️' })
     notify('Servicio creado')
   }
 
@@ -333,6 +333,66 @@ export default function Admin() {
 
   const bookingLink = `${window.location.origin}/b/${business?.slug}`
 
+  // ── Subscription status ─────────────────────────────────────────────────────
+  const getSubStatus = () => {
+    if (!business) return { status: 'trial', daysLeft: 7 }
+    const now  = new Date()
+    const raw  = business.subscription_status || 'trial'
+
+    const diffDays = (date) => Math.ceil((new Date(date) - now) / 86400000)
+
+    if (raw === 'active') {
+      const left = diffDays(business.subscription_expires_at)
+      if (left > 1)  return { status: 'active', daysLeft: left }
+      if (left >= 0) return { status: 'grace',  daysLeft: left }
+      return { status: 'blocked' }
+    }
+    if (raw === 'blocked') return { status: 'blocked' }
+    // trial (default)
+    const trialEnd = business.trial_ends_at
+      ? new Date(business.trial_ends_at)
+      : new Date(Date.now() + 7 * 86400000)
+    const left = diffDays(trialEnd)
+    if (left > 1)  return { status: 'trial', daysLeft: left }
+    if (left >= 0) return { status: 'grace',  daysLeft: left }
+    return { status: 'blocked' }
+  }
+
+  const [subPaying, setSubPaying] = React.useState(false)
+  const paySubscription = async () => {
+    setSubPaying(true)
+    const { data, error } = await supabase.functions.invoke('create-subscription-payment', {
+      body: { business_id: business.id },
+    })
+    setSubPaying(false)
+    if (error || !data?.init_point) { notify('Error al iniciar pago'); return }
+    window.location.href = data.init_point
+  }
+
+  const sub = getSubStatus()
+
+  // ── Pantalla bloqueada ────────────────────────────────────────────────────
+  if (sub.status === 'blocked') return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <span className="text-3xl">🔒</span>
+      </div>
+      <h1 className="text-xl font-bold text-slate-900 mb-2">Cuenta suspendida</h1>
+      <p className="text-slate-500 text-sm mb-6 max-w-xs">
+        Tu período de prueba o suscripción venció. Activá tu plan para seguir usando turnoStick.
+      </p>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 w-full max-w-sm mb-4">
+        <div className="text-2xl font-bold text-slate-900 mb-0.5">$14.999 <span className="text-sm font-normal text-slate-400">ARS/mes</span></div>
+        <p className="text-xs text-slate-500 mb-4">Reservas ilimitadas · Pagos · Horarios · Notificaciones</p>
+        <button onClick={paySubscription} disabled={subPaying}
+          className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors disabled:opacity-60">
+          {subPaying ? 'Redirigiendo...' : '💳 Activar con MercadoPago'}
+        </button>
+      </div>
+      <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-slate-600">Cerrar sesión</button>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* TOP BAR */}
@@ -390,6 +450,47 @@ export default function Admin() {
           {notification && (
             <div className="fixed top-16 right-4 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="white" /> {notification}
+            </div>
+          )}
+
+          {/* ── Banner de suscripción ── */}
+          {sub.status === 'trial' && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-indigo-800">
+                  🎉 Prueba gratis — {sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''} restante{sub.daysLeft !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-indigo-600 mt-0.5">Después $14.999 ARS/mes para continuar</p>
+              </div>
+              <button onClick={paySubscription} disabled={subPaying}
+                className="shrink-0 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60">
+                {subPaying ? '...' : 'Activar ya'}
+              </button>
+            </div>
+          )}
+          {sub.status === 'grace' && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-amber-800">
+                  ⚠️ Último día — tu cuenta se bloquea mañana
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">Activá tu suscripción ahora para no perder el acceso</p>
+              </div>
+              <button onClick={paySubscription} disabled={subPaying}
+                className="shrink-0 bg-amber-500 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-60">
+                {subPaying ? '...' : 'Pagar ahora'}
+              </button>
+            </div>
+          )}
+          {sub.status === 'active' && sub.daysLeft <= 5 && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-600">
+                📅 Tu suscripción vence en <strong>{sub.daysLeft} días</strong>
+              </p>
+              <button onClick={paySubscription} disabled={subPaying}
+                className="shrink-0 text-xs text-indigo-600 font-semibold hover:underline disabled:opacity-60">
+                {subPaying ? '...' : 'Renovar'}
+              </button>
             </div>
           )}
 
@@ -499,68 +600,103 @@ export default function Admin() {
               </div>
               {filteredBookings.length === 0
                 ? <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center text-slate-400 text-sm">No hay turnos para mostrar</div>
-                : <div className="space-y-3">
-                    {filteredBookings.map(b => (
-                      <div key={b.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${b.status === 'cancelled' ? 'border-red-100 opacity-70' : 'border-slate-100'}`}>
-                        {/* Top row: avatar + name + status */}
-                        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">{b.client_name?.[0]?.toUpperCase()}</div>
-                            <div>
-                              <div className="font-semibold text-slate-900 text-sm">{b.client_name}</div>
-                              <div className="text-xs text-slate-400">{b.client_email}</div>
-                            </div>
-                          </div>
-                          <StatusBadge status={b.status} />
-                        </div>
+                : (() => {
+                    const todayStr = today()
+                    // Group by date, sorted chronologically
+                    const groups = filteredBookings.reduce((acc, b) => {
+                      if (!acc[b.date]) acc[b.date] = []
+                      acc[b.date].push(b)
+                      return acc
+                    }, {})
+                    const sortedDates = Object.keys(groups).sort()
+                    return (
+                      <div className="space-y-6">
+                        {sortedDates.map(date => {
+                          const isToday = date === todayStr
+                          const isPast  = date < todayStr
+                          const dateLabel = new Date(date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+                          const dayBookings = groups[date].slice().sort((a, b) => a.time.localeCompare(b.time))
+                          return (
+                            <div key={date}>
+                              {/* Day header */}
+                              <div className={`flex items-center gap-2 mb-3 ${isPast ? 'opacity-60' : ''}`}>
+                                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isToday ? 'bg-indigo-500' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
+                                <span className={`text-sm font-bold capitalize ${isToday ? 'text-indigo-700' : 'text-slate-700'}`}>
+                                  {isToday ? 'Hoy — ' : ''}{dateLabel}
+                                </span>
+                                <span className="ml-auto text-xs text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
+                                  {dayBookings.length} turno{dayBookings.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              {/* Cards for this day */}
+                              <div className="space-y-2.5">
+                                {dayBookings.map(b => (
+                                  <div key={b.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${b.status === 'cancelled' ? 'border-red-100 opacity-60' : isToday ? 'border-indigo-100' : 'border-slate-100'}`}>
+                                    {/* Top row: time pill + avatar + name + status */}
+                                    <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
+                                          {b.time}
+                                        </div>
+                                        <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
+                                          {b.client_name?.[0]?.toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <div className="font-semibold text-slate-900 text-sm truncate">{b.client_name}</div>
+                                          <div className="text-xs text-slate-400 truncate">{b.client_email}</div>
+                                        </div>
+                                      </div>
+                                      <StatusBadge status={b.status} />
+                                    </div>
 
-                        {/* Middle: service + date/time + amount */}
-                        <div className="flex items-center justify-between px-4 py-2 bg-slate-50 mx-3 rounded-xl mb-3">
-                          <div>
-                            <div className="text-xs font-medium text-slate-700">{svcName(b.service_id)}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">
-                              {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })} · {b.time} hs
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-slate-900">{fmt(b.amount)}</div>
-                            {b.paid
-                              ? <span className="text-xs text-emerald-600 font-medium">✓ Pagado</span>
-                              : b.status !== 'cancelled' && (
-                                  <button onClick={() => markPaid(b.id)} className="text-xs text-amber-600 font-medium hover:underline">Marcar pagado</button>
-                                )
-                            }
-                          </div>
-                        </div>
+                                    {/* Service + amount row */}
+                                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 mx-3 rounded-xl mb-3">
+                                      <div className="text-xs font-medium text-slate-700">{svcName(b.service_id)}</div>
+                                      <div className="text-right">
+                                        <div className="text-sm font-bold text-slate-900">{fmt(b.amount)}</div>
+                                        {b.paid
+                                          ? <span className="text-xs text-emerald-600 font-medium">✓ Pagado</span>
+                                          : b.status !== 'cancelled' && (
+                                              <button onClick={() => markPaid(b.id)} className="text-xs text-amber-600 font-medium hover:underline">Marcar pagado</button>
+                                            )
+                                        }
+                                      </div>
+                                    </div>
 
-                        {/* Actions row */}
-                        <div className="flex items-center gap-2 px-4 pb-3">
-                          {b.status !== 'confirmed' && b.status !== 'cancelled' && (
-                            <button onClick={() => confirmAndNotify(b)}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition-colors">
-                              <Icon d={Icons.check} size={13} stroke="#047857" /> Confirmar
-                            </button>
-                          )}
-                          {b.status !== 'cancelled' && (
-                            <button onClick={() => updateStatus(b.id, 'cancelled')}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 transition-colors">
-                              <Icon d={Icons.x} size={13} stroke="#dc2626" /> Anular turno
-                            </button>
-                          )}
-                          {whatsappLink(b) && (
-                            <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
-                              className="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors flex-shrink-0">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                            </a>
-                          )}
-                          <button onClick={() => deleteBooking(b.id)}
-                            className="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0">
-                            <Icon d={Icons.trash} size={14} />
-                          </button>
-                        </div>
+                                    {/* Actions row */}
+                                    <div className="flex items-center gap-2 px-4 pb-3">
+                                      {b.status !== 'confirmed' && b.status !== 'cancelled' && (
+                                        <button onClick={() => confirmAndNotify(b)}
+                                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition-colors">
+                                          <Icon d={Icons.check} size={13} stroke="#047857" /> Confirmar
+                                        </button>
+                                      )}
+                                      {b.status !== 'cancelled' && (
+                                        <button onClick={() => updateStatus(b.id, 'cancelled')}
+                                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 transition-colors">
+                                          <Icon d={Icons.x} size={13} stroke="#dc2626" /> Anular
+                                        </button>
+                                      )}
+                                      {whatsappLink(b) && (
+                                        <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
+                                          className="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors flex-shrink-0">
+                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                        </a>
+                                      )}
+                                      <button onClick={() => deleteBooking(b.id)}
+                                        className="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0">
+                                        <Icon d={Icons.trash} size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })()
               }
 
               {/* Modal nuevo turno */}
@@ -631,8 +767,8 @@ export default function Admin() {
                     {services.map(s => (
                       <div key={s.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.color + '20' }}>
-                            <Icon d={Icons.scissors} size={22} stroke={s.color} />
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ backgroundColor: s.color + '20' }}>
+                            {s.emoji || '✂️'}
                           </div>
                           <div>
                             <div className="font-semibold text-slate-900">{s.name}</div>
@@ -675,6 +811,17 @@ export default function Admin() {
                           <label className="block text-xs font-medium text-slate-700 mb-1">Precio (ARS)</label>
                           <input type="number" value={newService.price} onChange={e => setNewService(p => ({ ...p, price: +e.target.value }))}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-2">Ícono</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {['✂️','💇','💅','🧴','🪒','💆','🧖','👗','👠','💄','🏋️','🧘','💪','🩺','🦷','🐾','🎨','🍕','☕','🎵'].map(e => (
+                            <button key={e} onClick={() => setNewService(p => ({ ...p, emoji: e }))}
+                              className={`w-9 h-9 rounded-lg text-xl flex items-center justify-center transition-all ${newService.emoji === e ? 'bg-indigo-100 ring-2 ring-indigo-500 scale-110' : 'bg-slate-50 hover:bg-slate-100'}`}>
+                              {e}
+                            </button>
+                          ))}
                         </div>
                       </div>
                       <div>
