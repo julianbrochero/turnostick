@@ -41,6 +41,7 @@ export default function Admin() {
   const [loadingData, setLoadingData] = useState(true)
   const [mobileMenu, setMobileMenu]   = useState(false)
   const [notification, setNotification] = useState(null)
+  const [subPaying, setSubPaying]     = useState(false)
 
   // Booking modal
   const [showNewBooking, setShowNewBooking] = useState(false)
@@ -358,7 +359,6 @@ export default function Admin() {
     return { status: 'blocked' }
   }
 
-  const [subPaying, setSubPaying] = React.useState(false)
   const paySubscription = async () => {
     setSubPaying(true)
     const { data, error } = await supabase.functions.invoke('create-subscription-payment', {
