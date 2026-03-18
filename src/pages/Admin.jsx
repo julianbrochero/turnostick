@@ -236,11 +236,13 @@ export default function Admin() {
   const toggleBlockSlot = async (date, time) => {
     const existing = blockedSlots.find(b => b.date === date && b.time === time)
     if (existing) {
-      await supabase.from('blocked_slots').delete().eq('id', existing.id)
+      const { error } = await supabase.from('blocked_slots').delete().eq('id', existing.id)
+      if (error) { notify('Error al desbloquear: ' + error.message); return }
       setBlockedSlots(prev => prev.filter(b => b.id !== existing.id))
     } else {
-      const { data } = await supabase.from('blocked_slots')
+      const { data, error } = await supabase.from('blocked_slots')
         .insert({ business_id: business.id, date, time }).select().single()
+      if (error) { notify('Error al bloquear: ' + error.message); return }
       if (data) setBlockedSlots(prev => [...prev, data])
     }
   }
@@ -248,11 +250,13 @@ export default function Admin() {
   const toggleRecurringBlock = async (dow, time) => {
     const existing = recurringBlocked.find(b => b.day_of_week === dow && b.time === time)
     if (existing) {
-      await supabase.from('recurring_blocked_slots').delete().eq('id', existing.id)
+      const { error } = await supabase.from('recurring_blocked_slots').delete().eq('id', existing.id)
+      if (error) { notify('Error al desbloquear: ' + error.message); return }
       setRecurringBlocked(prev => prev.filter(b => b.id !== existing.id))
     } else {
-      const { data } = await supabase.from('recurring_blocked_slots')
+      const { data, error } = await supabase.from('recurring_blocked_slots')
         .insert({ business_id: business.id, day_of_week: dow, time }).select().single()
+      if (error) { notify('Error al bloquear: ' + error.message); return }
       if (data) setRecurringBlocked(prev => [...prev, data])
     }
   }
