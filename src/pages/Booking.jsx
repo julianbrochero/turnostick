@@ -174,14 +174,21 @@ export default function Booking() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="turnoStick" className="w-7 h-7" />
-          <span className="font-bold text-slate-900">{business?.name}</span>
+      <div className="bg-white border-b border-slate-100 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+              <Icon d={Icons.scissors} size={16} stroke="white" />
+            </div>
+            <div>
+              <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
+              <div className="text-xs text-indigo-500 font-medium leading-tight">turnoStick</div>
+            </div>
+          </div>
+          <button onClick={() => navigate('/')} className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1">
+            <Icon d={Icons.home} size={13} /> Inicio
+          </button>
         </div>
-        <button onClick={() => navigate('/')} className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1">
-          <Icon d={Icons.home} size={15} /> Inicio
-        </button>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-8">
@@ -414,9 +421,11 @@ export default function Booking() {
                       desc={`Seña de ${fmt(senaAmt)} con tarjeta de crédito o débito`} />
                   )}
 
-                  {/* Pagar en el local */}
-                  <PayOption id="local" icon="🏠" title="Pagar en el local"
-                    desc="Acordás el pago directamente con el negocio" />
+                  {/* Pagar en el local — solo si no hay ningún otro método */}
+                  {!hasMp && !hasTransfer && (
+                    <PayOption id="local" icon="🏠" title="Pagar en el local"
+                      desc="Acordás el pago directamente con el negocio" />
+                  )}
                 </div>
               </div>
             )
