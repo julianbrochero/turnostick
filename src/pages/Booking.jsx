@@ -402,8 +402,8 @@ export default function Booking() {
                           <span className="font-bold text-indigo-700">{fmt(senaAmt)}</span>
                         </div>
                       )}
-                      <p className="text-xs text-indigo-600 bg-white rounded-lg px-3 py-2 border border-indigo-100">
-                        📌 Después de confirmar tu reserva, hacé la transferencia y el negocio te confirmará el turno.
+                      <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200 font-medium">
+                        ⏱️ Tenés 15 minutos para realizar la transferencia. Si no se recibe, el turno se cancela automáticamente.
                       </p>
                     </div>
                   )}
@@ -487,7 +487,7 @@ export default function Booking() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 text-center mb-5">
-                    Una vez que recibamos la transferencia, te confirmamos el turno por email a <strong>{selected.email}</strong>
+                    Una vez que recibamos la transferencia, te confirmamos el turno por email a <strong>{selected.email}</strong>. <span className="text-amber-600 font-semibold">Tenés 15 minutos para transferir, pasado ese tiempo el turno se cancela.</span>
                   </p>
                 </div>
               ) : (

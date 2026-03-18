@@ -928,21 +928,24 @@ export default function Admin() {
                   <p className="text-xs text-slate-400 mt-0.5">Feriados, días especiales o con horario distinto</p>
                 </div>
                 <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 space-y-3">
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
-                      <input type="date" value={newOverride.date} min={today()}
-                        onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-                    </div>
-                    <div className="flex items-center gap-2 pb-0.5">
-                      <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
-                        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                        <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
-                      </button>
-                      <span className="text-sm text-slate-700 whitespace-nowrap font-medium">{newOverride.is_open ? 'Abierto' : 'Cerrado'}</span>
-                    </div>
+                  {/* Fecha */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
+                    <input type="date" value={newOverride.date} min={today()}
+                      onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
                   </div>
+                  {/* Toggle abierto/cerrado */}
+                  <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2.5">
+                    <span className="text-sm font-medium text-slate-700">
+                      {newOverride.is_open ? '🟢 Abierto con horario especial' : '🔴 Cerrado todo el día'}
+                    </span>
+                    <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
+                      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                      <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  {/* Horarios (solo si abierto) */}
                   {newOverride.is_open && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
