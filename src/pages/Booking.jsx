@@ -177,9 +177,7 @@ export default function Booking() {
       <div className="bg-white border-b border-slate-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-              <Icon d={Icons.scissors} size={16} stroke="white" />
-            </div>
+            <img src="/logo.png" alt="turnoStick" className="w-8 h-8 shrink-0" />
             <div>
               <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
               <div className="text-xs text-indigo-500 font-medium leading-tight">turnoStick</div>
@@ -555,3 +553,4 @@ export default function Booking() {
     </div>
   )
 }
+
