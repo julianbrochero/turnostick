@@ -433,7 +433,7 @@ export default function Booking() {
                         </div>
                       )}
                       <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200 font-medium">
-                        ⏱️ Tenés 15 minutos para realizar la transferencia. Si no se recibe, el turno se cancela automáticamente.
+                        ⚠ Tenés 15 minutos para realizar la transferencia. Si no se recibe, el turno se cancela automáticamente.
                       </p>
                     </div>
                   )}
