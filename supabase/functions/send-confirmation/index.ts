@@ -51,6 +51,7 @@ serve(async (req: any) => {
 
       <!-- Detalles -->
       <div style="background:#f8fafc;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
         ${[
           ['📋 Servicio',   service],
           ['📅 Fecha',      fmtDate(date)],
@@ -60,11 +61,12 @@ serve(async (req: any) => {
           ...(business_address ? [['📍 Dirección', business_address]] : []),
           ...(business_phone   ? [['📞 Teléfono',  business_phone]]   : []),
         ].map(([label, value]) => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e2e8f0;">
-            <span style="color:#64748b;font-size:13px;">${label}</span>
-            <span style="color:#1e293b;font-size:13px;font-weight:600;text-align:right;max-width:60%;">${value}</span>
-          </div>
+          <tr>
+            <td style="padding:12px 0; border-bottom:1px solid #e2e8f0; color:#64748b; font-size:13px; width:40%; vertical-align:top;">${label}</td>
+            <td style="padding:12px 0; border-bottom:1px solid #e2e8f0; color:#1e293b; font-size:13px; font-weight:600; text-align:right; width:60%; vertical-align:top;">${value}</td>
+          </tr>
         `).join('')}
+        </table>
       </div>
 
       <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;">
