@@ -282,7 +282,7 @@ export default function Admin() {
     await updateStatus(booking.id, 'confirmed')
     const svc = services.find(s => s.id === booking.service_id)
     try {
-      const { error } = await supabase.functions.invoke('send-confirmation', {
+      const { data, error } = await supabase.functions.invoke('send-confirmation', {
         body: {
           to:               booking.client_email,
           client_name:      booking.client_name,
@@ -297,6 +297,7 @@ export default function Admin() {
         },
       })
       if (error) throw error
+      if (data?.error) throw new Error(data.error)
       notify('Turno confirmado y email enviado ✉️')
     } catch (err) {
       notify(`Confirmado, pero no se pudo enviar el email: ${err.message || 'Error desconocido'}`)
