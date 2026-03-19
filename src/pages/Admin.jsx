@@ -401,7 +401,7 @@ export default function Admin() {
   const paySubscription = async () => {
     setSubPaying(true)
     try {
-      const { data, error } = await supabase.functions.invoke('create-subscription-payment', {
+      const { data, error } = await supabase.functions.invoke('create-subs-payment', {
         body: { business_id: business.id },
       })
       if (error) throw new Error(error.message || JSON.stringify(error))
