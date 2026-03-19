@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@theme {
+  /* 
+    --- RESPALDO DEL COLOR ORIGINAL (AZUL VIOLETA / INDIGO) ---
+    Por si te arrepentís y querés volver al diseño anterior, solo tenés que
+    borrar o comentar todas estas variables "--color-indigo-..." que están 
+    aquí abajo y la página volverá a su color normal.
+  */
+
+  /* Novedoso verde lima basado en tu color #94D91C */
+  --color-indigo-50: #f7fee7;
+  --color-indigo-100: #ecfccb;
+  --color-indigo-200: #d9f99d;
+  --color-indigo-300: #bef264;
+  --color-indigo-400: #a3e635;
+  --color-indigo-500: #94d91c; /* Tu color exacto */
+  --color-indigo-600: #94d91c; /* Mapeo del mismo en 600 porque es el bg principal en la app */
+  --color-indigo-700: #7eb413; /* Un tono más oscuro para hovers */
+  --color-indigo-800: #3f6212;
+  --color-indigo-900: #365314;
+  --color-indigo-950: #1a2e05;
+}
+
 body {
   margin: 0;
 }
