@@ -470,11 +470,14 @@ export default function Admin() {
           {/* ── Banner de suscripción ── */}
           {sub.status === 'trial' && (
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-indigo-800">
-                  🎉 Prueba gratis — {sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''} restante{sub.daysLeft !== 1 ? 's' : ''}
-                </p>
-                <p className="text-xs text-indigo-600 mt-0.5">Después $14.999 ARS/mes para continuar</p>
+              <div className="flex items-start gap-3 min-w-0">
+                <img src="/logo.png" alt="turnoStick" className="w-5 h-5 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-indigo-800">
+                    Prueba gratis — {sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''} restante{sub.daysLeft !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs text-indigo-600 mt-0.5">Después $14.999 ARS/mes para continuar</p>
+                </div>
               </div>
               <button onClick={paySubscription} disabled={subPaying}
                 className="shrink-0 bg-indigo-600 text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60">
