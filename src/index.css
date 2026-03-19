@@ -8,18 +8,18 @@
     aquí abajo y la página volverá a su color normal.
   */
 
-  /* Nuevo verde basado en tu color #7BB517 */
-  --color-indigo-50: #f7fee7;
-  --color-indigo-100: #ecfccb;
-  --color-indigo-200: #d9f99d;
-  --color-indigo-300: #bef264;
-  --color-indigo-400: #a3e635;
-  --color-indigo-500: #7BB517; /* Tu color exacto */
-  --color-indigo-600: #7BB517; /* Mapeo del mismo en 600 porque es el bg principal en la app */
-  --color-indigo-700: #649312; /* Tono más oscuro para hovers */
-  --color-indigo-800: #3f6212;
-  --color-indigo-900: #365314;
-  --color-indigo-950: #1a2e05;
+  /* Nuevo verde basado en tu color #567E10 */
+  --color-indigo-50: #f0f8e0;
+  --color-indigo-100: #dff0b8;
+  --color-indigo-200: #c0e07a;
+  --color-indigo-300: #96c93d;
+  --color-indigo-400: #6fa014;
+  --color-indigo-500: #567E10; /* Tu color exacto */
+  --color-indigo-600: #567E10; /* Mapeo del mismo en 600 porque es el bg principal en la app */
+  --color-indigo-700: #43620d; /* Tono más oscuro para hovers */
+  --color-indigo-800: #2f4508;
+  --color-indigo-900: #1e2d04;
+  --color-indigo-950: #111902;
 
   /* Nuevo tono gris/oscuro para los detalles e iconos basado en tu color #31393C */
   --color-slate-50: #f4f6f7;
