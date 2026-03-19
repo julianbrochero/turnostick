@@ -8,15 +8,15 @@
     aquí abajo y la página volverá a su color normal.
   */
 
-  /* Nuevo verde lima basado en tu color #87C71A */
+  /* Nuevo verde basado en tu color #7BB517 */
   --color-indigo-50: #f7fee7;
   --color-indigo-100: #ecfccb;
   --color-indigo-200: #d9f99d;
   --color-indigo-300: #bef264;
   --color-indigo-400: #a3e635;
-  --color-indigo-500: #87C71A; /* Tu color exacto */
-  --color-indigo-600: #87C71A; /* Mapeo del mismo en 600 porque es el bg principal en la app */
-  --color-indigo-700: #70A516; /* Tono más oscuro para hovers */
+  --color-indigo-500: #7BB517; /* Tu color exacto */
+  --color-indigo-600: #7BB517; /* Mapeo del mismo en 600 porque es el bg principal en la app */
+  --color-indigo-700: #649312; /* Tono más oscuro para hovers */
   --color-indigo-800: #3f6212;
   --color-indigo-900: #365314;
   --color-indigo-950: #1a2e05;
