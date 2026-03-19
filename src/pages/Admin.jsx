@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -44,6 +44,9 @@ export default function Admin() {
   const [subPaying, setSubPaying]     = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null) // booking id to confirm delete
   const [filterDate, setFilterDate]   = useState(null)    // null = all dates
+  const [canScrollDaysLeft, setCanScrollDaysLeft] = useState(false)
+  const [canScrollDaysRight, setCanScrollDaysRight] = useState(false)
+  const dayPickerRef = useRef(null)
 
   // Booking modal
   const [showNewBooking, setShowNewBooking] = useState(false)
@@ -324,6 +327,36 @@ export default function Admin() {
   const filteredBookings = filterDate ? statusFiltered.filter(b => b.date === filterDate) : statusFiltered
   // Unique sorted dates from status-filtered bookings (for the day picker)
   const bookingDates = [...new Set(statusFiltered.map(b => b.date))].sort()
+  const bookingDatesKey = bookingDates.join('|')
+
+  const scrollDayPicker = (direction) => {
+    const el = dayPickerRef.current
+    if (!el) return
+    const step = Math.max(el.clientWidth * 0.7, 180)
+    el.scrollBy({ left: direction === 'left' ? -step : step, behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    if (view !== 'bookings') return
+    const el = dayPickerRef.current
+    if (!el) return
+
+    const updateScrollButtons = () => {
+      const maxScroll = el.scrollWidth - el.clientWidth
+      setCanScrollDaysLeft(el.scrollLeft > 2)
+      setCanScrollDaysRight(el.scrollLeft < maxScroll - 2)
+    }
+
+    const rafId = requestAnimationFrame(updateScrollButtons)
+    el.addEventListener('scroll', updateScrollButtons, { passive: true })
+    window.addEventListener('resize', updateScrollButtons)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      el.removeEventListener('scroll', updateScrollButtons)
+      window.removeEventListener('resize', updateScrollButtons)
+    }
+  }, [view, bookingDatesKey, filterDate])
 
   const stats = {
     total:     bookings.length,
@@ -619,30 +652,54 @@ export default function Admin() {
 
               {/* Day picker */}
               {bookingDates.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
-                  {bookingDates.map(d => {
-                    const dt    = new Date(d + 'T12:00')
-                    const day   = dt.toLocaleDateString('es-AR', { weekday: 'short' })
-                    const num   = dt.getDate()
-                    const month = dt.toLocaleDateString('es-AR', { month: 'short' })
-                    const isSelected = filterDate === d
-                    const isToday    = d === today()
-                    return (
-                      <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
-                        className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all flex-shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
-                        <span className={`text-xs capitalize ${isSelected ? 'text-indigo-500' : 'text-slate-500'}`}>{isToday ? 'Hoy' : day}</span>
-                        <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-indigo-600' : 'text-slate-900'}`}>{num}</span>
-                        <span className={`text-xs capitalize ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>{month}</span>
+                <div className="mb-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-slate-500">Filtrar por día</p>
+                    {filterDate && (
+                      <button onClick={() => setFilterDate(null)}
+                        className="text-xs text-indigo-600 font-semibold hover:underline">
+                        Ver todos
                       </button>
-                    )
-                  })}
-                  {filterDate && (
+                    )}
+                  </div>
+
+                  <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scroll-smooth">
                     <button onClick={() => setFilterDate(null)}
-                      className="flex flex-col items-center justify-center min-w-[52px] p-2 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 flex-shrink-0 text-xs gap-0.5">
-                      <Icon d={Icons.x} size={14} />
-                      <span>Todos</span>
+                      className={`flex flex-col items-center justify-center min-w-[62px] px-2 py-2 rounded-xl border transition-all flex-shrink-0 ${filterDate === null ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                      <span className={`text-xs ${filterDate === null ? 'text-indigo-500' : 'text-slate-500'}`}>Todos</span>
+                      <span className={`text-lg font-bold leading-tight ${filterDate === null ? 'text-indigo-700' : 'text-slate-800'}`}>·</span>
+                      <span className={`text-xs ${filterDate === null ? 'text-indigo-400' : 'text-slate-400'}`}>Días</span>
                     </button>
-                  )}
+
+                    {bookingDates.map(d => {
+                      const dt    = new Date(d + 'T12:00')
+                      const day   = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
+                      const num   = dt.getDate()
+                      const month = dt.toLocaleDateString('es-AR', { month: 'short' })
+                      const isSelected = filterDate === d
+                      const isToday    = d === today()
+                      return (
+                        <button key={d} onClick={() => setFilterDate(d)}
+                          className={`flex flex-col items-center justify-center min-w-[62px] px-2 py-2 rounded-xl border transition-all flex-shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                          <span className={`text-xs capitalize ${isSelected ? 'text-indigo-500' : 'text-slate-500'}`}>{isToday ? 'Hoy' : day}</span>
+                          <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{num}</span>
+                          <span className={`text-xs capitalize ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>{month}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="mt-1 flex items-center justify-between">
+                    <button type="button" onClick={() => scrollDayPicker('left')} disabled={!canScrollDaysLeft}
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      <span className="inline-flex rotate-180"><Icon d={Icons.arrow} size={12} /></span>
+                    </button>
+                    <p className="text-[11px] text-slate-400">Deslizá para ver más días</p>
+                    <button type="button" onClick={() => scrollDayPicker('right')} disabled={!canScrollDaysRight}
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      <Icon d={Icons.arrow} size={12} />
+                    </button>
+                  </div>
                 </div>
               )}
               {filteredBookings.length === 0
