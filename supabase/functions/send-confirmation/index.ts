@@ -83,6 +83,9 @@ serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY')
     if (!resendKey) throw new Error('RESEND_API_KEY no configurada')
 
+    const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'
+    const resendFromName = Deno.env.get('RESEND_FROM_NAME') || 'TurnoStick'
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -90,7 +93,7 @@ serve(async (req) => {
         'Content-Type':  'application/json',
       },
       body: JSON.stringify({
-        from:    'TurnoStick <turnos@turnostick.com>',
+        from:    `${resendFromName} <${resendFromEmail}>`,
         to:      [to],
         subject: `✅ Turno confirmado – ${business_name}`,
         html,
