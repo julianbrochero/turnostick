@@ -13,7 +13,7 @@ const fmtDate = (dateStr: string) =>
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
-serve(async (req) => {
+serve(async (req: any) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
@@ -109,8 +109,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
