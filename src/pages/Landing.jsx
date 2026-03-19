@@ -44,7 +44,7 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-            Más de 1.200 negocios en Latinoamérica
+            Más de 200 negocios en Argentina
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
             El sistema de turnos<br />
@@ -70,7 +70,7 @@ export default function Landing() {
       {/* STATS */}
       <section className="py-12 bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[['1.200+','Negocios activos'],['80%','Menos inasistencias'],['2 min','Para reservar'],['24/7','Disponibilidad']].map(([n, l]) => (
+          {[['200+','Negocios activos'],['80%','Menos inasistencias'],['1 min','Para reservar'],['24/7','Disponibilidad']].map(([n, l]) => (
             <div key={l}>
               <div className="text-3xl font-extrabold text-indigo-600 mb-1">{n}</div>
               <div className="text-sm text-slate-500">{l}</div>
@@ -90,7 +90,7 @@ export default function Landing() {
             {features.map(({ icon, title, desc }) => (
               <div key={title} className="p-6 border border-slate-100 rounded-2xl hover:border-indigo-200 hover:shadow-sm transition-all group">
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
-                  <Icon d={icon} size={20} stroke="#567E10" />
+                  <Icon d={icon} size={20} stroke="#4A6C0E" />
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">{title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
@@ -119,7 +119,7 @@ export default function Landing() {
                   {feats.map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${highlight ? 'bg-white/20' : 'bg-indigo-50'}`}>
-                        <Icon d={Icons.check} size={11} stroke={highlight ? 'white' : '#567E10'} />
+                        <Icon d={Icons.check} size={11} stroke={highlight ? 'white' : '#4A6C0E'} />
                       </div>
                       <span className={highlight ? 'text-white' : 'text-slate-700'}>{f}</span>
                     </li>
