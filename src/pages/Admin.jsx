@@ -55,7 +55,7 @@ export default function Admin() {
 
   // Service modal
   const [showNewService, setShowNewService] = useState(false)
-  const [newService, setNewService] = useState({ name: '', duration: 30, price: 0, color: '#6366f1', emoji: '✂️' })
+  const [newService, setNewService] = useState({ name: '', duration: 30, price: 0, color: '#7BB517', emoji: '✂️' })
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
@@ -175,7 +175,7 @@ export default function Admin() {
     if (error) { notify('Error al crear servicio'); return }
     setServices(prev => [...prev, data])
     setShowNewService(false)
-    setNewService({ name: '', duration: 30, price: 0, color: '#6366f1', emoji: '✂️' })
+    setNewService({ name: '', duration: 30, price: 0, color: '#7BB517', emoji: '✂️' })
     notify('Servicio creado')
   }
 
@@ -474,8 +474,8 @@ export default function Admin() {
           <nav className="p-3 space-y-1">
             {navItems.map(({ id, label, icon }) => (
               <button key={id} onClick={() => { setView(id); setMobileMenu(false) }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${view === id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                <Icon d={icon} size={17} stroke={view === id ? '#6366f1' : 'currentColor'} />
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${view === id ? 'bg-[#31393C] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}>
+                <Icon d={icon} size={17} stroke={view === id ? 'white' : 'currentColor'} />
                 {label}
               </button>
             ))}
@@ -561,7 +561,7 @@ export default function Admin() {
                 ].map(({ label, val, icon }) => (
                   <div key={label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 bg-indigo-50">
-                      <Icon d={icon} size={16} stroke="#6366f1" />
+                      <Icon d={icon} size={16} stroke="#7BB517" />
                     </div>
                     <div className="text-2xl font-bold text-slate-900 mb-0.5">{val}</div>
                     <div className="text-xs text-slate-500">{label}</div>
@@ -945,7 +945,7 @@ export default function Admin() {
                       <div>
                         <label className="block text-xs font-medium text-slate-700 mb-2">Color</label>
                         <div className="flex gap-2 flex-wrap">
-                          {['#6366f1','#ec4899','#14b8a6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16'].map(c => (
+                          {['#7BB517','#ec4899','#14b8a6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16'].map(c => (
                             <button key={c} onClick={() => setNewService(p => ({ ...p, color: c }))}
                               className={`w-8 h-8 rounded-lg border-2 transition-all ${newService.color === c ? 'border-slate-900 scale-110' : 'border-transparent'}`}
                               style={{ backgroundColor: c }} />

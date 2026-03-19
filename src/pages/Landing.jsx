@@ -90,7 +90,7 @@ export default function Landing() {
             {features.map(({ icon, title, desc }) => (
               <div key={title} className="p-6 border border-slate-100 rounded-2xl hover:border-indigo-200 hover:shadow-sm transition-all group">
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
-                  <Icon d={icon} size={20} stroke="#6366f1" />
+                  <Icon d={icon} size={20} stroke="#7BB517" />
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">{title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
@@ -119,7 +119,7 @@ export default function Landing() {
                   {feats.map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${highlight ? 'bg-white/20' : 'bg-indigo-50'}`}>
-                        <Icon d={Icons.check} size={11} stroke={highlight ? 'white' : '#6366f1'} />
+                        <Icon d={Icons.check} size={11} stroke={highlight ? 'white' : '#7BB517'} />
                       </div>
                       <span className={highlight ? 'text-white' : 'text-slate-700'}>{f}</span>
                     </li>

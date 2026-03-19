@@ -20,6 +20,19 @@
   --color-indigo-800: #3f6212;
   --color-indigo-900: #365314;
   --color-indigo-950: #1a2e05;
+
+  /* Nuevo tono gris/oscuro para los detalles e iconos basado en tu color #31393C */
+  --color-slate-50: #f4f6f7;
+  --color-slate-100: #e4e7e8;
+  --color-slate-200: #cdd3d6;
+  --color-slate-300: #aab4b8;
+  --color-slate-400: #809095;
+  --color-slate-500: #627278;
+  --color-slate-600: #4f5a5e;
+  --color-slate-700: #3f4a4e;
+  --color-slate-800: #31393C; /* El color exacto solicitado para la Landing y detalles */
+  --color-slate-900: #293033; /* Más oscuro para textos primarios */
+  --color-slate-950: #1a1e20;
 }
 
 body {
