@@ -6,9 +6,10 @@ import { useAuth } from '../contexts/AuthContext'
 
 export default function Landing() {
   const navigate = useNavigate()
-  const { user, business } = useAuth()
+  const { user, business, loading } = useAuth()
 
   const goToApp = () => {
+    if (loading) return
     if (user && business) navigate('/admin')
     else navigate('/register')
   }

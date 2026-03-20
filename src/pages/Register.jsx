@@ -20,7 +20,7 @@ const GoogleIcon = () => (
 )
 
 export default function Register() {
-  const { user, business, signInWithGoogle, createBusiness, updateBusiness } = useAuth()
+  const { user, business, loading: authLoading, signInWithGoogle, createBusiness, updateBusiness } = useAuth()
   const navigate = useNavigate()
 
   const [biz, setBiz]               = useState({ name: '', slug: '', address: '', phone: '' })
@@ -30,12 +30,13 @@ export default function Register() {
   const [showTrialModal, setShowTrialModal] = useState(false)
   const [startingTrial, setStartingTrial]   = useState(false)
 
-  // Si ya tiene negocio activo → admin (trial iniciado, suscripción activa o bloqueado)
+  // Si ya tiene negocio → admin (cualquier estado excepto recién creado sin trial)
   useEffect(() => {
+    if (authLoading) return
     if (user && business && (business.trial_ends_at || business.subscription_status === 'active' || business.subscription_status === 'blocked')) {
       navigate('/admin', { replace: true })
     }
-  }, [user, business])
+  }, [user, business, authLoading])
 
   const handleGoogle = async () => {
     setError('')
@@ -75,6 +76,13 @@ export default function Register() {
       navigate('/admin', { replace: true })
     }
   }
+
+  // ── Cargando auth ────────────────────────────────────────────────────────
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-6 h-6 border-2 border-[#31393C] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
 
   // ── Sin sesión: pantalla de Google ───────────────────────────────────────
   if (!user) return (
