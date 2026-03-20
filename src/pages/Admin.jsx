@@ -726,75 +726,60 @@ export default function Admin() {
                                 </span>
                               </div>
                               {/* Cards for this day */}
-                              <div className="space-y-2.5">
+                              <div className="space-y-2">
                                 {dayBookings.map(b => (
-                                  <div key={b.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${b.status === 'cancelled' ? 'border-red-100 opacity-60' : isToday ? 'border-indigo-100' : 'border-slate-100'}`}>
-                                    {/* Top row: time pill + avatar + name + status */}
-                                    <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
-                                      <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-slate-900' : 'bg-slate-100 text-slate-600'}`}>
-                                          {b.time}
-                                        </div>
-                                        <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
-                                          {b.client_name?.[0]?.toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0">
-                                          <div className="font-semibold text-slate-900 text-sm truncate">{b.client_name}</div>
-                                          <div className="text-xs text-slate-600 truncate">{b.client_email}</div>
-                                        </div>
+                                  <div key={b.id} className={`bg-white rounded-xl border overflow-hidden transition-all ${b.status === 'cancelled' ? 'border-red-100 opacity-60' : isToday ? 'border-indigo-100' : 'border-slate-100'}`}>
+                                    {/* Fila principal: hora + nombre + servicio + monto + status */}
+                                    <div className="flex items-center gap-2 px-3 py-2.5">
+                                      <span className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-slate-900' : 'bg-slate-100 text-slate-600'}`}>
+                                        {b.time}
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="font-semibold text-slate-900 text-sm truncate leading-tight">{b.client_name}</div>
+                                        <div className="text-xs text-slate-400 truncate leading-tight">{svcName(b.service_id)} · {fmt(b.amount)}</div>
                                       </div>
-                                      <StatusBadge status={b.status} />
-                                    </div>
-
-                                    {/* Service + amount row */}
-                                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 mx-3 rounded-xl mb-3">
-                                      <div className="text-xs font-medium text-slate-700">{svcName(b.service_id)}</div>
-                                      <div className="text-right">
-                                        <div className="text-sm font-bold text-slate-900">{fmt(b.amount)}</div>
-                                        {b.paid
-                                          ? <span className="text-xs text-emerald-600 font-medium">✓ Pagado</span>
-                                          : b.status !== 'cancelled' && (
-                                              <button onClick={() => markPaid(b.id)} className="text-xs text-amber-600 font-medium hover:underline">Marcar pagado</button>
-                                            )
-                                        }
+                                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        {b.paid && <span className="text-xs text-emerald-600 font-semibold hidden sm:block">✓</span>}
+                                        <StatusBadge status={b.status} />
                                       </div>
                                     </div>
 
-                                    {/* Actions row */}
-                                    <div className="flex items-center gap-2 px-4 pb-3">
+                                    {/* Fila de acciones compacta */}
+                                    <div className="flex items-center border-t border-slate-50">
                                       {b.status !== 'confirmed' && b.status !== 'cancelled' && (
                                         <button onClick={() => confirmAndNotify(b)}
-                                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition-colors">
-                                          <Icon d={Icons.check} size={13} stroke="#047857" /> Confirmar
+                                          className="flex-1 flex items-center justify-center gap-1 py-2 text-emerald-700 text-xs font-semibold hover:bg-emerald-50 transition-colors">
+                                          <Icon d={Icons.check} size={12} stroke="#047857" /> Confirmar
+                                        </button>
+                                      )}
+                                      {b.status !== 'cancelled' && !b.paid && (
+                                        <button onClick={() => markPaid(b.id)}
+                                          className="flex-1 flex items-center justify-center gap-1 py-2 text-amber-600 text-xs font-semibold hover:bg-amber-50 transition-colors border-l border-slate-50">
+                                          $ Pagado
                                         </button>
                                       )}
                                       {b.status !== 'cancelled' && (
                                         <button onClick={() => updateStatus(b.id, 'cancelled')}
-                                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 transition-colors">
-                                          <Icon d={Icons.x} size={13} stroke="#dc2626" /> Anular
+                                          className="flex-1 flex items-center justify-center gap-1 py-2 text-red-500 text-xs font-semibold hover:bg-red-50 transition-colors border-l border-slate-50">
+                                          <Icon d={Icons.x} size={12} stroke="#ef4444" /> Anular
                                         </button>
                                       )}
                                       {whatsappLink(b) && (
                                         <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
-                                          className="w-9 h-9 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors flex-shrink-0">
-                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                          className="w-9 flex items-center justify-center py-2 text-green-600 hover:bg-green-50 transition-colors border-l border-slate-50">
+                                          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                                         </a>
                                       )}
                                       {confirmDelete === b.id
-                                        ? <div className="flex items-center gap-1.5 ml-auto">
-                                            <span className="text-xs text-slate-500">¿Eliminar?</span>
+                                        ? <div className="flex items-center gap-1 px-2 border-l border-slate-50">
                                             <button onClick={() => { deleteBooking(b.id); setConfirmDelete(null) }}
-                                              className="px-2.5 py-1.5 bg-red-500 text-slate-900 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors">
-                                              Sí
-                                            </button>
+                                              className="px-2 py-1.5 bg-red-500 text-white rounded text-xs font-bold">Sí</button>
                                             <button onClick={() => setConfirmDelete(null)}
-                                              className="px-2.5 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold hover:bg-slate-200 transition-colors">
-                                              No
-                                            </button>
+                                              className="px-2 py-1.5 bg-slate-100 text-slate-600 rounded text-xs font-bold">No</button>
                                           </div>
                                         : <button onClick={() => setConfirmDelete(b.id)}
-                                            className="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-600 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0">
-                                            <Icon d={Icons.trash} size={14} />
+                                            className="w-9 flex items-center justify-center py-2 text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors border-l border-slate-50">
+                                            <Icon d={Icons.trash} size={13} />
                                           </button>
                                       }
                                     </div>
