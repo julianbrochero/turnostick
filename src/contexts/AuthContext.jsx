@@ -25,11 +25,12 @@ export function AuthProvider({ children }) {
   }, [])
 
   const fetchBusiness = async (userId) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('businesses')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
+    if (error) console.error('[fetchBusiness] error:', error.message, error.code)
     setBusiness(data ?? null)
     setLoading(false)
   }
