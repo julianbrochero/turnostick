@@ -507,10 +507,10 @@ export default function Admin() {
               <div className="flex items-start gap-3 min-w-0">
                 <img src="/logo.png" alt="turnoStick" className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-indigo-600">
+                  <p className="text-sm font-semibold text-slate-900">
                     Prueba gratis — {sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''} restante{sub.daysLeft !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-xs text-indigo-600 mt-0.5">Después $14.999 ARS/mes para continuar</p>
+                  <p className="text-xs text-slate-700 mt-0.5">Después $14.999 ARS/mes para continuar</p>
                 </div>
               </div>
               <button onClick={paySubscription} disabled={subPaying}
@@ -539,7 +539,7 @@ export default function Admin() {
                 📅 Tu suscripción vence en <strong>{sub.daysLeft} días</strong>
               </p>
               <button onClick={paySubscription} disabled={subPaying}
-                className="shrink-0 text-xs text-indigo-600 font-semibold hover:underline disabled:opacity-60">
+                className="shrink-0 text-xs text-slate-800 font-semibold hover:underline disabled:opacity-60">
                 {subPaying ? '...' : 'Renovar'}
               </button>
             </div>
@@ -560,7 +560,7 @@ export default function Admin() {
                   { label: 'Ingresos cobrados',  val: fmt(stats.revenue),   icon: Icons.dollar,   color: 'violet'  },
                 ].map(({ label, val, icon }) => (
                   <div key={label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 bg-indigo-50">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 bg-[#31393C]">
                       <Icon d={icon} size={16} stroke="#AAFF00" />
                     </div>
                     <div className="text-2xl font-bold text-slate-900 mb-0.5">{val}</div>
@@ -572,12 +572,12 @@ export default function Admin() {
               {/* Link rápido */}
               <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-4 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-indigo-600">Tu página de reservas está activa</div>
-                  <div className="text-xs text-indigo-600 mt-0.5">{bookingLink}</div>
+                  <div className="text-sm font-semibold text-slate-900">Tu página de reservas está activa</div>
+                  <div className="text-xs text-slate-700 mt-0.5">{bookingLink}</div>
                 </div>
                 <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
                   className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-medium px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
-                  <Icon d={Icons.copy} size={13} stroke="#1C1C1E" /> Copiar
+                  <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Copiar
                 </button>
               </div>
 
@@ -658,7 +658,7 @@ export default function Admin() {
                     <p className="text-xs font-medium text-slate-500">Filtrar por día</p>
                     {filterDate && (
                       <button onClick={() => setFilterDate(null)}
-                        className="text-xs text-indigo-600 font-semibold hover:underline">
+                        className="text-xs text-slate-800 font-semibold hover:underline">
                         Ver todos
                       </button>
                     )}
@@ -667,9 +667,9 @@ export default function Admin() {
                   <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scroll-smooth">
                     <button onClick={() => setFilterDate(null)}
                       className={`flex flex-col items-center justify-center min-w-[62px] px-2 py-2 rounded-xl border transition-all flex-shrink-0 ${filterDate === null ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                      <span className={`text-xs ${filterDate === null ? 'text-indigo-500' : 'text-slate-500'}`}>Todos</span>
-                      <span className={`text-lg font-bold leading-tight ${filterDate === null ? 'text-indigo-600' : 'text-slate-900'}`}>·</span>
-                      <span className={`text-xs ${filterDate === null ? 'text-indigo-400' : 'text-slate-600'}`}>Días</span>
+                      <span className={`text-xs ${filterDate === null ? 'text-slate-700' : 'text-slate-500'}`}>Todos</span>
+                      <span className="text-lg font-bold leading-tight text-slate-900">·</span>
+                      <span className={`text-xs ${filterDate === null ? 'text-slate-700' : 'text-slate-600'}`}>Días</span>
                     </button>
 
                     {bookingDates.map(d => {
@@ -682,9 +682,9 @@ export default function Admin() {
                       return (
                         <button key={d} onClick={() => setFilterDate(d)}
                           className={`flex flex-col items-center justify-center min-w-[62px] px-2 py-2 rounded-xl border transition-all flex-shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                          <span className={`text-xs capitalize ${isSelected ? 'text-indigo-500' : 'text-slate-500'}`}>{isToday ? 'Hoy' : day}</span>
-                          <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-indigo-600' : 'text-slate-900'}`}>{num}</span>
-                          <span className={`text-xs capitalize ${isSelected ? 'text-indigo-400' : 'text-slate-600'}`}>{month}</span>
+                          <span className={`text-xs capitalize ${isSelected ? 'text-slate-700' : 'text-slate-500'}`}>{isToday ? 'Hoy' : day}</span>
+                          <span className="text-lg font-bold leading-tight text-slate-900">{num}</span>
+                          <span className={`text-xs capitalize ${isSelected ? 'text-slate-700' : 'text-slate-600'}`}>{month}</span>
                         </button>
                       )
                     })}
@@ -726,7 +726,7 @@ export default function Admin() {
                               {/* Day header */}
                               <div className={`flex items-center gap-2 mb-3 ${isPast ? 'opacity-60' : ''}`}>
                                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isToday ? 'bg-indigo-500' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
-                                <span className={`text-sm font-bold capitalize ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>
+                                <span className={`text-sm font-bold capitalize ${isToday ? 'text-slate-900' : 'text-slate-700'}`}>
                                   {isToday ? 'Hoy — ' : ''}{dateLabel}
                                 </span>
                                 <span className="ml-auto text-xs text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
@@ -740,7 +740,7 @@ export default function Admin() {
                                     {/* Top row: time pill + avatar + name + status */}
                                     <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
                                       <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+                                        <div className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-slate-900' : 'bg-slate-100 text-slate-600'}`}>
                                           {b.time}
                                         </div>
                                         <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
@@ -1027,7 +1027,7 @@ export default function Admin() {
                   <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
                   <button onClick={saveSchedule}
                     className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
-                    <Icon d={Icons.check} size={13} stroke="#1C1C1E" /> Guardar
+                    <Icon d={Icons.check} size={13} stroke="#AAFF00" /> Guardar
                   </button>
                 </div>
                 <div className="divide-y divide-slate-50">

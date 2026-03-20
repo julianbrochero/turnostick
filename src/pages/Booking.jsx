@@ -177,8 +177,8 @@ export default function Booking() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔒</div>
-        <h1 className="text-xl font-bold text-white mb-2">Reservas no disponibles</h1>
-        <p className="text-slate-400 text-sm">Este negocio tiene su cuenta suspendida temporalmente.</p>
+        <h1 className="text-xl font-bold text-slate-900 mb-2">Reservas no disponibles</h1>
+        <p className="text-slate-600 text-sm">Este negocio tiene su cuenta suspendida temporalmente.</p>
       </div>
     </div>
   )
@@ -187,8 +187,8 @@ export default function Booking() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔍</div>
-        <h1 className="text-xl font-bold text-white mb-2">Página no encontrada</h1>
-        <p className="text-slate-400 text-sm mb-6">No existe ningún negocio con esa URL</p>
+        <h1 className="text-xl font-bold text-slate-900 mb-2">Página no encontrada</h1>
+        <p className="text-slate-600 text-sm mb-6">No existe ningún negocio con esa URL</p>
         <button onClick={() => navigate('/')} className="bg-indigo-600 text-slate-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
           Volver al inicio
         </button>
@@ -292,7 +292,7 @@ export default function Booking() {
                         disabled={closed}
                         className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all ${closed ? 'border-slate-100 opacity-40 cursor-not-allowed' : selected.date === d ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200'}`}>
                         <span className="text-xs text-slate-500 capitalize">{day}</span>
-                        <span className={`text-lg font-bold ${selected.date === d ? 'text-indigo-600' : 'text-slate-900'}`}>{num}</span>
+                        <span className="text-lg font-bold text-slate-900">{num}</span>
                         <span className="text-xs text-slate-400 capitalize">{month}</span>
                       </button>
                     )
@@ -553,7 +553,7 @@ export default function Booking() {
                 className="w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
                 Reservar otro turno
               </button>
-              <button onClick={() => navigate('/')} className="text-sm text-indigo-600 hover:underline flex justify-center">
+              <button onClick={() => navigate('/')} className="text-sm text-slate-600 hover:underline flex justify-center">
                 Volver al inicio
               </button>
             </div>
