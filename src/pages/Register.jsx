@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Icon, Icons } from '../components/Icon'
+import Logo from '../components/Logo'
 
 const slugify = (str) =>
   str.toLowerCase()
@@ -29,9 +30,11 @@ export default function Register() {
   const [showTrialModal, setShowTrialModal] = useState(false)
   const [startingTrial, setStartingTrial]   = useState(false)
 
-  // Si ya tiene negocio con trial activo → admin (ej. recarga de página)
+  // Si ya tiene negocio activo → admin (trial iniciado, suscripción activa o bloqueado)
   useEffect(() => {
-    if (user && business && business.trial_ends_at) navigate('/admin', { replace: true })
+    if (user && business && (business.trial_ends_at || business.subscription_status === 'active' || business.subscription_status === 'blocked')) {
+      navigate('/admin', { replace: true })
+    }
   }, [user, business])
 
   const handleGoogle = async () => {
@@ -78,7 +81,7 @@ export default function Register() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
+          <Logo size={48} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900">Crear cuenta gratis</h1>
           <p className="text-sm text-slate-500 mt-1">7 días gratis · Sin tarjeta de crédito</p>
         </div>
@@ -114,8 +117,8 @@ export default function Register() {
   if (showTrialModal) return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-xs text-center">
-        <div className="w-16 h-16 bg-[#31393C] rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <img src="/logo.png" alt="turnoStick" className="w-10 h-10" />
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <Logo size={64} />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-2">¡Tu negocio está listo!</h1>
         <p className="text-slate-500 text-sm mb-1">Tenés <strong className="text-slate-900">7 días gratis</strong> para probar todo.</p>
@@ -151,7 +154,7 @@ export default function Register() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
+          <Logo size={48} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900">¡Último paso!</h1>
           <p className="text-sm text-slate-500 mt-1">Configurá tu página de reservas</p>
         </div>
