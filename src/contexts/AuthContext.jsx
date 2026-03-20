@@ -29,9 +29,10 @@ export function AuthProvider({ children }) {
       .from('businesses')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle()
+      .order('created_at', { ascending: false })
+      .limit(1)
     if (error) console.error('[fetchBusiness] error:', error.message, error.code)
-    setBusiness(data ?? null)
+    setBusiness(data?.[0] ?? null)
     setLoading(false)
   }
 
