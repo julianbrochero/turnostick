@@ -19,17 +19,19 @@ const GoogleIcon = () => (
 )
 
 export default function Register() {
-  const { user, business, signInWithGoogle, createBusiness } = useAuth()
+  const { user, business, signInWithGoogle, createBusiness, updateBusiness } = useAuth()
   const navigate = useNavigate()
 
-  const [biz, setBiz]         = useState({ name: '', slug: '', address: '', phone: '' })
-  const [error, setError]     = useState('')
-  const [loading, setLoading] = useState(false)
+  const [biz, setBiz]               = useState({ name: '', slug: '', address: '', phone: '' })
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showTrialModal, setShowTrialModal] = useState(false)
+  const [startingTrial, setStartingTrial]   = useState(false)
 
-  // Si ya completó el negocio → admin
+  // Si ya tiene negocio con trial activo → admin (ej. recarga de página)
   useEffect(() => {
-    if (user && business) navigate('/admin', { replace: true })
+    if (user && business && business.trial_ends_at) navigate('/admin', { replace: true })
   }, [user, business])
 
   const handleGoogle = async () => {
@@ -37,7 +39,6 @@ export default function Register() {
     setGoogleLoading(true)
     try {
       await signInWithGoogle()
-      // Supabase redirige de vuelta aquí → el useEffect detecta user sin business
     } catch {
       setError('No se pudo conectar con Google. Intentá de nuevo.')
       setGoogleLoading(false)
@@ -51,7 +52,8 @@ export default function Register() {
     setLoading(true)
     try {
       await createBusiness(biz)
-      navigate('/admin')
+      // Mostrar modal para iniciar prueba — NO navegar todavía
+      setShowTrialModal(true)
     } catch (err) {
       if (err.code === '23505') setError('Esa URL ya está en uso, elegí otra')
       else setError(err.message)
@@ -60,23 +62,34 @@ export default function Register() {
     }
   }
 
+  const handleStartTrial = async () => {
+    setStartingTrial(true)
+    try {
+      const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      await updateBusiness({ trial_ends_at: trialEndsAt })
+      navigate('/admin', { replace: true })
+    } catch {
+      navigate('/admin', { replace: true })
+    }
+  }
+
   // ── Sin sesión: pantalla de Google ───────────────────────────────────────
   if (!user) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900">Crear cuenta gratis</h1>
-          <p className="text-sm text-slate-500 mt-1">30 turnos/mes · Sin tarjeta de crédito</p>
+          <p className="text-sm text-slate-500 mt-1">7 días gratis · Sin tarjeta de crédito</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
           {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">{error}</div>}
 
           <button onClick={handleGoogle} disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-slate-200 rounded-xl text-slate-700 font-semibold text-sm hover:border-indigo-300 hover:bg-indigo-50 transition-all disabled:opacity-60">
+            className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-slate-200 rounded-xl text-slate-700 font-semibold text-sm hover:border-slate-300 hover:bg-slate-50 transition-all disabled:opacity-60">
             {googleLoading
-              ? <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+              ? <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
               : <GoogleIcon />}
             {googleLoading ? 'Redirigiendo...' : 'Registrarse con Google'}
           </button>
@@ -97,9 +110,45 @@ export default function Register() {
     </div>
   )
 
+  // ── Modal de inicio de prueba ──────────────────────────────────────────────
+  if (showTrialModal) return (
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="w-full max-w-xs text-center">
+        <div className="w-16 h-16 bg-[#31393C] rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <img src="/logo.png" alt="turnoStick" className="w-10 h-10" />
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">¡Tu negocio está listo!</h1>
+        <p className="text-slate-500 text-sm mb-1">Tenés <strong className="text-slate-900">7 días gratis</strong> para probar todo.</p>
+        <p className="text-slate-400 text-xs mb-8">La prueba arranca cuando hagas clic.</p>
+
+        <div className="bg-slate-50 rounded-2xl p-5 mb-6 text-left space-y-3">
+          {[
+            'Reservas ilimitadas',
+            'Pagos anticipados online',
+            'Recordatorios automáticos',
+            'Sin tarjeta de crédito',
+          ].map(f => (
+            <div key={f} className="flex items-center gap-2.5 text-sm text-slate-700">
+              <div className="w-5 h-5 bg-[#31393C] rounded-full flex items-center justify-center shrink-0">
+                <Icon d={Icons.check} size={10} stroke="#AAFF00" />
+              </div>
+              {f}
+            </div>
+          ))}
+        </div>
+
+        <button onClick={handleStartTrial} disabled={startingTrial}
+          className="w-full py-3.5 bg-[#31393C] text-indigo-600 font-bold rounded-xl hover:bg-slate-700 transition-colors disabled:opacity-60 text-sm">
+          {startingTrial ? 'Iniciando...' : 'Iniciar prueba gratis →'}
+        </button>
+        <p className="text-xs text-slate-400 mt-3">Después $14.999 ARS/mes · Cancelá cuando quieras</p>
+      </div>
+    </div>
+  )
+
   // ── Con sesión pero sin negocio: configurar negocio ──────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
@@ -114,12 +163,12 @@ export default function Register() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Nombre del negocio *</label>
             <input type="text" value={biz.name} required placeholder="Ej: Peluquería Ana"
               onChange={e => setBiz(p => ({ ...p, name: e.target.value, slug: slugify(e.target.value) }))}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">URL de tu página *</label>
-            <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-300">
+            <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-slate-300">
               <span className="px-3 py-2.5 bg-slate-50 text-slate-400 text-xs border-r border-slate-200 whitespace-nowrap">turnostick.com/b/</span>
               <input type="text" value={biz.slug} required
                 onChange={e => setBiz(p => ({ ...p, slug: slugify(e.target.value) }))}
@@ -132,19 +181,19 @@ export default function Register() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Teléfono</label>
             <input type="tel" value={biz.phone} placeholder="+54 11 1234-5678"
               onChange={e => setBiz(p => ({ ...p, phone: e.target.value }))}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Dirección</label>
             <input type="text" value={biz.address} placeholder="Av. Corrientes 1234, CABA"
               onChange={e => setBiz(p => ({ ...p, address: e.target.value }))}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors disabled:opacity-60">
-            {loading ? 'Creando negocio...' : '¡Empezar ahora! →'}
+            className="w-full py-3 bg-[#31393C] text-indigo-600 rounded-xl font-bold text-sm hover:bg-slate-700 transition-colors disabled:opacity-60">
+            {loading ? 'Creando negocio...' : 'Continuar →'}
           </button>
         </form>
       </div>

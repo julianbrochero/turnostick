@@ -377,25 +377,20 @@ export default function Admin() {
   // ── Subscription status ─────────────────────────────────────────────────────
   const getSubStatus = () => {
     if (!business) return { status: 'trial', daysLeft: 7 }
-    const now  = new Date()
-    const raw  = business.subscription_status || 'trial'
-
+    const now = new Date()
+    const raw = business.subscription_status || 'trial'
     const diffDays = (date) => Math.ceil((new Date(date) - now) / 86400000)
 
     if (raw === 'active') {
       const left = diffDays(business.subscription_expires_at)
-      if (left > 1)  return { status: 'active', daysLeft: left }
-      if (left >= 0) return { status: 'grace',  daysLeft: left }
+      if (left > 0) return { status: 'active', daysLeft: left }
       return { status: 'blocked' }
     }
     if (raw === 'blocked') return { status: 'blocked' }
-    // trial (default)
-    const trialEnd = business.trial_ends_at
-      ? new Date(business.trial_ends_at)
-      : new Date(Date.now() + 7 * 86400000)
-    const left = diffDays(trialEnd)
-    if (left > 1)  return { status: 'trial', daysLeft: left }
-    if (left >= 0) return { status: 'grace',  daysLeft: left }
+    // trial — si no arrancó todavía, no bloquear
+    if (!business.trial_ends_at) return { status: 'pending_trial' }
+    const left = diffDays(business.trial_ends_at)
+    if (left > 0) return { status: 'trial', daysLeft: left }
     return { status: 'blocked' }
   }
 
@@ -501,17 +496,28 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ── Banner de suscripción ── */}
-          {sub.status === 'trial' && (
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <img src="/logo.png" alt="turnoStick" className="w-5 h-5 shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Prueba gratis — {sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''} restante{sub.daysLeft !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-xs text-slate-700 mt-0.5">Después $14.999 ARS/mes para continuar</p>
-                </div>
+          {/* ── Banners de suscripción ── */}
+          {sub.status === 'trial' && sub.daysLeft <= 2 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-red-700">
+                  ⚠️ Tu prueba vence {sub.daysLeft === 1 ? 'mañana' : 'en 2 días'} — activá tu plan para no perder el acceso
+                </p>
+                <p className="text-xs text-red-500 mt-0.5">$14.999 ARS/mes · Sin interrupciones</p>
+              </div>
+              <button onClick={paySubscription} disabled={subPaying}
+                className="shrink-0 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-60 whitespace-nowrap">
+                {subPaying ? '...' : 'Activar ahora'}
+              </button>
+            </div>
+          )}
+          {sub.status === 'trial' && sub.daysLeft > 2 && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img src="/logo.png" alt="" className="w-5 h-5 shrink-0" />
+                <p className="text-sm text-slate-700">
+                  Prueba gratis — <strong>{sub.daysLeft} días restantes</strong>
+                </p>
               </div>
               <button onClick={paySubscription} disabled={subPaying}
                 className="shrink-0 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-60">
@@ -519,27 +525,13 @@ export default function Admin() {
               </button>
             </div>
           )}
-          {sub.status === 'grace' && (
-            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-amber-800">
-                  ⚠️ Último día — tu cuenta se bloquea mañana
-                </p>
-                <p className="text-xs text-amber-700 mt-0.5">Activá tu suscripción ahora para no perder el acceso</p>
-              </div>
-              <button onClick={paySubscription} disabled={subPaying}
-                className="shrink-0 bg-amber-500 text-slate-900 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-60">
-                {subPaying ? '...' : 'Pagar ahora'}
-              </button>
-            </div>
-          )}
           {sub.status === 'active' && sub.daysLeft <= 5 && (
             <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
               <p className="text-xs text-slate-600">
-                📅 Tu suscripción vence en <strong>{sub.daysLeft} días</strong>
+                📅 Tu suscripción vence en <strong>{sub.daysLeft} día{sub.daysLeft !== 1 ? 's' : ''}</strong>
               </p>
               <button onClick={paySubscription} disabled={subPaying}
-                className="shrink-0 text-xs text-slate-800 font-semibold hover:underline disabled:opacity-60">
+                className="shrink-0 text-xs text-[#31393C] font-semibold hover:underline disabled:opacity-60">
                 {subPaying ? '...' : 'Renovar'}
               </button>
             </div>

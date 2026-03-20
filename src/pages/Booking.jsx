@@ -212,12 +212,11 @@ export default function Booking() {
     const status = business.subscription_status || 'trial'
     if (status === 'blocked') return true
     if (status === 'active') {
-      const exp = new Date(business.subscription_expires_at)
-      return (exp - now) / 86400000 < -1
+      return new Date(business.subscription_expires_at) <= now
     }
-    // trial
-    const trialEnd = business.trial_ends_at ? new Date(business.trial_ends_at) : new Date(Date.now() + 7 * 86400000)
-    return (trialEnd - now) / 86400000 < -1
+    // trial — si no arrancó todavía, no bloquear
+    if (!business.trial_ends_at) return false
+    return new Date(business.trial_ends_at) <= now
   }
 
   if (isBusinessBlocked()) return (
