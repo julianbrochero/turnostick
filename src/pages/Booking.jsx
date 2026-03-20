@@ -207,7 +207,7 @@ export default function Booking() {
             </div>
             <div>
               <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
-              <div className="text-xs text-indigo-600 font-medium leading-tight">turnoStick</div>
+              <div className="text-xs text-slate-800 font-semibold leading-tight tracking-wide">turnoStick</div>
             </div>
           </div>
           <button onClick={() => navigate('/')} className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1">
