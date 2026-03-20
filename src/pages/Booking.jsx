@@ -202,8 +202,8 @@ export default function Booking() {
       <div className="bg-white border-b border-slate-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#31393C] rounded-lg flex items-center justify-center shrink-0">
-              <img src="/logo.png" alt="turnoStick" className="w-6 h-6" />
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <img src="/logo.png" alt="turnoStick" className="w-8 h-8" />
             </div>
             <div>
               <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
