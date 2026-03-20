@@ -8,18 +8,18 @@
     aquí abajo y la página volverá a su color normal.
   */
 
-  /* Nuevo verde basado en tu color #4A6C0E */
-  --color-indigo-50: #f0f8e0;
-  --color-indigo-100: #dff0b8;
-  --color-indigo-200: #c0e07a;
-  --color-indigo-300: #96c93d;
-  --color-indigo-400: #6fa014;
-  --color-indigo-500: #4A6C0E; /* Tu color exacto */
-  --color-indigo-600: #4A6C0E; /* Mapeo del mismo en 600 porque es el bg principal en la app */
-  --color-indigo-700: #43620d; /* Tono más oscuro para hovers */
-  --color-indigo-800: #2f4508;
-  --color-indigo-900: #1e2d04;
-  --color-indigo-950: #111902;
+  /* Verde flúor / neon sobre grafito */
+  --color-indigo-50:  #f2ffd9;
+  --color-indigo-100: #e4ff9e;
+  --color-indigo-200: #ccff55;
+  --color-indigo-300: #bbff1a;
+  --color-indigo-400: #AAFF00;
+  --color-indigo-500: #AAFF00;
+  --color-indigo-600: #AAFF00; /* verde flúor principal */
+  --color-indigo-700: #88CC00; /* hover */
+  --color-indigo-800: #5a8800;
+  --color-indigo-900: #334d00;
+  --color-indigo-950: #1a2900;
 
   /* Nuevo tono gris/oscuro para los detalles e iconos basado en tu color #31393C */
   --color-slate-50: #f4f6f7;

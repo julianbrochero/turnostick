@@ -153,7 +153,7 @@ export default function Booking() {
   const svc = services.find(s => s.id === selected.service)
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E]">
       <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
     </div>
   )
@@ -174,22 +174,22 @@ export default function Booking() {
   }
 
   if (isBusinessBlocked()) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔒</div>
-        <h1 className="text-xl font-bold text-slate-900 mb-2">Reservas no disponibles</h1>
-        <p className="text-slate-500 text-sm">Este negocio tiene su cuenta suspendida temporalmente.</p>
+        <h1 className="text-xl font-bold text-white mb-2">Reservas no disponibles</h1>
+        <p className="text-slate-400 text-sm">Este negocio tiene su cuenta suspendida temporalmente.</p>
       </div>
     </div>
   )
 
   if (notFound) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔍</div>
-        <h1 className="text-xl font-bold text-slate-900 mb-2">Página no encontrada</h1>
-        <p className="text-slate-500 text-sm mb-6">No existe ningún negocio con esa URL</p>
-        <button onClick={() => navigate('/')} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
+        <h1 className="text-xl font-bold text-white mb-2">Página no encontrada</h1>
+        <p className="text-slate-400 text-sm mb-6">No existe ningún negocio con esa URL</p>
+        <button onClick={() => navigate('/')} className="bg-indigo-600 text-slate-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
           Volver al inicio
         </button>
       </div>
@@ -197,18 +197,20 @@ export default function Booking() {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1C1C1E]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3">
+      <div className="bg-[#242424] border-b border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="turnoStick" className="w-8 h-8 shrink-0" />
+            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center shrink-0">
+              <img src="/logo.png" alt="turnoStick" className="w-6 h-6" />
+            </div>
             <div>
-              <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
-              <div className="text-xs text-indigo-500 font-medium leading-tight">turnoStick</div>
+              <div className="font-bold text-white text-sm leading-tight">{business?.name}</div>
+              <div className="text-xs text-indigo-600 font-medium leading-tight">turnoStick</div>
             </div>
           </div>
-          <button onClick={() => navigate('/')} className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1">
+          <button onClick={() => navigate('/')} className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1">
             <Icon d={Icons.home} size={13} /> Inicio
           </button>
         </div>
@@ -220,15 +222,15 @@ export default function Booking() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               {['Servicio','Fecha','Datos','Pago'].map((label, i) => (
-                <div key={label} className={`flex items-center gap-1 text-xs font-medium ${i + 1 <= step ? 'text-indigo-600' : 'text-slate-400'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i + 1 < step ? 'bg-indigo-600 text-white' : i + 1 === step ? 'bg-indigo-100 text-indigo-600 border-2 border-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                    {i + 1 < step ? <Icon d={Icons.check} size={12} stroke="white" /> : i + 1}
+                <div key={label} className={`flex items-center gap-1 text-xs font-medium ${i + 1 <= step ? 'text-indigo-600' : 'text-slate-600'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i + 1 < step ? 'bg-indigo-600 text-slate-900' : i + 1 === step ? 'bg-indigo-600 text-slate-900' : 'bg-slate-800 text-slate-500'}`}>
+                    {i + 1 < step ? <Icon d={Icons.check} size={12} stroke="#1C1C1E" /> : i + 1}
                   </div>
                   <span className="hidden sm:block">{label}</span>
                 </div>
               ))}
             </div>
-            <div className="h-1 bg-slate-200 rounded-full">
+            <div className="h-1 bg-slate-800 rounded-full">
               <div className="h-1 bg-indigo-600 rounded-full transition-all" style={{ width: `${((step - 1) / 3) * 100}%` }} />
             </div>
           </div>
@@ -305,7 +307,7 @@ export default function Booking() {
                   : <div className="grid grid-cols-4 gap-2">
                       {slots.map(t => (
                         <button key={t} onClick={() => setSelected(p => ({ ...p, time: t }))}
-                          className={`py-2 rounded-lg text-sm font-medium border transition-all ${selected.time === t ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50'}`}>
+                          className={`py-2 rounded-lg text-sm font-medium border transition-all ${selected.time === t ? 'bg-indigo-600 text-slate-900 font-bold border-indigo-600' : 'border-slate-200 text-slate-700 hover:border-indigo-600 hover:bg-indigo-50'}`}>
                           {t}
                         </button>
                       ))}
@@ -330,7 +332,7 @@ export default function Booking() {
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
                     <input type={type} placeholder={placeholder} value={selected[key]}
                       onChange={e => setSelected(p => ({ ...p, [key]: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent" />
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent" />
                   </div>
                 ))}
               </div>
@@ -548,7 +550,7 @@ export default function Booking() {
               )}
 
               <button onClick={() => { setStep(1); setSelected({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' }) }}
-                className="w-full py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
+                className="w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
                 Reservar otro turno
               </button>
               <button onClick={() => navigate('/')} className="text-sm text-indigo-600 hover:underline flex justify-center">
@@ -568,7 +570,7 @@ export default function Booking() {
               <button
                 onClick={() => step < 4 ? setStep(s => s + 1) : confirmBooking()}
                 disabled={!canNext() || submitting || mpLoading}
-                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
                 {submitting || mpLoading ? (mpLoading ? 'Redirigiendo a MercadoPago...' : 'Confirmando...') : step === 4 ? (selected.payMethod === 'mercadopago' ? 'Confirmar y pagar seña →' : 'Confirmar reserva →') : 'Continuar →'}
               </button>
             </div>
