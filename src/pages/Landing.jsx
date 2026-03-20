@@ -19,22 +19,22 @@ export default function Landing() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#1C1C1E] font-sans">
+    <div className="min-h-screen bg-white font-sans">
       {/* NAV */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-[#1C1C1E]/90 backdrop-blur-md border-b border-slate-800">
+      <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="turnoStick" className="w-8 h-8" />
-            <span className="font-bold text-white text-lg tracking-tight">turnoStick</span>
+            <span className="font-bold text-slate-900 text-lg tracking-tight">turnoStick</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-slate-400">
+          <div className="hidden md:flex items-center gap-8 text-sm text-slate-600">
             <a href="#features" className="hover:text-indigo-600 transition-colors">Características</a>
             <a href="#pricing"  className="hover:text-indigo-600 transition-colors">Precios</a>
             <a href="#reviews"  className="hover:text-indigo-600 transition-colors">Reseñas</a>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/login')}    className="text-sm text-slate-400 hover:text-indigo-600 transition-colors font-medium">Ingresar</button>
-            <button onClick={() => navigate('/register')} className="bg-indigo-600 text-slate-900 text-sm font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">Comenzar gratis</button>
+            <button onClick={() => navigate('/login')}    className="text-sm text-slate-600 hover:text-indigo-600 transition-colors font-medium">Ingresar</button>
+            <button onClick={() => navigate('/register')} className="bg-[#31393C] text-indigo-600 text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors">Comenzar gratis</button>
           </div>
         </div>
       </nav>
@@ -42,38 +42,38 @@ export default function Landing() {
       {/* HERO */}
       <section className="pt-28 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
             <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse" />
             Más de 200 negocios en Argentina
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
             El sistema de turnos<br />
             <span className="text-indigo-600">que simplifica</span> tu negocio
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
             Agenda online 24/7, cobros anticipados y recordatorios automáticos para peluquerías, barberías, consultorios y más.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={() => navigate('/register')} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-slate-900 font-bold px-7 py-3.5 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
+            <button onClick={() => navigate('/register')} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#31393C] text-indigo-600 font-bold px-7 py-3.5 rounded-xl hover:bg-slate-700 transition-all shadow-lg">
               Empezar gratis
-              <Icon d={Icons.arrow} size={18} stroke="#1C1C1E" />
+              <Icon d={Icons.arrow} size={18} stroke="#AAFF00" />
             </button>
-            <button onClick={() => navigate('/login')} className="w-full sm:w-auto flex items-center justify-center gap-2 border border-slate-700 text-slate-300 font-semibold px-7 py-3.5 rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all">
+            <button onClick={() => navigate('/login')} className="w-full sm:w-auto flex items-center justify-center gap-2 border border-slate-200 text-slate-700 font-semibold px-7 py-3.5 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-all">
               <Icon d={Icons.eye} size={18} />
               Ver demo
             </button>
           </div>
-          <p className="text-xs text-slate-600 mt-4">Sin tarjeta de crédito · 7 días gratis · Configuración en 5 minutos</p>
+          <p className="text-xs text-slate-400 mt-4">Sin tarjeta de crédito · 7 días gratis · Configuración en 5 minutos</p>
         </div>
       </section>
 
       {/* STATS */}
-      <section className="py-12 bg-[#242424]">
+      <section className="py-12 bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[['200+','Negocios activos'],['80%','Menos inasistencias'],['1 min','Para reservar'],['24/7','Disponibilidad']].map(([n, l]) => (
             <div key={l}>
               <div className="text-3xl font-extrabold text-indigo-600 mb-1">{n}</div>
-              <div className="text-sm text-slate-400">{l}</div>
+              <div className="text-sm text-slate-500">{l}</div>
             </div>
           ))}
         </div>
@@ -83,17 +83,17 @@ export default function Landing() {
       <section id="features" className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-white mb-3">Todo lo que necesitás en un solo lugar</h2>
-            <p className="text-slate-400">Funcionalidades pensadas para negocios argentinos</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">Todo lo que necesitás en un solo lugar</h2>
+            <p className="text-slate-500">Funcionalidades pensadas para negocios argentinos</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {features.map(({ icon, title, desc }) => (
-              <div key={title} className="p-6 border border-slate-700 rounded-2xl hover:border-indigo-600 hover:shadow-sm transition-all group bg-[#242424]">
-                <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-50 transition-colors">
+              <div key={title} className="p-6 border border-slate-100 rounded-2xl hover:border-slate-200 hover:shadow-sm transition-all group">
+                <div className="w-10 h-10 bg-[#31393C] rounded-xl flex items-center justify-center mb-4">
                   <Icon d={icon} size={20} stroke="#AAFF00" />
                 </div>
-                <h3 className="font-semibold text-white mb-2">{title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
+                <h3 className="font-semibold text-slate-900 mb-2">{title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -101,31 +101,31 @@ export default function Landing() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-20 px-6 bg-[#242424]">
+      <section id="pricing" className="py-20 px-6 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-white mb-3">Precios simples y transparentes</h2>
-            <p className="text-slate-400">Sin costos ocultos ni comisiones por reserva</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">Precios simples y transparentes</h2>
+            <p className="text-slate-500">Sin costos ocultos ni comisiones por reserva</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {plans.map(({ name, price, period, highlight, features: feats }) => (
-              <div key={name} className={`rounded-2xl p-8 ${highlight ? 'bg-[#1C1C1E] border-2 border-indigo-600 shadow-xl shadow-indigo-600/20' : 'bg-[#2A2A2A] border border-slate-700'}`}>
-                <div className={`text-sm font-semibold mb-1 ${highlight ? 'text-indigo-600' : 'text-slate-400'}`}>{name}</div>
+              <div key={name} className={`rounded-2xl p-8 ${highlight ? 'bg-[#31393C] text-white shadow-xl' : 'bg-white border border-slate-200'}`}>
+                <div className={`text-sm font-semibold mb-1 ${highlight ? 'text-indigo-600' : 'text-slate-500'}`}>{name}</div>
                 <div className="flex items-end gap-1 mb-6">
-                  <span className="text-4xl font-extrabold text-white">{price}</span>
-                  <span className={`text-sm mb-1 ${highlight ? 'text-slate-400' : 'text-slate-500'}`}>{period}</span>
+                  <span className="text-4xl font-extrabold">{price}</span>
+                  <span className={`text-sm mb-1 ${highlight ? 'text-slate-400' : 'text-slate-400'}`}>{period}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {feats.map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
                         <Icon d={Icons.check} size={11} stroke="#AAFF00" />
                       </div>
-                      <span className="text-slate-300">{f}</span>
+                      <span className={highlight ? 'text-slate-300' : 'text-slate-700'}>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => navigate('/register')} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${highlight ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-slate-900'}`}>
+                <button onClick={() => navigate('/register')} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${highlight ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'bg-[#31393C] text-indigo-600 hover:bg-slate-700'}`}>
                   {name === 'Prueba' ? 'Probar 7 días gratis' : 'Suscribirme ahora'}
                 </button>
               </div>
@@ -138,7 +138,7 @@ export default function Landing() {
       <section id="reviews" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-white mb-3">Lo que dicen nuestros clientes</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">Lo que dicen nuestros clientes</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -146,14 +146,14 @@ export default function Landing() {
               { name: 'Ricardo P.',  role: 'Barbería en Medellín',       text: 'Mis clientes adoran poder reservar a cualquier hora desde el celu. Súper fácil de configurar.' },
               { name: 'Valentina R.',role: 'Centro de Estética en Santiago', text: 'Gestiono 3 profesionales y todas las sucursales desde un solo panel. Excelente.' },
             ].map(({ name, role, text }) => (
-              <div key={name} className="p-6 border border-slate-700 rounded-2xl bg-[#242424]">
+              <div key={name} className="p-6 border border-slate-100 rounded-2xl">
                 <div className="flex gap-0.5 mb-4">
                   {[...Array(5)].map((_, i) => <Icon key={i} d={Icons.star} size={14} fill="#fbbf24" stroke="#fbbf24" />)}
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed mb-4">"{text}"</p>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">"{text}"</p>
                 <div>
-                  <div className="font-semibold text-white text-sm">{name}</div>
-                  <div className="text-xs text-slate-500">{role}</div>
+                  <div className="font-semibold text-slate-900 text-sm">{name}</div>
+                  <div className="text-xs text-slate-400">{role}</div>
                 </div>
               </div>
             ))}
@@ -162,17 +162,17 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6 bg-indigo-600">
+      <section className="py-20 px-6 bg-[#31393C]">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">¡Empezá gratis hoy mismo!</h2>
-          <p className="text-slate-800 mb-8">7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
-          <button onClick={() => navigate('/register')} className="bg-slate-900 text-indigo-600 font-bold px-8 py-4 rounded-xl hover:bg-slate-800 transition-colors shadow-lg border border-slate-700">
+          <h2 className="text-3xl font-bold text-white mb-4">¡Empezá gratis hoy mismo!</h2>
+          <p className="text-slate-400 mb-8">7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
+          <button onClick={() => navigate('/register')} className="bg-indigo-600 text-slate-900 font-bold px-8 py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg">
             Crear cuenta gratuita →
           </button>
         </div>
       </section>
 
-      <footer className="py-8 px-6 text-center text-sm text-slate-500 border-t border-slate-800">
+      <footer className="py-8 px-6 text-center text-sm text-slate-400 border-t border-slate-100">
         © 2025 TurnoStick · Todos los derechos reservados
       </footer>
     </div>

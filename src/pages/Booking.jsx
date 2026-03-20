@@ -153,7 +153,7 @@ export default function Booking() {
   const svc = services.find(s => s.id === selected.service)
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E]">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
     </div>
   )
@@ -174,7 +174,7 @@ export default function Booking() {
   }
 
   if (isBusinessBlocked()) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔒</div>
         <h1 className="text-xl font-bold text-white mb-2">Reservas no disponibles</h1>
@@ -184,7 +184,7 @@ export default function Booking() {
   )
 
   if (notFound) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="text-center">
         <div className="text-5xl mb-4">🔍</div>
         <h1 className="text-xl font-bold text-white mb-2">Página no encontrada</h1>
@@ -197,20 +197,20 @@ export default function Booking() {
   )
 
   return (
-    <div className="min-h-screen bg-[#1C1C1E]">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-[#242424] border-b border-slate-800 px-4 py-3">
+      <div className="bg-white border-b border-slate-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 bg-[#31393C] rounded-lg flex items-center justify-center shrink-0">
               <img src="/logo.png" alt="turnoStick" className="w-6 h-6" />
             </div>
             <div>
-              <div className="font-bold text-white text-sm leading-tight">{business?.name}</div>
+              <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
               <div className="text-xs text-indigo-600 font-medium leading-tight">turnoStick</div>
             </div>
           </div>
-          <button onClick={() => navigate('/')} className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1">
+          <button onClick={() => navigate('/')} className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1">
             <Icon d={Icons.home} size={13} /> Inicio
           </button>
         </div>
@@ -222,15 +222,15 @@ export default function Booking() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               {['Servicio','Fecha','Datos','Pago'].map((label, i) => (
-                <div key={label} className={`flex items-center gap-1 text-xs font-medium ${i + 1 <= step ? 'text-indigo-600' : 'text-slate-600'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i + 1 < step ? 'bg-indigo-600 text-slate-900' : i + 1 === step ? 'bg-indigo-600 text-slate-900' : 'bg-slate-800 text-slate-500'}`}>
-                    {i + 1 < step ? <Icon d={Icons.check} size={12} stroke="#1C1C1E" /> : i + 1}
+                <div key={label} className={`flex items-center gap-1 text-xs font-medium ${i + 1 <= step ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i + 1 < step ? 'bg-[#31393C] text-indigo-600' : i + 1 === step ? 'bg-indigo-600 text-slate-900' : 'bg-slate-100 text-slate-400'}`}>
+                    {i + 1 < step ? <Icon d={Icons.check} size={12} stroke="#AAFF00" /> : i + 1}
                   </div>
                   <span className="hidden sm:block">{label}</span>
                 </div>
               ))}
             </div>
-            <div className="h-1 bg-slate-800 rounded-full">
+            <div className="h-1 bg-slate-200 rounded-full">
               <div className="h-1 bg-indigo-600 rounded-full transition-all" style={{ width: `${((step - 1) / 3) * 100}%` }} />
             </div>
           </div>
@@ -570,7 +570,7 @@ export default function Booking() {
               <button
                 onClick={() => step < 4 ? setStep(s => s + 1) : confirmBooking()}
                 disabled={!canNext() || submitting || mpLoading}
-                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
+                className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-[#31393C] text-indigo-600 hover:bg-slate-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
                 {submitting || mpLoading ? (mpLoading ? 'Redirigiendo a MercadoPago...' : 'Confirmando...') : step === 4 ? (selected.payMethod === 'mercadopago' ? 'Confirmar y pagar seña →' : 'Confirmar reserva →') : 'Continuar →'}
               </button>
             </div>
