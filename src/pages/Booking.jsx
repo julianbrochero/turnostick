@@ -21,7 +21,7 @@ const generateSlots = (openTime, closeTime, interval = 30) => {
 }
 
 // Devuelve los slots disponibles para una fecha concreta
-const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = []) => {
+const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = [], bookedSlots = []) => {
   const override = overrides.find(o => o.date === date)
   let slots
   if (override) {
@@ -37,6 +37,7 @@ const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurrin
   const blocked = new Set([
     ...blockedSlots.filter(b => b.date === date).map(b => b.time),
     ...recurringBlocked.filter(b => b.day_of_week === dow).map(b => b.time),
+    ...bookedSlots.filter(b => b.date === date).map(b => b.time),
   ])
   return slots.filter(s => !blocked.has(s))
 }
@@ -51,6 +52,7 @@ export default function Booking() {
   const [overrides, setOverrides]   = useState([])
   const [blockedSlots, setBlockedSlots]         = useState([])
   const [recurringBlocked, setRecurringBlocked] = useState([])
+  const [bookedSlots, setBookedSlots]           = useState([])  // turnos ya confirmados/pendientes
   const [notFound, setNotFound]   = useState(false)
   const [loading, setLoading]     = useState(true)
 
@@ -58,6 +60,7 @@ export default function Booking() {
   const [selected, setSelected] = useState({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' })
   const [submitting, setSubmitting] = useState(false)
   const [mpLoading, setMpLoading]   = useState(false)
+  const [reservationId, setReservationId] = useState(null)  // ID del hold temporal
 
   // Check MP redirect callback
   useEffect(() => {
@@ -82,18 +85,26 @@ export default function Booking() {
     if (error || !biz) { setNotFound(true); setLoading(false); return }
     setBusiness(biz)
 
-    const [svcsRes, schRes, ovRes, blRes, rbRes] = await Promise.all([
+    const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    const [svcsRes, schRes, ovRes, blRes, rbRes, bkRes] = await Promise.all([
       supabase.from('services').select('*').eq('business_id', biz.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', biz.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', biz.id).gte('date', today()),
       supabase.from('blocked_slots').select('*').eq('business_id', biz.id).gte('date', today()),
       supabase.from('recurring_blocked_slots').select('*').eq('business_id', biz.id),
+      supabase.from('bookings').select('date, time, status, created_at')
+        .eq('business_id', biz.id).neq('status', 'cancelled').gte('date', today()),
     ])
     setServices(svcsRes.data || [])
     setSchedules(schRes.data || [])
     setOverrides(ovRes.data || [])
     setBlockedSlots(blRes.data || [])
     setRecurringBlocked(rbRes.data || [])
+    // Filtrar: reservados activos (< 10 min) + confirmados/pendientes
+    const rawBookings = bkRes.data || []
+    setBookedSlots(rawBookings.filter(b =>
+      b.status !== 'reserved' || new Date(b.created_at) > new Date(tenMinsAgo)
+    ))
     setLoading(false)
   }
 
@@ -114,25 +125,61 @@ export default function Booking() {
     return true
   }
 
+  // Reserva temporal del slot al pasar al paso 3
+  const reserveSlot = async () => {
+    const svc = services.find(s => s.id === selected.service)
+    const { data, error } = await supabase.from('bookings').insert({
+      business_id:    business.id,
+      service_id:     selected.service,
+      date:           selected.date,
+      time:           selected.time,
+      status:         'reserved',
+      client_name:    '',
+      client_email:   '',
+      paid:           false,
+      amount:         svc?.price || 0,
+    }).select('id').single()
+    if (!error && data) {
+      setReservationId(data.id)
+      // Marcarlo localmente como reservado para que otros no lo vean
+      setBookedSlots(prev => [...prev, { date: selected.date, time: selected.time, status: 'reserved', created_at: new Date().toISOString() }])
+    }
+    return { error }
+  }
+
+  // Libera el hold si el usuario retrocede o abandona
+  const releaseSlot = async (id) => {
+    const rid = id ?? reservationId
+    if (!rid) return
+    await supabase.from('bookings').delete().eq('id', rid)
+    setReservationId(null)
+    setBookedSlots(prev => prev.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')))
+  }
+
   const confirmBooking = async () => {
     setSubmitting(true)
     const svc = services.find(s => s.id === selected.service)
     const isMp = selected.payMethod === 'mercadopago'
 
-    const { data: booking, error } = await supabase.from('bookings').insert({
-      business_id:    business.id,
-      service_id:     selected.service,
+    // Actualizar la reserva temporal → booking real
+    const payload = {
       client_name:    selected.name,
       client_email:   selected.email,
       client_phone:   selected.phone,
-      date:           selected.date,
-      time:           selected.time,
       status:         isMp ? 'pending_payment' : 'pending',
       paid:           false,
       amount:         svc?.price || 0,
       payment_method: selected.payMethod,
       payment_status: isMp ? 'pending' : 'unpaid',
-    }).select().single()
+    }
+    let booking, error
+    if (reservationId) {
+      const res = await supabase.from('bookings').update(payload).eq('id', reservationId).select().single()
+      booking = res.data; error = res.error
+    } else {
+      const res = await supabase.from('bookings').insert({ business_id: business.id, service_id: selected.service, date: selected.date, time: selected.time, ...payload }).select().single()
+      booking = res.data; error = res.error
+    }
 
     setSubmitting(false)
     if (error) { alert('Error al reservar, intentá de nuevo'); return }
@@ -276,7 +323,7 @@ export default function Booking() {
 
           {/* Step 2 — Fecha y hora */}
           {step === 2 && (() => {
-            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked)
+            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')))
             const isClosedDay = slots.length === 0
             return (
               <div>
@@ -285,7 +332,7 @@ export default function Booking() {
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
                   {days.map(d => {
                     const { day, num, month } = fmtDay(d)
-                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked)
+                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots)
                     const closed   = daySlots.length === 0
                     return (
                       <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}
@@ -563,12 +610,25 @@ export default function Booking() {
           {step < 5 && (
             <div className="flex gap-3 mt-6">
               {step > 1 && (
-                <button onClick={() => setStep(s => s - 1)} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors">
+                <button onClick={async () => {
+                  if (step === 3) await releaseSlot()
+                  setStep(s => s - 1)
+                }} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors">
                   ← Volver
                 </button>
               )}
               <button
-                onClick={() => step < 4 ? setStep(s => s + 1) : confirmBooking()}
+                onClick={async () => {
+                  if (step === 2) {
+                    const { error } = await reserveSlot()
+                    if (error) { alert('Este turno acaba de ser tomado. Elegí otro horario.'); return }
+                    setStep(3)
+                  } else if (step < 4) {
+                    setStep(s => s + 1)
+                  } else {
+                    confirmBooking()
+                  }
+                }}
                 disabled={!canNext() || submitting || mpLoading}
                 className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${canNext() && !submitting && !mpLoading ? 'bg-[#31393C] text-indigo-600 hover:bg-slate-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
                 {submitting || mpLoading ? (mpLoading ? 'Redirigiendo a MercadoPago...' : 'Confirmando...') : step === 4 ? (selected.payMethod === 'mercadopago' ? 'Confirmar y pagar seña →' : 'Confirmar reserva →') : 'Continuar →'}
