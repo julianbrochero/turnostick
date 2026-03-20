@@ -6,14 +6,17 @@ import { Icon, Icons } from '../components/Icon'
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 const today = () => new Date().toISOString().split('T')[0]
 
+const timeToMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+
 // Genera slots cada `interval` minutos entre open y close
+// Solo muestra slots donde el servicio entra completo antes del cierre
 const generateSlots = (openTime, closeTime, interval = 30) => {
   const slots = []
   const [oh, om] = openTime.split(':').map(Number)
   const [ch, cm] = closeTime.split(':').map(Number)
   let cur = oh * 60 + om
   const end = ch * 60 + cm
-  while (cur < end) {
+  while (cur + interval <= end) {
     slots.push(`${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`)
     cur += interval
   }
@@ -21,25 +24,42 @@ const generateSlots = (openTime, closeTime, interval = 30) => {
 }
 
 // Devuelve los slots disponibles para una fecha concreta
-const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = [], bookedSlots = []) => {
+// serviceMap: { [service_id]: { duration } } para calcular solapamientos de turnos existentes
+const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = [], bookedSlots = [], serviceDuration = 30, serviceMap = {}) => {
   const override = overrides.find(o => o.date === date)
   let slots
   if (override) {
     if (!override.is_open) return []
-    slots = generateSlots(override.open_time, override.close_time)
+    slots = generateSlots(override.open_time, override.close_time, serviceDuration)
   } else {
     const dow = new Date(date + 'T12:00').getDay()
     const sch = schedules.find(s => s.day_of_week === dow)
     if (!sch || !sch.is_open) return []
-    slots = generateSlots(sch.open_time, sch.close_time)
+    slots = generateSlots(sch.open_time, sch.close_time, serviceDuration)
   }
   const dow = new Date(date + 'T12:00').getDay()
-  const blocked = new Set([
+
+  // Slots fijos bloqueados (sin duración)
+  const fixedBlocked = new Set([
     ...blockedSlots.filter(b => b.date === date).map(b => b.time),
     ...recurringBlocked.filter(b => b.day_of_week === dow).map(b => b.time),
-    ...bookedSlots.filter(b => b.date === date).map(b => b.time),
   ])
-  return slots.filter(s => !blocked.has(s))
+
+  // Turnos ya reservados de ese día, con su duración para detectar solapamientos
+  const dayBookings = bookedSlots.filter(b => b.date === date)
+
+  return slots.filter(slot => {
+    if (fixedBlocked.has(slot)) return false
+    const slotStart = timeToMins(slot)
+    const slotEnd   = slotStart + serviceDuration
+    // Un slot está bloqueado si se solapa con cualquier turno existente
+    return !dayBookings.some(b => {
+      const bDuration = serviceMap[b.service_id]?.duration || serviceDuration
+      const bStart    = timeToMins(b.time)
+      const bEnd      = bStart + bDuration
+      return slotStart < bEnd && bStart < slotEnd
+    })
+  })
 }
 
 export default function Booking() {
@@ -92,7 +112,7 @@ export default function Booking() {
       supabase.from('schedule_overrides').select('*').eq('business_id', biz.id).gte('date', today()),
       supabase.from('blocked_slots').select('*').eq('business_id', biz.id).gte('date', today()),
       supabase.from('recurring_blocked_slots').select('*').eq('business_id', biz.id),
-      supabase.from('bookings').select('date, time, status, created_at')
+      supabase.from('bookings').select('date, time, status, created_at, service_id')
         .eq('business_id', biz.id).neq('status', 'cancelled').gte('date', today()),
     ])
     setServices(svcsRes.data || [])
@@ -142,7 +162,7 @@ export default function Booking() {
     if (!error && data) {
       setReservationId(data.id)
       // Marcarlo localmente como reservado para que otros no lo vean
-      setBookedSlots(prev => [...prev, { date: selected.date, time: selected.time, status: 'reserved', created_at: new Date().toISOString() }])
+      setBookedSlots(prev => [...prev, { date: selected.date, time: selected.time, status: 'reserved', created_at: new Date().toISOString(), service_id: selected.service }])
     }
     return { error }
   }
@@ -197,7 +217,9 @@ export default function Booking() {
     }
   }
 
-  const svc = services.find(s => s.id === selected.service)
+  const svc        = services.find(s => s.id === selected.service)
+  const svcDuration = svc?.duration || 30
+  const serviceMap  = Object.fromEntries(services.map(s => [s.id, s]))
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -322,7 +344,7 @@ export default function Booking() {
 
           {/* Step 2 — Fecha y hora */}
           {step === 2 && (() => {
-            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')))
+            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')), svcDuration, serviceMap)
             const isClosedDay = slots.length === 0
             return (
               <div>
@@ -331,7 +353,7 @@ export default function Booking() {
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
                   {days.map(d => {
                     const { day, num, month } = fmtDay(d)
-                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots)
+                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots, svcDuration, serviceMap)
                     const closed   = daySlots.length === 0
                     return (
                       <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}
