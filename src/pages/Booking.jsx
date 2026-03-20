@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Icon, Icons } from '../components/Icon'
+import Logo from '../components/Logo'
 
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 const today = () => new Date().toISOString().split('T')[0]
@@ -24,8 +25,8 @@ const generateSlots = (openTime, closeTime, interval = 30) => {
 }
 
 // Devuelve los slots disponibles para una fecha concreta
-// serviceMap: { [service_id]: { duration } } para calcular solapamientos de turnos existentes
-const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = [], bookedSlots = [], serviceDuration = 30, serviceMap = {}) => {
+// serviceMap: { [service_id]: { duration, quantity } } para solapamientos y capacidad
+const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurringBlocked = [], bookedSlots = [], serviceDuration = 30, serviceMap = {}, serviceQuantity = 1) => {
   const override = overrides.find(o => o.date === date)
   let slots
   if (override) {
@@ -39,26 +40,26 @@ const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurrin
   }
   const dow = new Date(date + 'T12:00').getDay()
 
-  // Slots fijos bloqueados (sin duración)
   const fixedBlocked = new Set([
     ...blockedSlots.filter(b => b.date === date).map(b => b.time),
     ...recurringBlocked.filter(b => b.day_of_week === dow).map(b => b.time),
   ])
 
-  // Turnos ya reservados de ese día, con su duración para detectar solapamientos
   const dayBookings = bookedSlots.filter(b => b.date === date)
 
   return slots.filter(slot => {
     if (fixedBlocked.has(slot)) return false
     const slotStart = timeToMins(slot)
     const slotEnd   = slotStart + serviceDuration
-    // Un slot está bloqueado si se solapa con cualquier turno existente
-    return !dayBookings.some(b => {
+    // Contar bookings del mismo servicio que se solapan con este slot
+    const overlapCount = dayBookings.filter(b => {
       const bDuration = serviceMap[b.service_id]?.duration || serviceDuration
       const bStart    = timeToMins(b.time)
       const bEnd      = bStart + bDuration
       return slotStart < bEnd && bStart < slotEnd
-    })
+    }).length
+    // Disponible si hay capacidad libre (quantity > bookings solapados)
+    return overlapCount < serviceQuantity
   })
 }
 
@@ -217,8 +218,9 @@ export default function Booking() {
     }
   }
 
-  const svc        = services.find(s => s.id === selected.service)
+  const svc         = services.find(s => s.id === selected.service)
   const svcDuration = svc?.duration || 30
+  const svcQuantity = svc?.quantity || 1
   const serviceMap  = Object.fromEntries(services.map(s => [s.id, s]))
 
   if (loading) return (
@@ -270,8 +272,8 @@ export default function Booking() {
       <div className="bg-white border-b border-slate-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center shrink-0">
-              <img src="/logo.png" alt="turnoStick" className="w-8 h-8" />
+            <div className="flex items-center justify-center shrink-0">
+              <Logo size={32} />
             </div>
             <div>
               <div className="font-bold text-slate-900 text-sm leading-tight">{business?.name}</div>
@@ -344,7 +346,7 @@ export default function Booking() {
 
           {/* Step 2 — Fecha y hora */}
           {step === 2 && (() => {
-            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')), svcDuration, serviceMap)
+            const slots = getSlotsForDate(selected.date, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots.filter(b => !(b.date === selected.date && b.time === selected.time && b.status === 'reserved')), svcDuration, serviceMap, svcQuantity)
             const isClosedDay = slots.length === 0
             return (
               <div>
@@ -353,7 +355,7 @@ export default function Booking() {
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
                   {days.map(d => {
                     const { day, num, month } = fmtDay(d)
-                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots, svcDuration, serviceMap)
+                    const daySlots = getSlotsForDate(d, schedules, overrides, blockedSlots, recurringBlocked, bookedSlots, svcDuration, serviceMap, svcQuantity)
                     const closed   = daySlots.length === 0
                     return (
                       <button key={d} onClick={() => !closed && setSelected(p => ({ ...p, date: d, time: null }))}

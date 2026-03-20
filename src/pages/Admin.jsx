@@ -56,7 +56,7 @@ export default function Admin() {
 
   // Service modal
   const [showNewService, setShowNewService] = useState(false)
-  const [newService, setNewService] = useState({ name: '', duration: '30', price: '', color: '#4A6C0E', emoji: '✂️' })
+  const [newService, setNewService] = useState({ name: '', duration: '30', price: '', quantity: '1', color: '#4A6C0E', emoji: '✂️' })
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
@@ -172,12 +172,12 @@ export default function Admin() {
   // ── Service CRUD ────────────────────────────────────────────────────────────
   const addService = async () => {
     if (!newService.name) return
-    const payload = { ...newService, duration: parseInt(newService.duration) || 30, price: parseFloat(newService.price) || 0 }
+    const payload = { ...newService, duration: parseInt(newService.duration) || 30, price: parseFloat(newService.price) || 0, quantity: parseInt(newService.quantity) || 1 }
     const { data, error } = await supabase.from('services').insert({ business_id: business.id, ...payload }).select().single()
     if (error) { notify('Error al crear servicio'); return }
     setServices(prev => [...prev, data])
     setShowNewService(false)
-    setNewService({ name: '', duration: '30', price: '', color: '#4A6C0E', emoji: '✂️' })
+    setNewService({ name: '', duration: '30', price: '', quantity: '1', color: '#4A6C0E', emoji: '✂️' })
     notify('Servicio creado')
   }
 
@@ -872,6 +872,7 @@ export default function Admin() {
                             <div className="text-sm text-slate-500 flex items-center gap-3 mt-0.5">
                               <span className="flex items-center gap-1"><Icon d={Icons.clock} size={12} stroke="#94a3b8" /> {s.duration} min</span>
                               <span className="font-medium text-slate-700">{fmt(s.price)}</span>
+                              {s.quantity > 1 && <span className="flex items-center gap-1 text-indigo-600 font-medium">×{s.quantity}</span>}
                             </div>
                             <div className="text-xs mt-1 text-slate-600">{bookings.filter(b => b.service_id === s.id).length} reservas</div>
                           </div>
@@ -898,7 +899,7 @@ export default function Admin() {
                         <input type="text" value={newService.name} onChange={e => setNewService(p => ({ ...p, name: e.target.value }))}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Duración (min)</label>
                           <input type="text" inputMode="numeric" value={newService.duration} placeholder="30"
@@ -909,6 +910,12 @@ export default function Admin() {
                           <label className="block text-xs font-medium text-slate-700 mb-1">Precio (ARS)</label>
                           <input type="text" inputMode="numeric" value={newService.price} placeholder="0"
                             onChange={e => setNewService(p => ({ ...p, price: e.target.value }))}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Cantidad</label>
+                          <input type="text" inputMode="numeric" value={newService.quantity} placeholder="1"
+                            onChange={e => setNewService(p => ({ ...p, quantity: e.target.value }))}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
                         </div>
                       </div>
