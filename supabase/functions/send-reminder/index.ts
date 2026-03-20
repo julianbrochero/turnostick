@@ -9,9 +9,18 @@ const fmtDate = (dateStr: string) =>
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
+const horasTexto = (date: string, time: string): string => {
+  const turno = new Date(`${date}T${time}:00-03:00`)
+  const diff  = Math.round((turno.getTime() - Date.now()) / (1000 * 60 * 60))
+  if (diff <= 1)  return 'en menos de 1 hora'
+  if (diff === 2) return 'en 2 horas'
+  return `en ${diff} horas`
+}
+
 const buildHtml = (p: {
   client_name: string, service: string, date: string, time: string,
   amount: number, business_name: string, business_phone: string, business_address: string,
+  horas: string,
 }) => `
 <!DOCTYPE html>
 <html lang="es">
@@ -24,14 +33,14 @@ const buildHtml = (p: {
       <div style="width:48px;height:48px;background:rgba(170,255,0,.15);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
         <span style="font-size:22px;">⏰</span>
       </div>
-      <h1 style="color:#AAFF00;margin:0;font-size:22px;font-weight:700;">Recordatorio de turno</h1>
+      <h1 style="color:#AAFF00;margin:0;font-size:22px;font-weight:700;">Tu turno es ${p.horas}</h1>
       <p style="color:#a0aab0;margin:6px 0 0;font-size:14px;">${p.business_name}</p>
     </div>
 
     <!-- Body -->
     <div style="padding:28px 32px;">
       <p style="color:#475569;font-size:15px;margin:0 0 24px;">
-        Hola <strong style="color:#1e293b;">${p.client_name}</strong>, te recordamos que en pocas horas tenés un turno reservado:
+        Hola <strong style="color:#1e293b;">${p.client_name}</strong>, te recordamos que tenés un turno <strong style="color:#1e293b;">${p.horas}</strong>:
       </p>
 
       <!-- Detalles -->
@@ -127,13 +136,14 @@ serve(async (req: any) => {
       const svc = (b as any).services
 
       try {
+        const horas = horasTexto(b.date, b.time)
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from:    `${fromName} <${fromEmail}>`,
             to:      [b.client_email],
-            subject: `⏰ Recordatorio: tu turno en ${biz.name} es hoy`,
+            subject: `⏰ Tu turno en ${biz.name} es ${horas}`,
             html: buildHtml({
               client_name:      b.client_name,
               service:          svc?.name ?? 'Servicio',
@@ -143,6 +153,7 @@ serve(async (req: any) => {
               business_name:    biz.name,
               business_phone:   biz.phone,
               business_address: biz.address,
+              horas,
             }),
           }),
         })
