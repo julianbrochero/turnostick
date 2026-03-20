@@ -55,7 +55,7 @@ export default function Admin() {
 
   // Service modal
   const [showNewService, setShowNewService] = useState(false)
-  const [newService, setNewService] = useState({ name: '', duration: 30, price: 0, color: '#4A6C0E', emoji: '✂️' })
+  const [newService, setNewService] = useState({ name: '', duration: '30', price: '', color: '#4A6C0E', emoji: '✂️' })
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
@@ -171,11 +171,12 @@ export default function Admin() {
   // ── Service CRUD ────────────────────────────────────────────────────────────
   const addService = async () => {
     if (!newService.name) return
-    const { data, error } = await supabase.from('services').insert({ business_id: business.id, ...newService }).select().single()
+    const payload = { ...newService, duration: parseInt(newService.duration) || 30, price: parseFloat(newService.price) || 0 }
+    const { data, error } = await supabase.from('services').insert({ business_id: business.id, ...payload }).select().single()
     if (error) { notify('Error al crear servicio'); return }
     setServices(prev => [...prev, data])
     setShowNewService(false)
-    setNewService({ name: '', duration: 30, price: 0, color: '#4A6C0E', emoji: '✂️' })
+    setNewService({ name: '', duration: '30', price: '', color: '#4A6C0E', emoji: '✂️' })
     notify('Servicio creado')
   }
 
@@ -899,12 +900,14 @@ export default function Admin() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Duración (min)</label>
-                          <input type="number" value={newService.duration} onChange={e => setNewService(p => ({ ...p, duration: +e.target.value }))}
+                          <input type="text" inputMode="numeric" value={newService.duration} placeholder="30"
+                            onChange={e => setNewService(p => ({ ...p, duration: e.target.value }))}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Precio (ARS)</label>
-                          <input type="number" value={newService.price} onChange={e => setNewService(p => ({ ...p, price: +e.target.value }))}
+                          <input type="text" inputMode="numeric" value={newService.price} placeholder="0"
+                            onChange={e => setNewService(p => ({ ...p, price: e.target.value }))}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
                         </div>
                       </div>
