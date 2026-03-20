@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Icons } from '../components/Icon'
+import Logo from '../components/Logo'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -37,7 +38,7 @@ export default function Landing() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="turnoStick" className="w-8 h-8" />
+            <Logo size={32} />
             <span className="font-bold text-slate-900 text-lg tracking-tight">turnoStick</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-slate-600">

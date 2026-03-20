@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Icon, Icons } from '../components/Icon'
+import Logo from '../components/Logo'
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -40,7 +41,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="turnoStick" className="w-12 h-12 mx-auto mb-4" />
+          <Logo size={48} className="mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900">turnoStick</h1>
           <p className="text-sm text-slate-500 mt-1">Ingresá a tu panel de administración</p>
         </div>
