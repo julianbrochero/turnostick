@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Icon, Icons } from '../components/Icon'
 import StatusBadge from '../components/StatusBadge'
+import Logo from '../components/Logo'
 
 const TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00']
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
@@ -32,7 +33,7 @@ const fmtDay = (d) => {
 }
 
 export default function Admin() {
-  const { business, signOut, updateBusiness } = useAuth()
+  const { user, business, signOut, updateBusiness } = useAuth()
   const navigate = useNavigate()
 
   const [view, setView]               = useState('dashboard')
@@ -445,7 +446,7 @@ export default function Admin() {
           <Icon d={Icons.menu} size={20} stroke="#9ca3af" />
         </button>
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="turnoStick" className="w-7 h-7" />
+          <Logo size={28} />
           <span className="font-bold text-slate-900 text-sm">turnoStick</span>
           <span className="text-xs bg-indigo-50 text-slate-900 px-2 py-0.5 rounded-full font-bold">Admin</span>
         </div>
@@ -515,7 +516,7 @@ export default function Admin() {
           {sub.status === 'trial' && sub.daysLeft > 2 && (
             <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <img src="/logo.png" alt="" className="w-5 h-5 shrink-0" />
+                <Logo size={20} />
                 <p className="text-sm text-slate-700">
                   Prueba gratis — <strong>{sub.daysLeft} días restantes</strong>
                 </p>
@@ -1247,6 +1248,22 @@ export default function Admin() {
             <div>
               <h1 className="text-xl font-bold text-slate-900 mb-6">Configuración</h1>
               <div className="grid gap-4 max-w-2xl">
+
+                {/* Cuenta */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Cuenta</h3>
+                  <div className="flex items-center gap-3">
+                    {user?.user_metadata?.avatar_url
+                      ? <img src={user.user_metadata.avatar_url} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                      : <div className="w-10 h-10 rounded-full bg-[#31393C] flex items-center justify-center text-indigo-600 font-bold text-sm">{user?.email?.[0]?.toUpperCase()}</div>
+                    }
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">{user?.user_metadata?.full_name || 'Usuario'}</div>
+                      <div className="text-xs text-slate-500">{user?.email}</div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
                   <h3 className="font-semibold text-slate-900 mb-4 text-sm">Información del negocio</h3>
                   <div className="space-y-3">
