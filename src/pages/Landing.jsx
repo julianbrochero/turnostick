@@ -1,8 +1,21 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Icons } from '../components/Icon'
 
 export default function Landing() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) }
+      }),
+      { threshold: 0.12 }
+    )
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   const features = [
     { icon: Icons.calendar, title: 'Agenda Digital 24/7',       desc: 'Tus clientes reservan en cualquier momento desde cualquier dispositivo.' },
@@ -42,18 +55,18 @@ export default function Landing() {
       {/* HERO */}
       <section className="pt-28 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+          <div className="reveal inline-flex items-center gap-2 bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
             <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse" />
             Más de 200 negocios en Argentina
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6">
+          <h1 className="reveal text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight mb-6" style={{ transitionDelay: '80ms' }}>
             El sistema de turnos<br />
             <span className="text-indigo-600">que simplifica</span> tu negocio
           </h1>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="reveal text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed" style={{ transitionDelay: '160ms' }}>
             Agenda online 24/7, cobros anticipados y recordatorios automáticos para peluquerías, barberías, consultorios y más.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="reveal flex flex-col sm:flex-row items-center justify-center gap-4" style={{ transitionDelay: '240ms' }}>
             <button onClick={() => navigate('/register')} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#31393C] text-indigo-600 font-bold px-7 py-3.5 rounded-xl hover:bg-slate-700 transition-all shadow-lg">
               Empezar gratis
               <Icon d={Icons.arrow} size={18} stroke="#AAFF00" />
@@ -63,15 +76,15 @@ export default function Landing() {
               Ver demo
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-4">Sin tarjeta de crédito · 7 días gratis · Configuración en 5 minutos</p>
+          <p className="reveal text-xs text-slate-400 mt-4" style={{ transitionDelay: '320ms' }}>Sin tarjeta de crédito · 7 días gratis · Configuración en 5 minutos</p>
         </div>
       </section>
 
       {/* STATS */}
       <section className="py-12 bg-slate-50">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[['200+','Negocios activos'],['80%','Menos inasistencias'],['1 min','Para reservar'],['24/7','Disponibilidad']].map(([n, l]) => (
-            <div key={l}>
+          {[['200+','Negocios activos'],['80%','Menos inasistencias'],['1 min','Para reservar'],['24/7','Disponibilidad']].map(([n, l], i) => (
+            <div key={l} className="reveal" style={{ transitionDelay: `${i * 80}ms` }}>
               <div className="text-3xl font-extrabold text-indigo-600 mb-1">{n}</div>
               <div className="text-sm text-slate-500">{l}</div>
             </div>
@@ -83,12 +96,12 @@ export default function Landing() {
       <section id="features" className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-slate-900 mb-3">Todo lo que necesitás en un solo lugar</h2>
-            <p className="text-slate-500">Funcionalidades pensadas para negocios argentinos</p>
+            <h2 className="reveal text-3xl font-bold text-slate-900 mb-3">Todo lo que necesitás en un solo lugar</h2>
+            <p className="reveal text-slate-500" style={{ transitionDelay: '80ms' }}>Funcionalidades pensadas para negocios argentinos</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {features.map(({ icon, title, desc }) => (
-              <div key={title} className="p-6 border border-slate-100 rounded-2xl hover:border-slate-200 hover:shadow-sm transition-all group">
+            {features.map(({ icon, title, desc }, i) => (
+              <div key={title} className="reveal p-6 border border-slate-100 rounded-2xl hover:border-slate-200 hover:shadow-sm transition-all group" style={{ transitionDelay: `${i * 80}ms` }}>
                 <div className="w-10 h-10 bg-[#31393C] rounded-xl flex items-center justify-center mb-4">
                   <Icon d={icon} size={20} stroke="#AAFF00" />
                 </div>
@@ -104,12 +117,12 @@ export default function Landing() {
       <section id="pricing" className="py-20 px-6 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-slate-900 mb-3">Precios simples y transparentes</h2>
-            <p className="text-slate-500">Sin costos ocultos ni comisiones por reserva</p>
+            <h2 className="reveal text-3xl font-bold text-slate-900 mb-3">Precios simples y transparentes</h2>
+            <p className="reveal text-slate-500" style={{ transitionDelay: '80ms' }}>Sin costos ocultos ni comisiones por reserva</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
-            {plans.map(({ name, price, period, highlight, features: feats }) => (
-              <div key={name} className={`rounded-2xl p-8 ${highlight ? 'bg-[#31393C] text-white shadow-xl' : 'bg-white border border-slate-200'}`}>
+            {plans.map(({ name, price, period, highlight, features: feats }, i) => (
+              <div key={name} className={`reveal rounded-2xl p-8 ${highlight ? 'bg-[#31393C] text-white shadow-xl' : 'bg-white border border-slate-200'}`} style={{ transitionDelay: `${i * 120}ms` }}>
                 <div className={`text-sm font-semibold mb-1 ${highlight ? 'text-indigo-600' : 'text-slate-500'}`}>{name}</div>
                 <div className="flex items-end gap-1 mb-6">
                   <span className="text-4xl font-extrabold">{price}</span>
@@ -138,15 +151,15 @@ export default function Landing() {
       <section id="reviews" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-slate-900 mb-3">Lo que dicen nuestros clientes</h2>
+            <h2 className="reveal text-3xl font-bold text-slate-900 mb-3">Lo que dicen nuestros clientes</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { name: 'Carolina M.', role: 'Peluquería en Buenos Aires', text: 'Pasé de 40 a 120 clientes al mes. Las inasistencias bajaron un 80% desde que activé los pagos anticipados.' },
               { name: 'Ricardo P.',  role: 'Barbería en Medellín',       text: 'Mis clientes adoran poder reservar a cualquier hora desde el celu. Súper fácil de configurar.' },
               { name: 'Valentina R.',role: 'Centro de Estética en Santiago', text: 'Gestiono 3 profesionales y todas las sucursales desde un solo panel. Excelente.' },
-            ].map(({ name, role, text }) => (
-              <div key={name} className="p-6 border border-slate-100 rounded-2xl">
+            ].map(({ name, role, text }, i) => (
+              <div key={name} className="reveal p-6 border border-slate-100 rounded-2xl" style={{ transitionDelay: `${i * 100}ms` }}>
                 <div className="flex gap-0.5 mb-4">
                   {[...Array(5)].map((_, i) => <Icon key={i} d={Icons.star} size={14} fill="#fbbf24" stroke="#fbbf24" />)}
                 </div>
@@ -164,11 +177,13 @@ export default function Landing() {
       {/* CTA */}
       <section className="py-20 px-6 bg-[#31393C]">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">¡Empezá gratis hoy mismo!</h2>
-          <p className="text-slate-400 mb-8">7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
-          <button onClick={() => navigate('/register')} className="bg-indigo-600 text-slate-900 font-bold px-8 py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg">
-            Crear cuenta gratuita →
-          </button>
+          <h2 className="reveal text-3xl font-bold text-white mb-4">¡Empezá gratis hoy mismo!</h2>
+          <p className="reveal text-slate-400 mb-8" style={{ transitionDelay: '80ms' }}>7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
+          <div className="reveal" style={{ transitionDelay: '160ms' }}>
+            <button onClick={() => navigate('/register')} className="bg-indigo-600 text-slate-900 font-bold px-8 py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg">
+              Crear cuenta gratuita →
+            </button>
+          </div>
         </div>
       </section>
 
