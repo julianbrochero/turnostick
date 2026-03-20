@@ -469,13 +469,21 @@ export default function Admin() {
         {/* SIDEBAR */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-slate-100 pt-14 transform transition-transform md:static md:translate-x-0 md:z-auto ${mobileMenu ? 'translate-x-0' : '-translate-x-full'}`}>
           <nav className="p-3 space-y-1">
-            {navItems.map(({ id, label, icon }) => (
-              <button key={id} onClick={() => { setView(id); setMobileMenu(false) }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${view === id ? 'bg-[#31393C] text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
-                <Icon d={icon} size={17} stroke={view === id ? '#AAFF00' : 'currentColor'} />
-                {label}
-              </button>
-            ))}
+            {navItems.map(({ id, label, icon }) => {
+              const pending = id === 'bookings' ? bookings.filter(b => b.status === 'pending').length : 0
+              return (
+                <button key={id} onClick={() => { setView(id); setMobileMenu(false) }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${view === id ? 'bg-[#31393C] text-indigo-600 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
+                  <Icon d={icon} size={17} stroke={view === id ? '#AAFF00' : 'currentColor'} />
+                  <span className="flex-1 text-left">{label}</span>
+                  {pending > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+                      {pending}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
             <div className="pt-3 border-t border-slate-100 mt-3 space-y-1">
               <button onClick={() => navigate('/')}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all">
