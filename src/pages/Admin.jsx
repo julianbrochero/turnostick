@@ -638,7 +638,7 @@ export default function Admin() {
                 <h1 className="text-xl font-bold text-slate-900">Turnos</h1>
                 <button onClick={() => setShowNewBooking(true)}
                   className="flex items-center gap-2 bg-[#31393C] text-indigo-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-slate-700 transition-colors">
-                  <Icon d={Icons.plus} size={16} stroke="#1C1C1E" /> Nuevo turno
+                  <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo turno
                 </button>
               </div>
               {/* Status filter */}
@@ -871,7 +871,7 @@ export default function Admin() {
                 <h1 className="text-xl font-bold text-slate-900">Servicios</h1>
                 <button onClick={() => setShowNewService(true)}
                   className="flex items-center gap-2 bg-[#31393C] text-indigo-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-slate-700 transition-colors">
-                  <Icon d={Icons.plus} size={16} stroke="#1C1C1E" /> Nuevo servicio
+                  <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo servicio
                 </button>
               </div>
               {services.length === 0
