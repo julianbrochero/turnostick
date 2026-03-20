@@ -2,9 +2,16 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon, Icons } from '../components/Icon'
 import Logo from '../components/Logo'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user, business } = useAuth()
+
+  const goToApp = () => {
+    if (user && business) navigate('/admin')
+    else navigate('/register')
+  }
 
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
@@ -48,7 +55,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/login')}    className="text-sm text-slate-600 hover:text-indigo-600 transition-colors font-medium">Ingresar</button>
-            <button onClick={() => navigate('/register')} className="bg-[#31393C] text-indigo-600 text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors">Comenzar gratis</button>
+            <button onClick={goToApp} className="bg-[#31393C] text-indigo-600 text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors">Comenzar gratis</button>
           </div>
         </div>
       </nav>
@@ -68,7 +75,7 @@ export default function Landing() {
             Agenda online 24/7, cobros anticipados y recordatorios automáticos para peluquerías, barberías, consultorios y más.
           </p>
           <div className="reveal flex flex-col sm:flex-row items-center justify-center gap-4" style={{ transitionDelay: '240ms' }}>
-            <button onClick={() => navigate('/register')} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#31393C] text-indigo-600 font-bold px-7 py-3.5 rounded-xl hover:bg-slate-700 transition-all shadow-lg">
+            <button onClick={goToApp} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#31393C] text-indigo-600 font-bold px-7 py-3.5 rounded-xl hover:bg-slate-700 transition-all shadow-lg">
               Empezar gratis
               <Icon d={Icons.arrow} size={18} stroke="#AAFF00" />
             </button>
@@ -139,7 +146,7 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => navigate('/register')} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${highlight ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'bg-[#31393C] text-indigo-600 hover:bg-slate-700'}`}>
+                <button onClick={goToApp} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${highlight ? 'bg-indigo-600 text-slate-900 hover:bg-indigo-700' : 'bg-[#31393C] text-indigo-600 hover:bg-slate-700'}`}>
                   {name === 'Prueba' ? 'Probar 7 días gratis' : 'Suscribirme ahora'}
                 </button>
               </div>
@@ -181,7 +188,7 @@ export default function Landing() {
           <h2 className="reveal text-3xl font-bold text-white mb-4">¡Empezá gratis hoy mismo!</h2>
           <p className="reveal text-slate-400 mb-8" style={{ transitionDelay: '80ms' }}>7 días gratis sin tarjeta de crédito. Después $14.999 ARS/mes.</p>
           <div className="reveal" style={{ transitionDelay: '160ms' }}>
-            <button onClick={() => navigate('/register')} className="bg-indigo-600 text-slate-900 font-bold px-8 py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg">
+            <button onClick={goToApp} className="bg-indigo-600 text-slate-900 font-bold px-8 py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg">
               Crear cuenta gratuita →
             </button>
           </div>
