@@ -73,11 +73,12 @@ export default function Admin() {
     day_of_week: d.dow, is_open: d.dow >= 1 && d.dow <= 6,
     open_time: '09:00', close_time: '18:00',
   }))
-  const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
-    const total = 480 + i * 30  // 08:00 a 21:30
+  const TIME_OPTIONS = Array.from({ length: 36 }, (_, i) => {
+    const total = 360 + i * 30  // 06:00 a 23:30
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
   })
-  const [schedule, setSchedule]       = useState(DEFAULT_SCHEDULE)
+  const [schedule, setSchedule]           = useState(DEFAULT_SCHEDULE)
+  const [scheduleDirty, setScheduleDirty] = useState(false)
   const [overrides, setOverrides]     = useState([])
   const [newOverride, setNewOverride] = useState({ date: '', is_open: true, open_time: '09:00', close_time: '18:00' })
   const [blockedSlots, setBlockedSlots]       = useState([])
@@ -215,11 +216,12 @@ export default function Admin() {
     }))
     const { error } = await supabase.from('schedules').insert(rows)
     if (error) notify('Error al guardar')
-    else notify('Horarios guardados ✓')
+    else { notify('Horarios guardados ✓'); setScheduleDirty(false) }
   }
 
   const updateDay = (dow, field, value) => {
     setSchedule(prev => prev.map(s => s.day_of_week === dow ? { ...s, [field]: value } : s))
+    setScheduleDirty(true)
   }
 
   const addOverride = async () => {
@@ -1115,10 +1117,12 @@ export default function Admin() {
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
-                    <button onClick={saveSchedule}
-                      className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
-                      <Icon d={Icons.check} size={13} stroke="#AAFF00" /> Guardar
-                    </button>
+                    {scheduleDirty && (
+                      <button onClick={saveSchedule}
+                        className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                        <Icon d={Icons.check} size={13} stroke="#AAFF00" /> Guardar
+                      </button>
+                    )}
                   </div>
                   <div className="divide-y divide-slate-50">
                     {DAYS.map(({ dow, label }) => {
