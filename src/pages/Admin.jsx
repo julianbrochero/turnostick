@@ -438,34 +438,80 @@ export default function Admin() {
     </div>
   )
 
+  const pendingCount = bookings.filter(b => b.status === 'pending').length
+  const moreActive   = navItems.slice(3).some(n => n.id === view)
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* TOP BAR */}
-      <header className="bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3 flex-shrink-0 z-40 sticky top-0">
-        <div className="flex items-center gap-2">
-          <Logo size={28} />
-          <span className="font-bold text-slate-900 text-sm">turnoStick</span>
+    <div className="min-h-screen bg-slate-50">
+
+      {/* ══ DESKTOP SIDEBAR (md+) ══════════════════════════════════════════════ */}
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-56 bg-white border-r border-slate-100 flex-col z-40">
+        {/* Logo */}
+        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-slate-100 shrink-0">
+          <Logo size={30} />
+          <div>
+            <div className="font-bold text-slate-900 text-sm leading-tight">turnoStick</div>
+            <div className="text-[10px] text-slate-400 leading-tight">{business?.name}</div>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+
+        {/* Nav items */}
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          {navItems.map(({ id, label, icon }) => {
+            const active  = view === id
+            const pending = id === 'bookings' ? pendingCount : 0
+            return (
+              <button key={id} onClick={() => setView(id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                  ${active ? 'bg-[#31393C] text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
+                <Icon d={icon} size={17} stroke={active ? '#AAFF00' : 'currentColor'} />
+                <span className="flex-1 text-left">{label}</span>
+                {pending > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                    {pending}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Bottom actions */}
+        <div className="p-3 border-t border-slate-100 space-y-1 shrink-0">
           <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-            className="hidden sm:flex items-center gap-1.5 text-xs bg-[#31393C] text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors font-medium">
-            <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Copiar link
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            <Icon d={Icons.copy} size={17} /> Copiar link de reservas
           </button>
           <button onClick={() => navigate(`/b/${business?.slug}`)}
-            className="flex items-center gap-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors font-medium border border-slate-200">
-            <Icon d={Icons.eye} size={13} stroke="#9ca3af" /> Ver
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            <Icon d={Icons.eye} size={17} /> Ver página pública
           </button>
-          <button onClick={handleLogout} className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 text-xs font-bold hover:bg-slate-700 transition-colors" title="Cerrar sesión">
-            {business?.name?.[0]?.toUpperCase() || 'A'}
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
+            <Icon d={Icons.logout} size={17} /> Cerrar sesión
           </button>
         </div>
+      </aside>
+
+      {/* ══ MOBILE HEADER (< md) ═══════════════════════════════════════════════ */}
+      <header className="md:hidden sticky top-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3">
+        <Logo size={26} />
+        <span className="font-bold text-slate-900 text-sm flex-1">{business?.name || 'turnoStick'}</span>
+        <button onClick={() => navigate(`/b/${business?.slug}`)}
+          className="flex items-center gap-1.5 text-xs border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors font-medium">
+          <Icon d={Icons.eye} size={13} stroke="#9ca3af" /> Ver
+        </button>
+        <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
+          className="flex items-center gap-1.5 text-xs bg-[#31393C] text-indigo-600 px-3 py-1.5 rounded-lg font-medium">
+          <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Link
+        </button>
       </header>
 
-      {/* MAIN */}
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+      {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
+      <div className="md:ml-56">
+        <main className="min-h-screen p-4 md:p-6 pb-28 md:pb-8">
           {notification && (
-            <div className="fixed top-16 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
+            <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
             </div>
           )}
@@ -1344,65 +1390,74 @@ export default function Admin() {
         </main>
       </div>
 
-      {/* BOTTOM NAV */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-100 safe-area-pb">
+      {/* ══ MOBILE BOTTOM NAV (< md) ═══════════════════════════════════════════ */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
         {/* "Más" sheet */}
         {showMoreMenu && (
           <>
-            <div className="fixed inset-0 z-30" onClick={() => setShowMoreMenu(false)} />
-            <div className="absolute bottom-full left-0 right-0 bg-white border-t border-slate-100 rounded-t-2xl shadow-xl z-40 p-2">
+            <div className="fixed inset-0 bg-black/20 z-30 backdrop-blur-[2px]" onClick={() => setShowMoreMenu(false)} />
+            <div className="absolute bottom-full inset-x-0 bg-white rounded-t-3xl shadow-2xl z-40 p-3 pb-4">
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
               {navItems.slice(3).map(({ id, label, icon }) => {
                 const active = view === id
                 return (
                   <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all
-                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <Icon d={icon} size={18} stroke={active ? '#AAFF00' : 'currentColor'} />
+                    className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold transition-all mb-1
+                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-600 hover:bg-slate-50 active:bg-slate-100'}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${active ? 'bg-slate-700' : 'bg-slate-100'}`}>
+                      <Icon d={icon} size={18} stroke={active ? '#AAFF00' : '#627278'} />
+                    </div>
                     {label}
                   </button>
                 )
               })}
+              <button onClick={handleLogout}
+                className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold text-red-400 active:bg-red-50 mt-1 border-t border-slate-100 pt-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50">
+                  <Icon d={Icons.logout} size={18} stroke="#f87171" />
+                </div>
+                Cerrar sesión
+              </button>
             </div>
           </>
         )}
 
-        <div className="flex items-stretch h-16">
+        <div className="flex items-stretch h-[60px] px-2">
           {navItems.slice(0, 3).map(({ id, label, icon }) => {
-            const pending = id === 'bookings' ? bookings.filter(b => b.status === 'pending').length : 0
-            const active = view === id
+            const pending = id === 'bookings' ? pendingCount : 0
+            const active  = view === id
             return (
               <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
-                  ${active ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
                 <div className="relative">
-                  <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${active ? 'bg-[#31393C]' : ''}`}>
-                    <Icon d={icon} size={20} stroke={active ? '#AAFF00' : 'currentColor'} />
+                  <div className={`w-12 h-8 flex items-center justify-center rounded-2xl transition-all duration-200
+                    ${active ? 'bg-[#31393C] shadow-sm' : ''}`}>
+                    <Icon d={icon} size={21} stroke={active ? '#AAFF00' : '#aab4b8'} />
                   </div>
                   {pending > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                    <span className="absolute -top-1 -right-0.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[16px] text-center leading-4">
                       {pending}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] ${active ? 'font-bold text-[#31393C]' : 'font-medium'}`}>{label}</span>
+                <span className={`text-[10px] leading-none transition-all ${active ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+                  {label}
+                </span>
               </button>
             )
           })}
 
           {/* Más */}
-          {(() => {
-            const moreActive = navItems.slice(3).some(n => n.id === view)
-            return (
-              <button onClick={() => setShowMoreMenu(m => !m)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
-                  ${moreActive ? 'text-[#31393C]' : 'text-slate-400'}`}>
-                <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${moreActive ? 'bg-[#31393C]' : ''}`}>
-                  <Icon d={Icons.menu} size={20} stroke={moreActive ? '#AAFF00' : 'currentColor'} />
-                </div>
-                <span className={`text-[10px] ${moreActive ? 'font-bold text-[#31393C]' : 'font-medium'}`}>Más</span>
-              </button>
-            )
-          })()}
+          <button onClick={() => setShowMoreMenu(m => !m)}
+            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
+            <div className={`w-12 h-8 flex items-center justify-center rounded-2xl transition-all duration-200
+              ${moreActive ? 'bg-[#31393C] shadow-sm' : ''}`}>
+              <Icon d={Icons.menu} size={21} stroke={moreActive ? '#AAFF00' : '#aab4b8'} />
+            </div>
+            <span className={`text-[10px] leading-none transition-all ${moreActive ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+              Más
+            </span>
+          </button>
         </div>
       </nav>
     </div>
