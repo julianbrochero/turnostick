@@ -523,9 +523,7 @@ export default function Admin() {
                   { label: 'Ingresos cobrados',  val: fmt(stats.revenue),   icon: Icons.dollar,   color: 'violet'  },
                 ].map(({ label, val, icon }) => (
                   <div key={label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3 bg-[#31393C]">
-                      <Icon d={icon} size={16} stroke="#AAFF00" />
-                    </div>
+                    <Icon d={icon} size={16} stroke="#aab4b8" className="mb-3" />
                     <div className="text-2xl font-bold text-slate-900 mb-0.5">{val}</div>
                     <div className="text-xs text-slate-500">{label}</div>
                   </div>
@@ -1342,7 +1340,7 @@ export default function Admin() {
       </div>
 
       {/* ══ BOTTOM NAV ═════════════════════════════════════════════════════════ */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100/80 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
         {/* Burbuja "Más" estilo Apple */}
         {showMoreMenu && (
           <>
@@ -1353,18 +1351,18 @@ export default function Admin() {
                 const active = view === id
                 return (
                   <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-all
-                      ${i > 0 ? 'border-t border-slate-100' : ''}
-                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-700 active:bg-slate-50'}`}>
-                    <Icon d={icon} size={17} stroke={active ? '#AAFF00' : '#627278'} />
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all
+                      ${i > 0 ? 'border-t border-slate-100/70' : ''}
+                      ${active ? 'font-semibold text-[#31393C]' : 'font-normal text-slate-500 active:bg-slate-50'}`}>
+                    <Icon d={icon} size={16} stroke={active ? '#31393C' : '#aab4b8'} />
                     {label}
                   </button>
                 )
               })}
-              <div className="border-t border-slate-200">
+              <div className="border-t border-slate-100">
                 <button onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-400 active:bg-red-50">
-                  <Icon d={Icons.logout} size={17} stroke="#f87171" />
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-normal text-red-400 active:bg-red-50">
+                  <Icon d={Icons.logout} size={16} stroke="#f87171" />
                   Cerrar sesión
                 </button>
               </div>
@@ -1375,41 +1373,37 @@ export default function Admin() {
           </>
         )}
 
-        <div className="flex items-stretch h-[60px] px-2">
+        <div className="flex items-stretch h-14">
           {navItems.slice(0, 3).map(({ id, label, icon }) => {
             const pending = id === 'bookings' ? pendingCount : 0
             const active  = view === id
             return (
               <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
+                className="flex-1 flex flex-col items-center justify-center gap-1.5 transition-all active:opacity-60">
                 <div className="relative">
-                  <div className={`w-12 h-8 flex items-center justify-center rounded-2xl transition-all duration-200
-                    ${active ? 'bg-[#31393C] shadow-sm' : ''}`}>
-                    <Icon d={icon} size={21} stroke={active ? '#AAFF00' : '#aab4b8'} />
-                  </div>
+                  <Icon d={icon} size={22} stroke={active ? '#31393C' : '#c8d0d3'} />
                   {pending > 0 && (
-                    <span className="absolute -top-1 -right-0.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[16px] text-center leading-4">
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
                       {pending}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] leading-none ${active ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+                <span className={`text-[10px] leading-none tracking-wide ${active ? 'font-semibold text-[#31393C]' : 'text-slate-300 font-normal'}`}>
                   {label}
                 </span>
+                {active && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
               </button>
             )
           })}
 
           {/* Más */}
           <button onClick={() => setShowMoreMenu(m => !m)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
-            <div className={`w-12 h-8 flex items-center justify-center rounded-2xl transition-all duration-200
-              ${moreActive || showMoreMenu ? 'bg-[#31393C] shadow-sm' : ''}`}>
-              <Icon d={Icons.menu} size={21} stroke={moreActive || showMoreMenu ? '#AAFF00' : '#aab4b8'} />
-            </div>
-            <span className={`text-[10px] leading-none ${moreActive || showMoreMenu ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+            className="flex-1 flex flex-col items-center justify-center gap-1.5 transition-all active:opacity-60">
+            <Icon d={Icons.menu} size={22} stroke={moreActive || showMoreMenu ? '#31393C' : '#c8d0d3'} />
+            <span className={`text-[10px] leading-none tracking-wide ${moreActive || showMoreMenu ? 'font-semibold text-[#31393C]' : 'text-slate-300 font-normal'}`}>
               Más
             </span>
+            {(moreActive || showMoreMenu) && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
           </button>
         </div>
       </nav>
