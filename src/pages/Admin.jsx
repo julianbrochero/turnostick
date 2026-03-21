@@ -52,7 +52,7 @@ export default function Admin() {
 
   // Booking modal
   const [showNewBooking, setShowNewBooking] = useState(false)
-  const [newBooking, setNewBooking] = useState({ client_name: '', client_email: '', service_id: '', date: today(), time: '10:00' })
+  const [newBooking, setNewBooking] = useState({ client_name: '', client_email: '', client_phone: '', service_id: '', date: today(), time: '10:00' })
   const [filterStatus, setFilterStatus] = useState('all')
 
   // Service modal
@@ -154,21 +154,24 @@ export default function Admin() {
   const addBooking = async () => {
     if (!newBooking.client_name || !newBooking.client_email || !newBooking.service_id) return
     const svc = services.find(s => s.id === newBooking.service_id)
-    const { data, error } = await supabase.from('bookings').insert({
-      business_id: business.id,
-      service_id:  newBooking.service_id,
-      client_name: newBooking.client_name,
+    const payload = {
+      business_id:  business.id,
+      service_id:   newBooking.service_id,
+      client_name:  newBooking.client_name,
       client_email: newBooking.client_email,
+      client_phone: newBooking.client_phone || null,
       date:   newBooking.date,
       time:   newBooking.time,
       status: 'confirmed',
       paid:   false,
       amount: svc?.price || 0,
-    }).select().single()
+    }
+    const { data, error } = await supabase.from('bookings').insert(payload).select('id')
     if (error) { notify('Error al crear turno'); return }
-    setBookings(prev => [...prev, data])
+    const id = data?.[0]?.id
+    setBookings(prev => [...prev, { ...payload, id }])
     setShowNewBooking(false)
-    setNewBooking({ client_name: '', client_email: '', service_id: '', date: today(), time: '10:00' })
+    setNewBooking({ client_name: '', client_email: '', client_phone: '', service_id: '', date: today(), time: '10:00' })
     notify('Turno creado')
   }
 
@@ -323,7 +326,8 @@ export default function Admin() {
       if (data?.error) throw new Error(data.error)
       notify('Turno confirmado y email enviado ✉️')
     } catch (err) {
-      notify(`Confirmado, pero no se pudo enviar el email: ${err.message || 'Error desconocido'}`)
+      console.error('[send-confirmation] error:', err)
+      notify(`Confirmado (email falló: ${err.message || 'Error desconocido'})`)
     }
   }
 
@@ -688,10 +692,11 @@ export default function Admin() {
                     const isSelected = filterDate === d
                     const isToday    = d === today()
                     const count      = bookings.filter(b => b.date === d).length
+                    const hasPending = bookings.some(b => b.date === d && b.status === 'pending')
                     return (
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
                         className={`flex flex-col items-center justify-center w-[56px] h-[58px] rounded-xl flex-shrink-0 transition-all
-                          ${isSelected ? 'bg-[#31393C] shadow-sm' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
+                          ${isSelected ? 'bg-[#31393C] shadow-sm' : hasPending ? 'bg-white border-2 border-red-400' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
                         <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
                           {isToday ? 'Hoy' : dayLabel}
                         </span>
@@ -834,9 +839,10 @@ export default function Admin() {
                     </div>
                     <div className="space-y-4">
                       {[
-                        { label: 'Nombre del cliente', key: 'client_name', type: 'text' },
+                        { label: 'Nombre del cliente', key: 'client_name',  type: 'text' },
                         { label: 'Email',              key: 'client_email', type: 'email' },
-                        { label: 'Fecha',              key: 'date',        type: 'date' },
+                        { label: 'Teléfono (para WA)', key: 'client_phone', type: 'tel' },
+                        { label: 'Fecha',              key: 'date',         type: 'date' },
                       ].map(({ label, key, type }) => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-slate-700 mb-1">{label}</label>
