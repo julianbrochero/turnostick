@@ -7,6 +7,24 @@ import Logo from '../components/Logo'
 const fmt   = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 const today = () => new Date().toISOString().split('T')[0]
 
+const copyText = (text, onDone) => {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => {
+      const el = document.createElement('textarea')
+      el.value = text; el.style.position = 'fixed'; el.style.opacity = '0'
+      document.body.appendChild(el); el.select()
+      document.execCommand('copy'); document.body.removeChild(el)
+      onDone?.()
+    })
+  } else {
+    const el = document.createElement('textarea')
+    el.value = text; el.style.position = 'fixed'; el.style.opacity = '0'
+    document.body.appendChild(el); el.select()
+    document.execCommand('copy'); document.body.removeChild(el)
+    onDone?.()
+  }
+}
+
 const timeToMins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
 
 // Genera slots cada `interval` minutos entre open y close
@@ -81,7 +99,12 @@ export default function Booking() {
   const [selected, setSelected] = useState({ service: null, date: today(), time: null, name: '', email: '', phone: '', payMethod: '' })
   const [submitting, setSubmitting] = useState(false)
   const [mpLoading, setMpLoading]   = useState(false)
-  const [reservationId, setReservationId] = useState(null)  // ID del hold temporal
+  const [reservationId, setReservationId] = useState(null)
+  const [copiedField, setCopiedField] = useState(null)
+
+  const handleCopy = (text, field) => copyText(text, () => {
+    setCopiedField(field); setTimeout(() => setCopiedField(null), 1800)
+  })
 
   // Check MP redirect callback
   useEffect(() => {
@@ -458,56 +481,10 @@ export default function Booking() {
                       desc={`Enviá la seña${senaAmt > 0 ? ` de ${fmt(senaAmt)}` : ''} y el negocio confirma tu turno`} />
                   )}
 
-                  {/* Datos bancarios — siempre visibles cuando está seleccionado */}
                   {hasTransfer && selected.payMethod === 'transfer' && (
-                    <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50 p-4 space-y-2.5">
-                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Datos para transferir</p>
-                      {business.bank_alias && (
-                        <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-indigo-100">
-                          <div>
-                            <div className="text-xs text-slate-500">Alias</div>
-                            <div className="font-bold text-slate-900 text-sm">{business.bank_alias}</div>
-                          </div>
-                          <button onClick={() => navigator.clipboard?.writeText(business.bank_alias)}
-                            className="text-xs text-indigo-600 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50">
-                            Copiar
-                          </button>
-                        </div>
-                      )}
-                      {business.bank_cbu && (
-                        <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-indigo-100">
-                          <div>
-                            <div className="text-xs text-slate-500">CBU</div>
-                            <div className="font-mono text-slate-900 text-xs tracking-tight">{business.bank_cbu}</div>
-                          </div>
-                          <button onClick={() => navigator.clipboard?.writeText(business.bank_cbu)}
-                            className="text-xs text-indigo-600 font-medium px-2 py-1 rounded-lg hover:bg-indigo-50 shrink-0">
-                            Copiar
-                          </button>
-                        </div>
-                      )}
-                      {business.bank_holder && (
-                        <div className="flex justify-between text-xs px-1">
-                          <span className="text-slate-500">Titular</span>
-                          <span className="font-medium text-slate-800">{business.bank_holder}</span>
-                        </div>
-                      )}
-                      {business.bank_bank && (
-                        <div className="flex justify-between text-xs px-1">
-                          <span className="text-slate-500">Banco</span>
-                          <span className="font-medium text-slate-800">{business.bank_bank}</span>
-                        </div>
-                      )}
-                      {senaAmt > 0 && (
-                        <div className="flex justify-between text-xs px-1 pt-1 border-t border-indigo-200">
-                          <span className="text-slate-500">Monto a transferir</span>
-                          <span className="font-bold text-indigo-700">{fmt(senaAmt)}</span>
-                        </div>
-                      )}
-                      <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200 font-medium">
-                        ⚠ Tenés 15 minutos para realizar la transferencia. Si no se recibe, el turno se cancela automáticamente.
-                      </p>
-                    </div>
+                    <p className="text-xs text-slate-500 px-1">
+                      Los datos bancarios aparecen al confirmar la reserva.
+                    </p>
                   )}
 
                   {/* MercadoPago */}
@@ -550,48 +527,49 @@ export default function Booking() {
                     </>}
                   </div>
 
-                  {/* Datos bancarios destacados */}
-                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 space-y-2.5 mb-4">
-                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Transferí la seña a:</p>
+                  {/* Datos bancarios */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 mb-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Datos para transferir</p>
                     {business.bank_alias && (
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-amber-100">
+                      <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
                         <div>
-                          <div className="text-xs text-slate-500">Alias</div>
-                          <div className="font-bold text-slate-900">{business.bank_alias}</div>
+                          <div className="text-xs text-slate-400">Alias</div>
+                          <div className="font-bold text-slate-900 text-sm">{business.bank_alias}</div>
                         </div>
-                        <button onClick={() => navigator.clipboard?.writeText(business.bank_alias)}
-                          className="text-xs text-amber-700 font-semibold px-2 py-1 rounded-lg hover:bg-amber-50">
-                          Copiar
+                        <button onClick={() => handleCopy(business.bank_alias, 'alias')}
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${copiedField === 'alias' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                          {copiedField === 'alias' ? '✓ Copiado' : 'Copiar'}
                         </button>
                       </div>
                     )}
                     {business.bank_cbu && (
-                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-amber-100">
+                      <div className="flex items-center justify-between py-2.5 border-b border-slate-100">
                         <div>
-                          <div className="text-xs text-slate-500">CBU</div>
-                          <div className="font-mono text-slate-900 text-xs">{business.bank_cbu}</div>
+                          <div className="text-xs text-slate-400">CBU</div>
+                          <div className="font-mono text-slate-900 text-sm tracking-tight">{business.bank_cbu}</div>
                         </div>
-                        <button onClick={() => navigator.clipboard?.writeText(business.bank_cbu)}
-                          className="text-xs text-amber-700 font-semibold px-2 py-1 rounded-lg hover:bg-amber-50 shrink-0">
-                          Copiar
+                        <button onClick={() => handleCopy(business.bank_cbu, 'cbu')}
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all shrink-0 ml-2 ${copiedField === 'cbu' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                          {copiedField === 'cbu' ? '✓ Copiado' : 'Copiar'}
                         </button>
                       </div>
                     )}
                     {business.bank_holder && (
-                      <div className="flex justify-between text-xs px-1">
-                        <span className="text-slate-500">Titular</span>
+                      <div className="flex justify-between text-sm py-2 border-b border-slate-100">
+                        <span className="text-slate-400 text-xs">Titular</span>
                         <span className="font-medium text-slate-800">{business.bank_holder}</span>
                       </div>
                     )}
                     {business.sena_amount > 0 && (
-                      <div className="flex justify-between text-sm px-1 pt-1 border-t border-amber-200">
-                        <span className="text-slate-600">Monto de la seña</span>
-                        <span className="font-bold text-amber-700">{fmt(business.sena_amount)}</span>
+                      <div className="flex justify-between text-sm pt-2">
+                        <span className="text-slate-500">Monto a transferir</span>
+                        <span className="font-bold text-slate-900">{fmt(business.sena_amount)}</span>
                       </div>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 text-center mb-5">
-                    Una vez que recibamos la transferencia, te confirmamos el turno por email a <strong>{selected.email}</strong>. <span className="text-amber-600 font-semibold">Tenés 15 minutos para transferir, pasado ese tiempo el turno se cancela.</span>
+                    Confirmamos tu turno por email a <strong>{selected.email}</strong> cuando recibamos la transferencia.<br/>
+                    <span className="text-red-500 font-medium">Tenés 15 minutos — si no se recibe, el turno se cancela.</span>
                   </p>
                 </div>
               ) : (
