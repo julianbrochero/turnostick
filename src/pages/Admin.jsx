@@ -1372,30 +1372,37 @@ export default function Admin() {
             const active = view === id
             return (
               <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
                   ${active ? 'text-[#31393C]' : 'text-slate-400'}`}>
                 <div className="relative">
-                  <Icon d={icon} size={22} stroke={active ? '#AAFF00' : 'currentColor'} />
+                  <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${active ? 'bg-[#31393C]' : ''}`}>
+                    <Icon d={icon} size={20} stroke={active ? '#AAFF00' : 'currentColor'} />
+                  </div>
                   {pending > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center leading-none">
                       {pending}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] font-medium ${active ? 'font-bold' : ''}`}>{label}</span>
-                {active && <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-600 rounded-b" />}
+                <span className={`text-[10px] ${active ? 'font-bold text-[#31393C]' : 'font-medium'}`}>{label}</span>
               </button>
             )
           })}
 
           {/* Más */}
-          <button onClick={() => setShowMoreMenu(m => !m)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative
-              ${navItems.slice(3).some(n => n.id === view) ? 'text-[#31393C]' : 'text-slate-400'}`}>
-            <Icon d={Icons.menu} size={22} stroke={navItems.slice(3).some(n => n.id === view) ? '#AAFF00' : 'currentColor'} />
-            <span className={`text-[10px] font-medium ${navItems.slice(3).some(n => n.id === view) ? 'font-bold' : ''}`}>Más</span>
-            {navItems.slice(3).some(n => n.id === view) && <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-600 rounded-b" />}
-          </button>
+          {(() => {
+            const moreActive = navItems.slice(3).some(n => n.id === view)
+            return (
+              <button onClick={() => setShowMoreMenu(m => !m)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
+                  ${moreActive ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${moreActive ? 'bg-[#31393C]' : ''}`}>
+                  <Icon d={Icons.menu} size={20} stroke={moreActive ? '#AAFF00' : 'currentColor'} />
+                </div>
+                <span className={`text-[10px] ${moreActive ? 'font-bold text-[#31393C]' : 'font-medium'}`}>Más</span>
+              </button>
+            )
+          })()}
         </div>
       </nav>
     </div>
