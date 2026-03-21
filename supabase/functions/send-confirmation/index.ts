@@ -1,5 +1,3 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -13,7 +11,7 @@ const fmtDate = (dateStr: string) =>
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
-serve(async (req: any) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
@@ -29,28 +27,14 @@ serve(async (req: any) => {
         ? '🏦 Seña abonada por transferencia'
         : '🏠 Pago en el local'
 
-    // SVG icons (14px, stroke-based, email-safe inline)
-    const svg = (path: string) =>
-      `<img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-        `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${path}</svg>`
-      )}" width="14" height="14" style="vertical-align:middle;margin-right:6px;" />`
-
-    const iconScissors  = svg('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>')
-    const iconCalendar  = svg('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>')
-    const iconClock     = svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>')
-    const iconDollar    = svg('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>')
-    const iconCard      = svg('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>')
-    const iconMapPin    = svg('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>')
-    const iconPhone     = svg('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>')
-
     const rows: [string, string][] = [
-      [iconScissors + 'Servicio', service],
-      [iconCalendar + 'Fecha',    fmtDate(date)],
-      [iconClock    + 'Hora',     `${time} hs`],
-      [iconDollar   + 'Total',    fmtMoney(amount)],
-      [iconCard     + 'Pago',     paymentLabel],
-      ...(business_address ? [[iconMapPin + 'Dirección', business_address]] as [string,string][] : []),
-      ...(business_phone   ? [[iconPhone  + 'Teléfono',  business_phone]]   as [string,string][] : []),
+      ['Servicio', service],
+      ['Fecha',    fmtDate(date)],
+      ['Hora',     `${time} hs`],
+      ['Total',    fmtMoney(amount)],
+      ['Pago',     paymentLabel],
+      ...(business_address ? [['Dirección', business_address]] as [string,string][] : []),
+      ...(business_phone   ? [['Teléfono',  business_phone]]   as [string,string][] : []),
     ]
 
     const html = `
@@ -110,7 +94,7 @@ serve(async (req: any) => {
     if (!resendKey) throw new Error('RESEND_API_KEY no configurada')
 
     const resendFromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'onboarding@resend.dev'
-    const resendFromName = Deno.env.get('RESEND_FROM_NAME') || 'TurnoStick'
+    const resendFromName  = Deno.env.get('RESEND_FROM_NAME')  || 'TurnoStick'
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -128,7 +112,7 @@ serve(async (req: any) => {
 
     if (!res.ok) {
       const err = await res.json()
-      throw new Error(err.message || 'Error al enviar email')
+      throw new Error(JSON.stringify(err))
     }
 
     return new Response(JSON.stringify({ ok: true }), {
@@ -136,6 +120,7 @@ serve(async (req: any) => {
     })
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
