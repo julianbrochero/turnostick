@@ -402,7 +402,7 @@ export default function Booking() {
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
                     <input type={type} placeholder={placeholder} value={selected[key]}
                       onChange={e => setSelected(p => ({ ...p, [key]: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent" />
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent" />
                   </div>
                 ))}
               </div>
