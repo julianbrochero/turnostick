@@ -306,12 +306,16 @@ export default function Admin() {
 
   const confirmAndNotify = async (booking) => {
     await updateStatus(booking.id, 'confirmed')
+    if (!booking.client_email) {
+      notify('Turno confirmado')
+      return
+    }
     const svc = services.find(s => s.id === booking.service_id)
     try {
       const { data, error } = await supabase.functions.invoke('send-confirmation', {
         body: {
           to:               booking.client_email,
-          client_name:      booking.client_name,
+          client_name:      booking.client_name || 'Cliente',
           service:          svc?.name || '-',
           date:             booking.date,
           time:             booking.time,
@@ -322,11 +326,17 @@ export default function Admin() {
           payment_method:   booking.payment_method || 'venue',
         },
       })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
+      if (error) {
+        console.error('[send-confirmation] invoke error:', error)
+        throw error
+      }
+      if (data?.error) {
+        console.error('[send-confirmation] response error:', data.error)
+        throw new Error(data.error)
+      }
       notify('Turno confirmado y email enviado ✉️')
     } catch (err) {
-      console.error('[send-confirmation] error:', err)
+      console.error('[send-confirmation] error:', err, err?.context, err?.status)
       notify(`Confirmado (email falló: ${err.message || 'Error desconocido'})`)
     }
   }
@@ -664,16 +674,26 @@ export default function Admin() {
           {/* ── BOOKINGS ── */}
           {view === 'bookings' && (
             <div className="max-w-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl font-bold text-slate-900">Turnos</h1>
+              <div className="flex items-center justify-between mb-1">
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900">Turnos</h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    {bookings.filter(b => b.status === 'pending').length > 0 && (
+                      <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        {bookings.filter(b => b.status === 'pending').length} pendiente{bookings.filter(b => b.status === 'pending').length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400">{bookings.filter(b => b.status !== 'cancelled').length} activos</span>
+                  </div>
+                </div>
                 <button onClick={() => setShowNewBooking(true)}
-                  className="flex items-center gap-2 bg-[#31393C] text-indigo-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-slate-700 transition-colors">
+                  className="flex items-center gap-2 bg-[#31393C] text-[#AAFF00] text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-700 transition-all shadow-sm">
                   <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo turno
                 </button>
               </div>
-              {/* Day picker — chips uniformes con conteo, sin "Todos" */}
+              {/* Day picker */}
               {bookingDates.length > 0 && (
-                <div ref={dayPickerRef} className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 mb-4 -mx-1 px-1">
+                <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5 mb-5 mt-4 -mx-1 px-1">
                   {bookingDates.map(d => {
                     const dt         = new Date(d + 'T12:00')
                     const dayLabel   = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
@@ -681,17 +701,24 @@ export default function Admin() {
                     const isSelected = filterDate === d
                     const isToday    = d === today()
                     const count      = bookings.filter(b => b.date === d).length
-                    const hasPending = bookings.some(b => b.date === d && b.status === 'pending')
+                    const pendingN   = bookings.filter(b => b.date === d && b.status === 'pending').length
                     return (
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
-                        className={`flex flex-col items-center justify-center w-[56px] h-[58px] rounded-xl flex-shrink-0 transition-all
-                          ${isSelected ? 'bg-[#31393C] shadow-sm' : hasPending ? 'bg-white border-2 border-red-400' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
-                        <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {isToday ? 'Hoy' : dayLabel}
+                        className={`relative flex flex-col items-center justify-center w-[58px] h-[62px] rounded-2xl flex-shrink-0 transition-all
+                          ${isSelected
+                            ? 'bg-[#31393C] shadow-md scale-105'
+                            : pendingN > 0
+                              ? 'bg-white border-2 border-amber-400 hover:border-amber-500'
+                              : 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm'}`}>
+                        <span className={`text-[10px] font-bold capitalize leading-none tracking-wide ${isSelected ? 'text-[#AAFF00]' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {isToday ? 'HOY' : dayLabel.toUpperCase()}
                         </span>
-                        <span className={`text-xl font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
+                        <span className={`text-2xl font-extrabold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
                         {count > 0 && (
-                          <span className={`text-[9px] font-semibold leading-none mt-1 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>{count}</span>
+                          <span className={`text-[9px] font-bold leading-none mt-0.5 ${isSelected ? 'text-slate-400' : pendingN > 0 ? 'text-amber-500' : 'text-slate-300'}`}>{count}</span>
+                        )}
+                        {pendingN > 0 && !isSelected && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full text-[9px] font-extrabold text-white flex items-center justify-center shadow-sm">{pendingN}</span>
                         )}
                       </button>
                     )
@@ -702,7 +729,6 @@ export default function Admin() {
                 ? <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center text-slate-600 text-sm">No hay turnos para mostrar</div>
                 : (() => {
                     const todayStr = today()
-                    // Group by date, sorted chronologically
                     const groups = filteredBookings.reduce((acc, b) => {
                       if (!acc[b.date]) acc[b.date] = []
                       acc[b.date].push(b)
@@ -716,101 +742,130 @@ export default function Admin() {
                           const isPast  = date < todayStr
                           const dateLabel = new Date(date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
                           const dayBookings = groups[date].slice().sort((a, b) => a.time.localeCompare(b.time))
+                          const pendingForDay = dayBookings.filter(b => b.status === 'pending').length
                           return (
                             <div key={date}>
                               {/* Day header */}
-                              <div className={`flex items-center gap-2 mb-3 min-w-0 ${isPast ? 'opacity-60' : ''}`}>
-                                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isToday ? 'bg-indigo-500' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
-                                <span className={`text-sm font-bold capitalize flex-1 min-w-0 truncate ${isToday ? 'text-slate-900' : 'text-slate-700'}`}>
+                              <div className={`flex items-center gap-2.5 mb-3 min-w-0 ${isPast ? 'opacity-50' : ''}`}>
+                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isToday ? 'bg-[#AAFF00]' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
+                                <span className={`text-sm font-bold capitalize flex-1 min-w-0 truncate ${isToday ? 'text-slate-900' : 'text-slate-600'}`}>
                                   {isToday ? 'Hoy — ' : ''}{dateLabel}
                                 </span>
-                                <span className="flex-shrink-0 text-xs text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
+                                {pendingForDay > 0 && (
+                                  <span className="flex-shrink-0 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">{pendingForDay} pend.</span>
+                                )}
+                                <span className="flex-shrink-0 text-xs text-slate-400 font-medium">
                                   {dayBookings.length} turno{dayBookings.length !== 1 ? 's' : ''}
                                 </span>
                               </div>
-                              {/* Cards for this day */}
+
+                              {/* Cards */}
                               <div className="space-y-2">
-                                {dayBookings.map(b => (
-                                  <div key={b.id} className={`rounded-xl border overflow-hidden transition-all ${b.status === 'cancelled' ? 'bg-white border-red-100 opacity-60' : b.status === 'pending' ? 'bg-slate-50 border-slate-200' : 'bg-white ' + (isToday ? 'border-[#4A6C0E]' : 'border-slate-200')}`}>
-                                    {/* Fila principal: hora + nombre + servicio + monto + status */}
-                                    <div className="flex items-center gap-2 px-3 py-2.5">
-                                      <span className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-slate-900' : 'bg-slate-100 text-slate-600'}`}>
-                                        {b.time}
-                                      </span>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="font-semibold text-slate-900 text-sm truncate leading-tight">{b.client_name}</div>
-                                        <div className="text-xs text-slate-400 truncate leading-tight">{svcName(b.service_id)} · {fmt(b.amount)}</div>
+                                {dayBookings.map(b => {
+                                  const borderColor = b.status === 'cancelled' ? 'border-l-red-200' : b.status === 'pending' ? 'border-l-amber-400' : 'border-l-emerald-400'
+                                  const cardBg      = b.status === 'cancelled' ? 'bg-white opacity-50' : b.status === 'pending' ? 'bg-white' : 'bg-white'
+                                  return (
+                                    <div key={b.id} className={`rounded-2xl border border-slate-100 border-l-4 ${borderColor} ${cardBg} shadow-sm overflow-hidden transition-all hover:shadow-md`}>
+                                      {/* Main row */}
+                                      <div className="flex items-center gap-3 px-4 py-3">
+                                        {/* Time badge */}
+                                        <div className={`flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-xl ${isToday ? 'bg-[#31393C]' : 'bg-slate-100'}`}>
+                                          <span className={`text-sm font-extrabold leading-none ${isToday ? 'text-[#AAFF00]' : 'text-slate-700'}`}>{b.time.slice(0,5).split(':')[0]}</span>
+                                          <span className={`text-[10px] font-medium leading-none mt-0.5 ${isToday ? 'text-slate-400' : 'text-slate-400'}`}>:{b.time.slice(3,5)}</span>
+                                        </div>
+                                        {/* Info */}
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <span className="font-bold text-slate-900 text-sm truncate leading-tight">
+                                              {b.client_name || <span className="text-slate-400 font-medium italic">Sin nombre</span>}
+                                            </span>
+                                            {b.paid && <span className="flex-shrink-0 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">✓ Pagado</span>}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                            <span className="text-xs text-slate-500 truncate">{svcName(b.service_id)}</span>
+                                            <span className="text-slate-300 text-xs">·</span>
+                                            <span className="text-xs font-semibold text-slate-700">{fmt(b.amount)}</span>
+                                            {b.client_phone && (
+                                              <>
+                                                <span className="text-slate-300 text-xs hidden sm:inline">·</span>
+                                                <span className="text-xs text-slate-400 hidden sm:inline">{b.client_phone}</span>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+                                        {/* Status */}
+                                        <div className="flex-shrink-0">
+                                          <StatusBadge status={b.status} />
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                                        {b.paid && <span className="text-xs text-emerald-600 font-semibold hidden sm:block">✓</span>}
-                                        <StatusBadge status={b.status} />
-                                      </div>
-                                    </div>
 
-                                    {/* Fila de acciones */}
-                                    <div className="flex items-stretch border-t border-slate-100">
-                                      {/* Acción primaria: Confirmar */}
-                                      {b.status !== 'confirmed' && b.status !== 'cancelled' && (
-                                        <button onClick={() => confirmAndNotify(b)}
-                                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors border-r border-slate-100">
-                                          <Icon d={Icons.check} size={14} stroke="#047857" /> Confirmar
-                                        </button>
-                                      )}
+                                      {/* Action row */}
+                                      {b.status !== 'cancelled' && (
+                                        <div className="flex items-stretch border-t border-slate-50">
+                                          {/* Confirm */}
+                                          {b.status === 'pending' && (
+                                            <button onClick={() => confirmAndNotify(b)}
+                                              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors border-r border-slate-100 active:scale-95">
+                                              <Icon d={Icons.check} size={14} stroke="#047857" /> Confirmar
+                                            </button>
+                                          )}
 
-                                      {/* WhatsApp — acción destacada, o spacer si no hay teléfono */}
-                                      {whatsappLink(b) ? (
-                                        <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
-                                          className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-green-600 hover:bg-green-50 transition-colors border-r border-slate-100 text-xs font-semibold">
-                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                                          WA
-                                        </a>
-                                      ) : (
-                                        <div className="flex-1 border-r border-slate-100" />
-                                      )}
+                                          {/* WhatsApp */}
+                                          {whatsappLink(b) ? (
+                                            <a href={whatsappLink(b)} target="_blank" rel="noreferrer"
+                                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-green-600 hover:bg-green-50 transition-colors border-r border-slate-100 text-xs font-bold active:scale-95">
+                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                              WA
+                                            </a>
+                                          ) : (
+                                            <div className="flex-1 border-r border-slate-100" />
+                                          )}
 
-                                      {/* Acciones secundarias agrupadas al final */}
-                                      <div className="flex items-stretch">
-                                        {/* Pagado: badge si ya pagó, botón sutil si no */}
-                                        {b.status !== 'cancelled' && (
-                                          b.paid
-                                            ? <span className="flex items-center px-3 text-xs text-emerald-600 font-semibold">✓ Pagado</span>
-                                            : <button onClick={() => markPaid(b.id)}
-                                                className="flex items-center px-3 py-2.5 text-xs text-slate-600 hover:text-amber-600 hover:bg-amber-50 transition-colors font-semibold border-r border-slate-100">
-                                                $ Pago
-                                              </button>
-                                        )}
-                                        {/* Anular */}
-                                        {b.status !== 'cancelled' && (
-                                          confirmCancel === b.id
+                                          {/* Pago */}
+                                          {!b.paid ? (
+                                            <button onClick={() => markPaid(b.id)}
+                                              className="flex items-center gap-1 px-3 py-2.5 text-xs text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors font-semibold border-r border-slate-100 active:scale-95">
+                                              <Icon d={Icons.dollar} size={13} stroke="currentColor" /> Cobrar
+                                            </button>
+                                          ) : (
+                                            <div className="flex items-center px-3 text-xs text-emerald-600 font-bold border-r border-slate-100">
+                                              ✓ Cobrado
+                                            </div>
+                                          )}
+
+                                          {/* Anular */}
+                                          {confirmCancel === b.id
                                             ? <div className="flex items-center gap-1 px-2 border-r border-slate-100">
-                                                <span className="text-xs text-slate-500 mr-1">¿Anular?</span>
+                                                <span className="text-xs text-slate-400 hidden sm:inline">¿Anular?</span>
                                                 <button onClick={() => { updateStatus(b.id, 'cancelled'); setConfirmCancel(null) }}
-                                                  className="px-2 py-1 bg-red-500 text-white rounded text-xs font-bold">Sí</button>
+                                                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sí</button>
                                                 <button onClick={() => setConfirmCancel(null)}
-                                                  className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">No</button>
+                                                  className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">No</button>
                                               </div>
                                             : <button onClick={() => setConfirmCancel(b.id)}
-                                                className="flex items-center px-3 py-2.5 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors border-r border-slate-100">
+                                                className="flex items-center justify-center w-10 py-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors border-r border-slate-100 active:scale-95">
                                                 <Icon d={Icons.x} size={13} stroke="currentColor" />
                                               </button>
-                                        )}
-                                        {/* Eliminar */}
-                                        {confirmDelete === b.id
-                                          ? <div className="flex items-center gap-1 px-2">
-                                              <button onClick={() => { deleteBooking(b.id); setConfirmDelete(null) }}
-                                                className="px-2 py-1 bg-red-500 text-white rounded text-xs font-bold">Sí</button>
-                                              <button onClick={() => setConfirmDelete(null)}
-                                                className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">No</button>
-                                            </div>
-                                          : <button onClick={() => setConfirmDelete(b.id)}
-                                              className="w-9 flex items-center justify-center py-2.5 text-slate-500 hover:text-red-400 hover:bg-red-50 transition-colors">
-                                              <Icon d={Icons.trash} size={13} />
-                                            </button>
-                                        }
-                                      </div>
+                                          }
+
+                                          {/* Eliminar */}
+                                          {confirmDelete === b.id
+                                            ? <div className="flex items-center gap-1 px-2">
+                                                <button onClick={() => { deleteBooking(b.id); setConfirmDelete(null) }}
+                                                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sí</button>
+                                                <button onClick={() => setConfirmDelete(null)}
+                                                  className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">No</button>
+                                              </div>
+                                            : <button onClick={() => setConfirmDelete(b.id)}
+                                                className="flex items-center justify-center w-10 py-2.5 text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors active:scale-95">
+                                                <Icon d={Icons.trash} size={13} />
+                                              </button>
+                                          }
+                                        </div>
+                                      )}
                                     </div>
-                                  </div>
-                                ))}
+                                  )
+                                })}
                               </div>
                             </div>
                           )
