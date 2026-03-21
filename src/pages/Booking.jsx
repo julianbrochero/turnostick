@@ -417,13 +417,13 @@ export default function Booking() {
               <p className="text-sm text-slate-500 mb-6">Para enviarte la confirmación</p>
               <div className="space-y-4">
                 {[
-                  { label: 'Nombre completo *', key: 'name',  type: 'text',  placeholder: 'Ej: María García' },
-                  { label: 'Email *',           key: 'email', type: 'email', placeholder: 'tu@email.com' },
-                  { label: 'Teléfono',          key: 'phone', type: 'tel',   placeholder: '+54 9 11 1234-5678' },
-                ].map(({ label, key, type, placeholder }) => (
+                  { label: 'Nombre completo *', key: 'name',  type: 'text',  placeholder: 'Ej: María García', autoComplete: 'name' },
+                  { label: 'Email *',           key: 'email', type: 'email', placeholder: 'tu@email.com',      autoComplete: 'email' },
+                  { label: 'Teléfono',          key: 'phone', type: 'tel',   placeholder: '+54 9 11 1234-5678',autoComplete: 'tel' },
+                ].map(({ label, key, type, placeholder, autoComplete }) => (
                   <div key={key}>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
-                    <input type={type} placeholder={placeholder} value={selected[key]}
+                    <input type={type} placeholder={placeholder} value={selected[key]} autoComplete={autoComplete}
                       onChange={e => setSelected(p => ({ ...p, [key]: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent" />
                   </div>
