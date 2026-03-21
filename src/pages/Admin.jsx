@@ -525,7 +525,7 @@ export default function Admin() {
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
       <div className="flex-1 md:ml-60">
-        <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8">
+        <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8 overflow-x-hidden">
           {notification && (
             <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
@@ -667,45 +667,41 @@ export default function Admin() {
                   <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo turno
                 </button>
               </div>
-              {/* Status filter */}
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-0.5">
+              {/* Status filter — chips compactos */}
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 mb-2.5">
                 {[['all','Todos'],['confirmed','Confirmados'],['pending','Pendientes'],['cancelled','Cancelados']].map(([val, lbl]) => (
                   <button key={val} onClick={() => setFilterStatus(val)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${filterStatus === val ? 'bg-[#31393C] text-indigo-600' : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300'}`}>
+                    className={`px-3 py-[5px] rounded-full text-[13px] font-medium whitespace-nowrap flex-shrink-0 transition-all
+                      ${filterStatus === val ? 'bg-[#31393C] text-indigo-600' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                     {lbl}
                   </button>
                 ))}
               </div>
 
-              {/* Day picker */}
+              {/* Day picker — chips uniformes con conteo, sin "Todos" */}
               {bookingDates.length > 0 && (
-                <div className="mb-5">
-                  <div ref={dayPickerRef} className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-                    {/* Botón "Todos" */}
-                    <button onClick={() => setFilterDate(null)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold flex-shrink-0 transition-all
-                        ${filterDate === null ? 'bg-[#31393C] text-indigo-600 shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-                      Todos
-                    </button>
-
-                    {bookingDates.map(d => {
-                      const dt       = new Date(d + 'T12:00')
-                      const day      = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
-                      const num      = dt.getDate()
-                      const isSelected = filterDate === d
-                      const isToday    = d === today()
-                      return (
-                        <button key={d} onClick={() => setFilterDate(d)}
-                          className={`flex flex-col items-center px-3 py-1.5 rounded-xl flex-shrink-0 transition-all min-w-[48px]
-                            ${isSelected ? 'bg-[#31393C] shadow-sm' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
-                          <span className={`text-[10px] font-medium capitalize leading-tight ${isSelected ? 'text-indigo-600' : isToday ? 'text-indigo-600' : 'text-slate-400'}`}>
-                            {isToday ? 'Hoy' : day}
-                          </span>
-                          <span className={`text-base font-bold leading-tight ${isSelected ? 'text-white' : 'text-slate-900'}`}>{num}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+                <div ref={dayPickerRef} className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 mb-4 -mx-1 px-1">
+                  {bookingDates.map(d => {
+                    const dt         = new Date(d + 'T12:00')
+                    const dayLabel   = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
+                    const num        = dt.getDate()
+                    const isSelected = filterDate === d
+                    const isToday    = d === today()
+                    const count      = bookings.filter(b => b.date === d).length
+                    return (
+                      <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
+                        className={`flex flex-col items-center justify-center w-12 h-11 rounded-2xl flex-shrink-0 transition-all
+                          ${isSelected ? 'bg-[#31393C] shadow-sm' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
+                        <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
+                          {isToday ? 'Hoy' : dayLabel}
+                        </span>
+                        <span className={`text-sm font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
+                        {count > 0 && (
+                          <span className={`text-[9px] font-semibold leading-none mt-0.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>·{count}</span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
               {filteredBookings.length === 0
@@ -1129,29 +1125,27 @@ export default function Admin() {
                     {DAYS.map(({ dow, label }) => {
                       const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
                       return (
-                        <div key={dow} className="px-4 py-3 flex items-start gap-3">
+                        <div key={dow} className="px-3 py-2 flex items-center gap-2">
                           <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
-                            className={`mt-0.5 relative shrink-0 w-10 h-5 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
+                            className={`relative shrink-0 w-8 h-4 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-4' : 'translate-x-0'}`} />
                           </button>
-                          <div className="flex-1 min-w-0">
-                            <span className={`text-sm font-medium ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
-                            {day.is_open ? (
-                              <div className="flex items-center gap-1.5 mt-1.5">
-                                <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                  className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                                <span className="text-slate-400 text-xs shrink-0">–</span>
-                                <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                  className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-slate-400 mt-0.5">Cerrado</p>
-                            )}
-                          </div>
+                          <span className={`text-sm font-medium w-9 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label.slice(0, 3)}</span>
+                          {day.is_open ? (
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                                className="flex-1 min-w-0 px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <span className="text-slate-400 text-xs shrink-0">–</span>
+                              <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                                className="flex-1 min-w-0 px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 flex-1">Cerrado</span>
+                          )}
                         </div>
                       )
                     })}
