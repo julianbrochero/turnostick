@@ -1343,34 +1343,34 @@ export default function Admin() {
 
       {/* ══ BOTTOM NAV ═════════════════════════════════════════════════════════ */}
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        {/* "Más" sheet — z-50 para que quede encima del nav */}
+        {/* Burbuja "Más" estilo Apple */}
         {showMoreMenu && (
           <>
-            <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px]" onClick={() => setShowMoreMenu(false)} />
-            <div className="fixed bottom-[60px] inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl p-3 pb-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
-              {navItems.slice(3).map(({ id, label, icon }) => {
+            <div className="fixed inset-0 z-50" onClick={() => setShowMoreMenu(false)} />
+            <div className="fixed z-50 right-3 bottom-[72px] bg-white rounded-3xl shadow-2xl overflow-hidden w-52"
+              style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.18)' }}>
+              {navItems.slice(3).map(({ id, label, icon }, i) => {
                 const active = view === id
                 return (
                   <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                    className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold transition-all mb-1
-                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-600 hover:bg-slate-50 active:bg-slate-100'}`}>
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${active ? 'bg-slate-700' : 'bg-slate-100'}`}>
-                      <Icon d={icon} size={18} stroke={active ? '#AAFF00' : '#627278'} />
-                    </div>
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-all
+                      ${i > 0 ? 'border-t border-slate-100' : ''}
+                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-700 active:bg-slate-50'}`}>
+                    <Icon d={icon} size={17} stroke={active ? '#AAFF00' : '#627278'} />
                     {label}
                   </button>
                 )
               })}
-              <div className="border-t border-slate-100 mt-1 pt-1">
+              <div className="border-t border-slate-200">
                 <button onClick={handleLogout}
-                  className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold text-red-400 active:bg-red-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50">
-                    <Icon d={Icons.logout} size={18} stroke="#f87171" />
-                  </div>
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-400 active:bg-red-50">
+                  <Icon d={Icons.logout} size={17} stroke="#f87171" />
                   Cerrar sesión
                 </button>
               </div>
+              {/* flecha abajo */}
+              <div className="absolute -bottom-2 right-7 w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100"
+                style={{ boxShadow: '2px 2px 4px rgba(0,0,0,0.06)' }} />
             </div>
           </>
         )}
