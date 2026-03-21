@@ -37,6 +37,7 @@
 
 body {
   margin: 0;
+  overflow-x: hidden; /* evitar scroll horizontal en mobile */
 }
 
 /* Prevenir zoom en iOS al hacer foco en inputs (requiere font-size >= 16px) */

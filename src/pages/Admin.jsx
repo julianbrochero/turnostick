@@ -1132,20 +1132,16 @@ export default function Admin() {
                           </button>
                           <span className={`text-sm font-medium w-9 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label.slice(0, 3)}</span>
                           {day.is_open ? (
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              <div className="flex-1 min-w-0">
-                                <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                  className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                              </div>
-                              <span className="text-slate-400 text-xs shrink-0">–</span>
-                              <div className="flex-1 min-w-0">
-                                <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                  className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                              </div>
+                            <div className="flex-1 min-w-0 grid items-center gap-1" style={{gridTemplateColumns:'1fr auto 1fr'}}>
+                              <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                                className="w-full px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <span className="text-slate-400 text-xs text-center px-0.5">–</span>
+                              <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                                className="w-full px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
                             </div>
                           ) : (
                             <span className="text-xs text-slate-400 flex-1">Cerrado</span>

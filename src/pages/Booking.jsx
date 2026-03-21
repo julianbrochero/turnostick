@@ -226,11 +226,12 @@ export default function Booking() {
     }
     let booking, error
     if (reservationId) {
-      const res = await supabase.from('bookings').update(payload).eq('id', reservationId).select().single()
-      booking = res.data; error = res.error
+      const { error: updateError } = await supabase.from('bookings').update(payload).eq('id', reservationId)
+      booking = { id: reservationId, ...payload }
+      error = updateError
     } else {
-      const res = await supabase.from('bookings').insert({ business_id: business.id, service_id: selected.service, date: selected.date, time: selected.time, ...payload }).select().single()
-      booking = res.data; error = res.error
+      const res = await supabase.from('bookings').insert({ business_id: business.id, service_id: selected.service, date: selected.date, time: selected.time, ...payload }).select('id')
+      booking = res.data?.[0]; error = res.error
     }
 
     setSubmitting(false)
