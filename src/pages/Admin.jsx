@@ -697,7 +697,7 @@ export default function Admin() {
                         </span>
                         <span className={`text-xl font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
                         {count > 0 && (
-                          <span className={`text-[9px] font-semibold leading-none mt-1 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>·{count}</span>
+                          <span className={`text-[9px] font-semibold leading-none mt-1 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>{count}</span>
                         )}
                       </button>
                     )
