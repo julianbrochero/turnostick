@@ -671,17 +671,6 @@ export default function Admin() {
                   <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo turno
                 </button>
               </div>
-              {/* Status filter — chips compactos */}
-              <div className="grid grid-cols-4 gap-1 mb-2.5">
-                {[['all','Todos'],['confirmed','Confirm.'],['pending','Pend.'],['cancelled','Cancel.']].map(([val, lbl]) => (
-                  <button key={val} onClick={() => setFilterStatus(val)}
-                    className={`py-[5px] rounded-full text-[11px] font-semibold whitespace-nowrap text-center transition-all
-                      ${filterStatus === val ? 'bg-[#31393C] text-indigo-600' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-                    {lbl}
-                  </button>
-                ))}
-              </div>
-
               {/* Day picker — chips uniformes con conteo, sin "Todos" */}
               {bookingDates.length > 0 && (
                 <div ref={dayPickerRef} className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 mb-4 -mx-1 px-1">
