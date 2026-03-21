@@ -441,21 +441,21 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* TOP BAR */}
-      <header className="bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3 flex-shrink-0 z-40 sticky top-0">
-        <div className="flex items-center gap-2">
+      <header className="bg-[#31393C] h-14 flex items-center px-4 gap-3 flex-shrink-0 z-40 sticky top-0 shadow-sm">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <Logo size={28} />
-          <span className="font-bold text-slate-900 text-sm">turnoStick</span>
+          <span className="font-bold text-white text-sm tracking-wide">turnoStick</span>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-            className="hidden sm:flex items-center gap-1.5 text-xs bg-[#31393C] text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors font-medium">
+            className="hidden sm:flex items-center gap-1.5 text-xs border border-[#AAFF00]/50 text-[#AAFF00] px-3 py-1.5 rounded-lg hover:bg-[#AAFF00]/10 transition-colors font-medium">
             <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Copiar link
           </button>
           <button onClick={() => navigate(`/b/${business?.slug}`)}
-            className="flex items-center gap-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors font-medium border border-slate-200">
-            <Icon d={Icons.eye} size={13} stroke="#9ca3af" /> Ver
+            className="flex items-center gap-1.5 text-xs bg-white/10 text-white px-3 py-1.5 rounded-lg hover:bg-white/20 transition-colors font-medium">
+            <Icon d={Icons.eye} size={13} stroke="white" /> Ver
           </button>
-          <button onClick={handleLogout} className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 text-xs font-bold hover:bg-slate-700 transition-colors" title="Cerrar sesión">
+          <button onClick={handleLogout} className="w-8 h-8 bg-[#AAFF00] rounded-full flex items-center justify-center text-[#31393C] text-xs font-extrabold hover:bg-[#99EE00] transition-colors shrink-0" title="Cerrar sesión">
             {business?.name?.[0]?.toUpperCase() || 'A'}
           </button>
         </div>
@@ -1345,61 +1345,65 @@ export default function Admin() {
       </div>
 
       {/* BOTTOM NAV */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-100 safe-area-pb">
-        {/* "Más" sheet */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-100 safe-area-pb shadow-[0_-2px_20px_rgba(0,0,0,0.07)]">
+        {/* "Más" bottom sheet */}
         {showMoreMenu && (
           <>
-            <div className="fixed inset-0 z-30" onClick={() => setShowMoreMenu(false)} />
-            <div className="absolute bottom-full left-0 right-0 bg-white border-t border-slate-100 rounded-t-2xl shadow-xl z-40 p-2">
-              {navItems.slice(3).map(({ id, label, icon }) => {
+            <div className="fixed inset-0 z-30 bg-black/25" onClick={() => setShowMoreMenu(false)} />
+            <div className="absolute bottom-full left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 overflow-hidden">
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 bg-slate-200 rounded-full" />
+              </div>
+              <div className="px-5 pb-2">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Más opciones</p>
+              </div>
+              {navItems.slice(4).map(({ id, label, icon }) => {
                 const active = view === id
                 return (
                   <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all
-                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <Icon d={icon} size={18} stroke={active ? '#AAFF00' : 'currentColor'} />
+                    className={`w-full flex items-center gap-4 px-6 py-4 text-sm font-semibold transition-all
+                      ${active ? 'bg-[#31393C] text-white' : 'text-slate-700 hover:bg-slate-50'}`}>
+                    <Icon d={icon} size={20} stroke={active ? '#AAFF00' : '#64748b'} />
                     {label}
+                    {active && <span className="ml-auto w-2 h-2 rounded-full bg-[#AAFF00]" />}
                   </button>
                 )
               })}
+              <div className="h-6" />
             </div>
           </>
         )}
 
         <div className="flex items-stretch h-16">
-          {navItems.slice(0, 3).map(({ id, label, icon }) => {
+          {navItems.slice(0, 4).map(({ id, label, icon }) => {
             const pending = id === 'bookings' ? bookings.filter(b => b.status === 'pending').length : 0
             const active = view === id
             return (
               <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
-                  ${active ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                className="flex-1 flex flex-col items-center justify-center gap-1 relative pt-1.5 pb-1 transition-all">
+                {active && <span className="absolute top-0 left-2 right-2 h-[3px] bg-[#AAFF00] rounded-b-full" />}
                 <div className="relative">
-                  <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${active ? 'bg-[#31393C]' : ''}`}>
-                    <Icon d={icon} size={20} stroke={active ? '#AAFF00' : 'currentColor'} />
-                  </div>
+                  <Icon d={icon} size={22} stroke={active ? '#AAFF00' : '#94a3b8'} />
                   {pending > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                    <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full min-w-[15px] text-center leading-none">
                       {pending}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] ${active ? 'font-bold text-[#31393C]' : 'font-medium'}`}>{label}</span>
+                <span className={`text-[10px] leading-none font-semibold ${active ? 'text-[#AAFF00]' : 'text-slate-400'}`}>{label}</span>
               </button>
             )
           })}
 
           {/* Más */}
           {(() => {
-            const moreActive = navItems.slice(3).some(n => n.id === view)
+            const moreActive = navItems.slice(4).some(n => n.id === view)
             return (
               <button onClick={() => setShowMoreMenu(m => !m)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all
-                  ${moreActive ? 'text-[#31393C]' : 'text-slate-400'}`}>
-                <div className={`w-10 h-8 flex items-center justify-center rounded-xl transition-all ${moreActive ? 'bg-[#31393C]' : ''}`}>
-                  <Icon d={Icons.menu} size={20} stroke={moreActive ? '#AAFF00' : 'currentColor'} />
-                </div>
-                <span className={`text-[10px] ${moreActive ? 'font-bold text-[#31393C]' : 'font-medium'}`}>Más</span>
+                className="flex-1 flex flex-col items-center justify-center gap-1 relative pt-1.5 pb-1 transition-all">
+                {moreActive && <span className="absolute top-0 left-2 right-2 h-[3px] bg-[#AAFF00] rounded-b-full" />}
+                <Icon d={Icons.menu} size={22} stroke={moreActive ? '#AAFF00' : '#94a3b8'} />
+                <span className={`text-[10px] leading-none font-semibold ${moreActive ? 'text-[#AAFF00]' : 'text-slate-400'}`}>Más</span>
               </button>
             )
           })()}
