@@ -731,7 +731,7 @@ export default function Admin() {
                               {/* Cards for this day */}
                               <div className="space-y-2">
                                 {dayBookings.map(b => (
-                                  <div key={b.id} className={`rounded-xl border overflow-hidden transition-all ${b.status === 'cancelled' ? 'bg-white border-red-100 opacity-60' : b.status === 'pending' ? 'bg-slate-50 border-slate-200' : 'bg-white ' + (isToday ? 'border-indigo-100' : 'border-slate-100')}`}>
+                                  <div key={b.id} className={`rounded-xl border overflow-hidden transition-all ${b.status === 'cancelled' ? 'bg-white border-red-100 opacity-60' : b.status === 'pending' ? 'bg-slate-50 border-slate-200' : 'bg-white ' + (isToday ? 'border-[#4A6C0E]' : 'border-slate-200')}`}>
                                     {/* Fila principal: hora + nombre + servicio + monto + status */}
                                     <div className="flex items-center gap-2 px-3 py-2.5">
                                       <span className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg ${isToday ? 'bg-indigo-50 text-slate-900' : 'bg-slate-100 text-slate-600'}`}>
@@ -775,7 +775,7 @@ export default function Admin() {
                                           b.paid
                                             ? <span className="flex items-center px-3 text-xs text-emerald-600 font-semibold">✓ Pagado</span>
                                             : <button onClick={() => markPaid(b.id)}
-                                                className="flex items-center px-3 py-2.5 text-xs text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors font-medium border-r border-slate-100">
+                                                className="flex items-center px-3 py-2.5 text-xs text-slate-600 hover:text-amber-600 hover:bg-amber-50 transition-colors font-semibold border-r border-slate-100">
                                                 $ Pago
                                               </button>
                                         )}
@@ -790,7 +790,7 @@ export default function Admin() {
                                                   className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">No</button>
                                               </div>
                                             : <button onClick={() => setConfirmCancel(b.id)}
-                                                className="flex items-center px-3 py-2.5 text-xs text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors border-r border-slate-100">
+                                                className="flex items-center px-3 py-2.5 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors border-r border-slate-100">
                                                 <Icon d={Icons.x} size={13} stroke="currentColor" />
                                               </button>
                                         )}
@@ -803,7 +803,7 @@ export default function Admin() {
                                                 className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">No</button>
                                             </div>
                                           : <button onClick={() => setConfirmDelete(b.id)}
-                                              className="w-9 flex items-center justify-center py-2.5 text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors">
+                                              className="w-9 flex items-center justify-center py-2.5 text-slate-500 hover:text-red-400 hover:bg-red-50 transition-colors">
                                               <Icon d={Icons.trash} size={13} />
                                             </button>
                                         }
