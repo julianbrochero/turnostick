@@ -1125,21 +1125,21 @@ export default function Admin() {
                     {DAYS.map(({ dow, label }) => {
                       const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
                       return (
-                        <div key={dow} className="px-3 py-2 flex items-center gap-2">
+                        <div key={dow} className="px-3 py-2.5 flex items-center gap-2.5">
                           <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
-                            className={`relative shrink-0 w-8 h-4 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                            <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-4' : 'translate-x-0'}`} />
+                            className={`relative shrink-0 w-10 h-5 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
                           </button>
                           <span className={`text-sm font-medium w-9 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label.slice(0, 3)}</span>
                           {day.is_open ? (
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
                               <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                className="flex-1 min-w-0 px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                               <span className="text-slate-400 text-xs shrink-0">–</span>
                               <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                className="flex-1 min-w-0 px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
@@ -1181,11 +1181,11 @@ export default function Admin() {
                               const hasBlocks = blockedSlots.some(b => b.date === d)
                               return (
                                 <button key={d} onClick={() => setBlockDate(d)}
-                                  className={`flex flex-col items-center min-w-[46px] py-1.5 px-1 rounded-xl border-2 transition-all shrink-0 ${blockDate === d ? 'border-red-400 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                                  className={`flex flex-col items-center min-w-[52px] py-2 px-1.5 rounded-xl border-2 transition-all shrink-0 ${blockDate === d ? 'border-red-400 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
                                   <span className="text-[10px] text-slate-400 capitalize">{day}</span>
-                                  <span className={`text-sm font-bold leading-tight ${blockDate === d ? 'text-red-600' : 'text-slate-800'}`}>{num}</span>
+                                  <span className={`text-base font-bold leading-tight ${blockDate === d ? 'text-red-600' : 'text-slate-800'}`}>{num}</span>
                                   <span className="text-[10px] text-slate-400 capitalize">{month}</span>
-                                  {hasBlocks && <span className="w-1 h-1 bg-red-400 rounded-full mt-0.5" />}
+                                  {hasBlocks && <span className="w-1.5 h-1.5 bg-red-400 rounded-full mt-0.5" />}
                                 </button>
                               )
                             })}
@@ -1197,7 +1197,7 @@ export default function Admin() {
                                   const isBlocked = blockedSlots.some(b => b.date === blockDate && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleBlockSlot(blockDate, t)}
-                                      className={`py-2 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
@@ -1232,7 +1232,7 @@ export default function Admin() {
                                   const isBlocked = recurringBlocked.some(b => b.day_of_week === blockDow && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleRecurringBlock(blockDow, t)}
-                                      className={`py-2 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
