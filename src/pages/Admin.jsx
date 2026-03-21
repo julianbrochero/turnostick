@@ -525,7 +525,7 @@ export default function Admin() {
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
       <div className="flex-1 md:ml-60">
-        <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8 overflow-x-hidden">
+        <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8 overflow-x-hidden max-w-5xl mx-auto">
           {notification && (
             <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
