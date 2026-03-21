@@ -225,15 +225,20 @@ export default function Booking() {
       payment_method: selected.payMethod,
       payment_status: isMp ? 'pending' : 'unpaid',
     }
-    let booking, error
+    // Eliminar reserva temporal si existe, luego insertar booking completo
     if (reservationId) {
-      const { error: updateError } = await supabase.from('bookings').update(payload).eq('id', reservationId)
-      booking = { id: reservationId, ...payload }
-      error = updateError
-    } else {
-      const res = await supabase.from('bookings').insert({ business_id: business.id, service_id: selected.service, date: selected.date, time: selected.time, ...payload }).select('id')
-      booking = res.data?.[0]; error = res.error
+      await supabase.from('bookings').delete().eq('id', reservationId)
+      setReservationId(null)
     }
+    const res = await supabase.from('bookings').insert({
+      business_id:  business.id,
+      service_id:   selected.service,
+      date:         selected.date,
+      time:         selected.time,
+      ...payload,
+    }).select('id')
+    const booking = res.data?.[0]
+    const error   = res.error
 
     setSubmitting(false)
     if (error) { alert('Error al reservar, intentá de nuevo'); return }
