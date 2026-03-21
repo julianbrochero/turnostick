@@ -769,9 +769,8 @@ export default function Admin() {
                                       {/* Main row */}
                                       <div className="flex items-center gap-3 px-4 py-3">
                                         {/* Time badge */}
-                                        <div className={`flex-shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-xl ${isToday ? 'bg-[#31393C]' : 'bg-slate-100'}`}>
-                                          <span className={`text-sm font-extrabold leading-none ${isToday ? 'text-[#AAFF00]' : 'text-slate-700'}`}>{b.time.slice(0,5).split(':')[0]}</span>
-                                          <span className={`text-[10px] font-medium leading-none mt-0.5 ${isToday ? 'text-slate-400' : 'text-slate-400'}`}>:{b.time.slice(3,5)}</span>
+                                        <div className={`flex-shrink-0 flex items-center justify-center px-3 h-10 rounded-xl ${isToday ? 'bg-[#31393C]' : 'bg-slate-100'}`}>
+                                          <span className={`text-sm font-extrabold tabular-nums tracking-tight ${isToday ? 'text-[#AAFF00]' : 'text-slate-700'}`}>{b.time.slice(0,5)}</span>
                                         </div>
                                         {/* Info */}
                                         <div className="min-w-0 flex-1">
