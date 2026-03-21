@@ -762,8 +762,11 @@ export default function Admin() {
                               {/* Cards */}
                               <div className="space-y-2">
                                 {dayBookings.map(b => {
+                                  const nowMins   = new Date().getHours() * 60 + new Date().getMinutes()
+                                  const [bh, bm]  = b.time.split(':').map(Number)
+                                  const isPastSlot = isToday && (bh * 60 + bm) < nowMins
                                   const borderColor = b.status === 'cancelled' ? 'border-l-red-200' : b.status === 'pending' ? 'border-l-amber-400' : 'border-l-emerald-400'
-                                  const cardBg      = b.status === 'cancelled' ? 'bg-white opacity-50' : b.status === 'pending' ? 'bg-white' : 'bg-white'
+                                  const cardBg      = b.status === 'cancelled' ? 'bg-white opacity-50' : isPastSlot ? 'bg-white opacity-50' : 'bg-white'
                                   return (
                                     <div key={b.id} className={`rounded-2xl border border-slate-100 border-l-4 ${borderColor} ${cardBg} shadow-sm overflow-hidden transition-all hover:shadow-md`}>
                                       {/* Main row */}
