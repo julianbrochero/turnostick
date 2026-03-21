@@ -442,14 +442,58 @@ export default function Admin() {
   const moreActive   = navItems.slice(3).some(n => n.id === view)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex">
 
-      {/* ══ HEADER ═════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3">
+      {/* ══ DESKTOP SIDEBAR (md+) ══════════════════════════════════════════════ */}
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 bg-white border-r border-slate-100 flex-col z-40">
+        <div className="h-16 flex items-center gap-3 px-5 border-b border-slate-100 shrink-0">
+          <Logo size={32} />
+          <div>
+            <div className="font-bold text-slate-900 text-sm leading-tight">turnoStick</div>
+            <div className="text-[11px] text-slate-400 leading-tight truncate max-w-[130px]">{business?.name}</div>
+          </div>
+        </div>
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          {navItems.map(({ id, label, icon }) => {
+            const active  = view === id
+            const pending = id === 'bookings' ? pendingCount : 0
+            return (
+              <button key={id} onClick={() => setView(id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
+                  ${active ? 'bg-[#31393C] text-white font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-medium'}`}>
+                <Icon d={icon} size={17} stroke={active ? '#AAFF00' : 'currentColor'} />
+                <span className="flex-1 text-left">{label}</span>
+                {pending > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                    {pending}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+        <div className="p-3 border-t border-slate-100 space-y-0.5 shrink-0">
+          <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            <Icon d={Icons.copy} size={17} /> Copiar link
+          </button>
+          <button onClick={() => navigate(`/b/${business?.slug}`)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            <Icon d={Icons.eye} size={17} /> Ver página
+          </button>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
+            <Icon d={Icons.logout} size={17} /> Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      {/* ══ MOBILE HEADER (< md) ═══════════════════════════════════════════════ */}
+      <header className="md:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3">
         <Logo size={26} />
         <span className="font-bold text-slate-900 text-sm flex-1">{business?.name || 'turnoStick'}</span>
         <button onClick={() => navigate(`/b/${business?.slug}`)}
-          className="flex items-center gap-1.5 text-xs border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors font-medium">
+          className="flex items-center gap-1.5 text-xs border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium">
           <Icon d={Icons.eye} size={13} stroke="#9ca3af" /> Ver
         </button>
         <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
@@ -459,8 +503,8 @@ export default function Admin() {
       </header>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
-      <div>
-        <main className="min-h-screen p-4 md:p-6 pb-28">
+      <div className="flex-1 md:ml-60">
+        <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8">
           {notification && (
             <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
@@ -1339,9 +1383,9 @@ export default function Admin() {
         </main>
       </div>
 
-      {/* ══ BOTTOM NAV ═════════════════════════════════════════════════════════ */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100/80 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
-        {/* Burbuja "Más" estilo Apple */}
+      {/* ══ BOTTOM NAV — solo mobile ═══════════════════════════════════════════ */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100/80 shadow-[0_-1px_0_rgba(0,0,0,0.04)]">
+        {/* Burbuja "Más" estilo Apple — solo mobile */}
         {showMoreMenu && (
           <>
             <div className="fixed inset-0 z-50" onClick={() => setShowMoreMenu(false)} />
