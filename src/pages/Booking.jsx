@@ -58,6 +58,12 @@ const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurrin
   }
   const dow = new Date(date + 'T12:00').getDay()
 
+  // Para hoy: calcular minutos actuales y filtrar slots ya pasados
+  const isToday = date === today()
+  const nowMins = isToday
+    ? (() => { const n = new Date(); return n.getHours() * 60 + n.getMinutes() })()
+    : -1
+
   const fixedBlocked = new Set([
     ...blockedSlots.filter(b => b.date === date).map(b => b.time),
     ...recurringBlocked.filter(b => b.day_of_week === dow).map(b => b.time),
@@ -66,9 +72,11 @@ const getSlotsForDate = (date, schedules, overrides, blockedSlots = [], recurrin
   const dayBookings = bookedSlots.filter(b => b.date === date)
 
   return slots.filter(slot => {
-    if (fixedBlocked.has(slot)) return false
     const slotStart = timeToMins(slot)
-    const slotEnd   = slotStart + serviceDuration
+    // Ocultar slots pasados para hoy
+    if (isToday && slotStart <= nowMins) return false
+    if (fixedBlocked.has(slot)) return false
+    const slotEnd = slotStart + serviceDuration
     // Contar bookings del mismo servicio que se solapan con este slot
     const overlapCount = dayBookings.filter(b => {
       const bDuration = serviceMap[b.service_id]?.duration || serviceDuration
