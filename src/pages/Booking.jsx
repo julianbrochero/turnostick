@@ -190,9 +190,10 @@ export default function Booking() {
       client_email:   '',
       paid:           false,
       amount:         svc?.price || 0,
-    }).select('id').single()
-    if (!error && data) {
-      setReservationId(data.id)
+    }).select('id')
+    const id = data?.[0]?.id
+    if (!error && id) {
+      setReservationId(id)
       // Marcarlo localmente como reservado para que otros no lo vean
       setBookedSlots(prev => [...prev, { date: selected.date, time: selected.time, status: 'reserved', created_at: new Date().toISOString(), service_id: selected.service }])
     }
