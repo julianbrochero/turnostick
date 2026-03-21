@@ -41,6 +41,7 @@ export default function Admin() {
   const [services, setServices]       = useState([])
   const [loadingData, setLoadingData] = useState(true)
   const [notification, setNotification] = useState(null)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [subPaying, setSubPaying]     = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null) // booking id to confirm delete
   const [filterDate, setFilterDate]   = useState(null)    // null = all dates
@@ -460,33 +461,9 @@ export default function Admin() {
         </div>
       </header>
 
-      {/* TAB BAR */}
-      <nav className="bg-white border-b border-slate-100 sticky top-14 z-30 flex-shrink-0">
-        <div className="flex overflow-x-auto scrollbar-none">
-          {navItems.map(({ id, label, icon }) => {
-            const pending = id === 'bookings' ? bookings.filter(b => b.status === 'pending').length : 0
-            const active = view === id
-            return (
-              <button key={id} onClick={() => setView(id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all relative flex-shrink-0
-                  ${active ? 'border-indigo-600 text-[#31393C] font-bold' : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-200'}`}>
-                <Icon d={icon} size={16} stroke={active ? '#AAFF00' : 'currentColor'}
-                  className={active ? '' : 'opacity-60'} />
-                {label}
-                {pending > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
-                    {pending}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
-
       {/* MAIN */}
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
           {notification && (
             <div className="fixed top-16 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
@@ -1366,6 +1343,61 @@ export default function Admin() {
           )}
         </main>
       </div>
+
+      {/* BOTTOM NAV */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-100 safe-area-pb">
+        {/* "Más" sheet */}
+        {showMoreMenu && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setShowMoreMenu(false)} />
+            <div className="absolute bottom-full left-0 right-0 bg-white border-t border-slate-100 rounded-t-2xl shadow-xl z-40 p-2">
+              {navItems.slice(3).map(({ id, label, icon }) => {
+                const active = view === id
+                return (
+                  <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all
+                      ${active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <Icon d={icon} size={18} stroke={active ? '#AAFF00' : 'currentColor'} />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        <div className="flex items-stretch h-16">
+          {navItems.slice(0, 3).map(({ id, label, icon }) => {
+            const pending = id === 'bookings' ? bookings.filter(b => b.status === 'pending').length : 0
+            const active = view === id
+            return (
+              <button key={id} onClick={() => { setView(id); setShowMoreMenu(false) }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative
+                  ${active ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                <div className="relative">
+                  <Icon d={icon} size={22} stroke={active ? '#AAFF00' : 'currentColor'} />
+                  {pending > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center leading-none">
+                      {pending}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[10px] font-medium ${active ? 'font-bold' : ''}`}>{label}</span>
+                {active && <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-600 rounded-b" />}
+              </button>
+            )
+          })}
+
+          {/* Más */}
+          <button onClick={() => setShowMoreMenu(m => !m)}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative
+              ${navItems.slice(3).some(n => n.id === view) ? 'text-[#31393C]' : 'text-slate-400'}`}>
+            <Icon d={Icons.menu} size={22} stroke={navItems.slice(3).some(n => n.id === view) ? '#AAFF00' : 'currentColor'} />
+            <span className={`text-[10px] font-medium ${navItems.slice(3).some(n => n.id === view) ? 'font-bold' : ''}`}>Más</span>
+            {navItems.slice(3).some(n => n.id === view) && <div className="absolute top-0 inset-x-0 h-0.5 bg-indigo-600 rounded-b" />}
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }
