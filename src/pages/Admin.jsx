@@ -669,7 +669,7 @@ export default function Admin() {
               </div>
               {/* Status filter — chips compactos */}
               <div className="grid grid-cols-4 gap-1 mb-2.5">
-                {[['all','Todos'],['confirmed','Confirm.'],['pending','Pend.'],['cancelled','Canel.']].map(([val, lbl]) => (
+                {[['all','Todos'],['confirmed','Confirm.'],['pending','Pend.'],['cancelled','Cancel.']].map(([val, lbl]) => (
                   <button key={val} onClick={() => setFilterStatus(val)}
                     className={`py-[5px] rounded-full text-[11px] font-semibold whitespace-nowrap text-center transition-all
                       ${filterStatus === val ? 'bg-[#31393C] text-indigo-600' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
