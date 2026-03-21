@@ -668,10 +668,10 @@ export default function Admin() {
                 </button>
               </div>
               {/* Status filter — chips compactos */}
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5 mb-2.5">
-                {[['all','Todos'],['confirmed','Confirmados'],['pending','Pendientes'],['cancelled','Cancelados']].map(([val, lbl]) => (
+              <div className="grid grid-cols-4 gap-1 mb-2.5">
+                {[['all','Todos'],['confirmed','Confirm.'],['pending','Pend.'],['cancelled','Canel.']].map(([val, lbl]) => (
                   <button key={val} onClick={() => setFilterStatus(val)}
-                    className={`px-3 py-[5px] rounded-full text-[13px] font-medium whitespace-nowrap flex-shrink-0 transition-all
+                    className={`py-[5px] rounded-full text-[11px] font-semibold whitespace-nowrap text-center transition-all
                       ${filterStatus === val ? 'bg-[#31393C] text-indigo-600' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                     {lbl}
                   </button>
@@ -690,14 +690,14 @@ export default function Admin() {
                     const count      = bookings.filter(b => b.date === d).length
                     return (
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
-                        className={`flex flex-col items-center justify-center w-12 h-11 rounded-2xl flex-shrink-0 transition-all
+                        className={`flex flex-col items-center justify-center w-[56px] h-[58px] rounded-xl flex-shrink-0 transition-all
                           ${isSelected ? 'bg-[#31393C] shadow-sm' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
                         <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
                           {isToday ? 'Hoy' : dayLabel}
                         </span>
-                        <span className={`text-sm font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
+                        <span className={`text-xl font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
                         {count > 0 && (
-                          <span className={`text-[9px] font-semibold leading-none mt-0.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>·{count}</span>
+                          <span className={`text-[9px] font-semibold leading-none mt-1 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>·{count}</span>
                         )}
                       </button>
                     )
@@ -725,12 +725,12 @@ export default function Admin() {
                           return (
                             <div key={date}>
                               {/* Day header */}
-                              <div className={`flex items-center gap-2 mb-3 ${isPast ? 'opacity-60' : ''}`}>
+                              <div className={`flex items-center gap-2 mb-3 min-w-0 ${isPast ? 'opacity-60' : ''}`}>
                                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isToday ? 'bg-indigo-500' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
-                                <span className={`text-sm font-bold capitalize ${isToday ? 'text-slate-900' : 'text-slate-700'}`}>
+                                <span className={`text-sm font-bold capitalize flex-1 min-w-0 truncate ${isToday ? 'text-slate-900' : 'text-slate-700'}`}>
                                   {isToday ? 'Hoy — ' : ''}{dateLabel}
                                 </span>
-                                <span className="ml-auto text-xs text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
+                                <span className="flex-shrink-0 text-xs text-slate-600 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
                                   {dayBookings.length} turno{dayBookings.length !== 1 ? 's' : ''}
                                 </span>
                               </div>
