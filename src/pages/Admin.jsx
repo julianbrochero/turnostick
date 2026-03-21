@@ -1133,15 +1133,19 @@ export default function Admin() {
                           <span className={`text-sm font-medium w-9 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label.slice(0, 3)}</span>
                           {day.is_open ? (
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
+                              <div className="flex-1 min-w-0">
+                                <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                              </div>
                               <span className="text-slate-400 text-xs shrink-0">–</span>
-                              <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                className="flex-1 min-w-0 px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
+                              <div className="flex-1 min-w-0">
+                                <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                  {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                              </div>
                             </div>
                           ) : (
                             <span className="text-xs text-slate-400 flex-1">Cerrado</span>
@@ -1175,7 +1179,8 @@ export default function Admin() {
                       const slots = slotsForDate(blockDate)
                       return (
                         <div className="px-4 py-3 space-y-3">
-                          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                          <div className="overflow-x-auto -mx-4 pb-1">
+                            <div className="flex gap-1.5 px-4">
                             {blockDays.map(d => {
                               const { day, num, month } = fmtDay(d)
                               const hasBlocks = blockedSlots.some(b => b.date === d)
@@ -1189,6 +1194,7 @@ export default function Admin() {
                                 </button>
                               )
                             })}
+                            </div>
                           </div>
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">Día cerrado</p>
