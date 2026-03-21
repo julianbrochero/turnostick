@@ -741,7 +741,16 @@ export default function Admin() {
                           const isToday = date === todayStr
                           const isPast  = date < todayStr
                           const dateLabel = new Date(date + 'T12:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
-                          const dayBookings = groups[date].slice().sort((a, b) => a.time.localeCompare(b.time))
+                          const nowMins = new Date().getHours() * 60 + new Date().getMinutes()
+                          const toMins  = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+                          const dayBookings = groups[date].slice().sort((a, b) => {
+                            if (isToday) {
+                              const aPast = toMins(a.time) < nowMins
+                              const bPast = toMins(b.time) < nowMins
+                              if (aPast !== bPast) return aPast ? 1 : -1
+                            }
+                            return a.time.localeCompare(b.time)
+                          })
                           const pendingForDay = dayBookings.filter(b => b.status === 'pending').length
                           return (
                             <div key={date}>
