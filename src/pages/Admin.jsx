@@ -57,6 +57,7 @@ export default function Admin() {
   // Service modal
   const [showNewService, setShowNewService] = useState(false)
   const [newService, setNewService] = useState({ name: '', duration: '30', price: '', quantity: '1', color: '#4A6C0E', emoji: '✂️' })
+  const [editingService, setEditingService] = useState(null) // service object being edited
 
   // Settings
   const [settingsForm, setSettingsForm] = useState({ name: '', address: '', phone: '', email: '' })
@@ -179,6 +180,23 @@ export default function Admin() {
     setShowNewService(false)
     setNewService({ name: '', duration: '30', price: '', quantity: '1', color: '#4A6C0E', emoji: '✂️' })
     notify('Servicio creado')
+  }
+
+  const updateService = async () => {
+    if (!editingService?.name) return
+    const payload = {
+      name: editingService.name,
+      duration: parseInt(editingService.duration) || 30,
+      price: parseFloat(editingService.price) || 0,
+      quantity: parseInt(editingService.quantity) || 1,
+      color: editingService.color,
+      emoji: editingService.emoji,
+    }
+    const { data, error } = await supabase.from('services').update(payload).eq('id', editingService.id).select().single()
+    if (error) { notify('Error al guardar'); return }
+    setServices(prev => prev.map(s => s.id === data.id ? data : s))
+    setEditingService(null)
+    notify('Servicio actualizado')
   }
 
   const deleteService = async (id) => {
@@ -888,13 +906,83 @@ export default function Admin() {
                             <div className="text-xs mt-1 text-slate-600">{bookings.filter(b => b.service_id === s.id).length} reservas</div>
                           </div>
                         </div>
-                        <button onClick={() => deleteService(s.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-700 hover:text-red-500 transition-colors">
-                          <Icon d={Icons.trash} size={15} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => setEditingService({ ...s, duration: String(s.duration), price: String(s.price), quantity: String(s.quantity || 1) })}
+                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
+                            <Icon d={Icons.settings} size={15} />
+                          </button>
+                          <button onClick={() => deleteService(s.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
+                            <Icon d={Icons.trash} size={15} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
               }
+
+              {/* Modal editar servicio */}
+              {editingService && (
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="font-bold text-slate-900">Editar servicio</h3>
+                      <button onClick={() => setEditingService(null)}><Icon d={Icons.x} size={18} stroke="#94a3b8" /></button>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Nombre</label>
+                        <input type="text" value={editingService.name} onChange={e => setEditingService(p => ({ ...p, name: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Duración (min)</label>
+                          <input type="text" inputMode="numeric" value={editingService.duration}
+                            onChange={e => setEditingService(p => ({ ...p, duration: e.target.value }))}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Precio (ARS)</label>
+                          <input type="text" inputMode="numeric" value={editingService.price}
+                            onChange={e => setEditingService(p => ({ ...p, price: e.target.value }))}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Cantidad</label>
+                          <input type="text" inputMode="numeric" value={editingService.quantity}
+                            onChange={e => setEditingService(p => ({ ...p, quantity: e.target.value }))}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-2">Ícono</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {['✂️','💇','💅','🧴','🪒','💆','🧖','👗','👠','💄','🏋️','🧘','💪','🩺','🦷','🐾','🎨','🍕','☕','🎵'].map(e => (
+                            <button key={e} onClick={() => setEditingService(p => ({ ...p, emoji: e }))}
+                              className={`w-9 h-9 rounded-lg text-xl flex items-center justify-center transition-all ${editingService.emoji === e ? 'bg-[#31393C] ring-2 ring-indigo-500 scale-110' : 'bg-slate-50 hover:bg-slate-100'}`}>
+                              {e}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-2">Color</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {['#4A6C0E','#ec4899','#14b8a6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16'].map(c => (
+                            <button key={c} onClick={() => setEditingService(p => ({ ...p, color: c }))}
+                              className={`w-8 h-8 rounded-lg border-2 transition-all ${editingService.color === c ? 'border-slate-900 scale-110' : 'border-transparent'}`}
+                              style={{ backgroundColor: c }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button onClick={() => setEditingService(null)} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Cancelar</button>
+                      <button onClick={updateService} className="flex-1 py-2.5 bg-[#31393C] text-indigo-600 rounded-xl text-sm font-medium hover:bg-slate-700">Guardar cambios</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Modal nuevo servicio */}
               {showNewService && (
