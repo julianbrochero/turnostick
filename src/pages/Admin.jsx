@@ -693,7 +693,7 @@ export default function Admin() {
               </div>
               {/* Day picker */}
               {bookingDates.length > 0 && (
-                <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5 mb-5 mt-4 -mx-1 px-1">
+                <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto scrollbar-none py-1 mb-5 mt-4 -mx-1 px-1">
                   {bookingDates.map(d => {
                     const dt         = new Date(d + 'T12:00')
                     const dayLabel   = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
@@ -706,7 +706,7 @@ export default function Admin() {
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
                         className={`relative flex flex-col items-center justify-center w-[58px] h-[62px] rounded-2xl flex-shrink-0 transition-all
                           ${isSelected
-                            ? 'bg-[#31393C] shadow-md scale-105'
+                            ? 'bg-[#31393C] shadow-md'
                             : pendingN > 0
                               ? 'bg-white border-2 border-amber-400 hover:border-amber-500'
                               : 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm'}`}>
