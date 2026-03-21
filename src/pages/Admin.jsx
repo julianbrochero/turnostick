@@ -444,57 +444,8 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ══ DESKTOP SIDEBAR (md+) ══════════════════════════════════════════════ */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-56 bg-white border-r border-slate-100 flex-col z-40">
-        {/* Logo */}
-        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-slate-100 shrink-0">
-          <Logo size={30} />
-          <div>
-            <div className="font-bold text-slate-900 text-sm leading-tight">turnoStick</div>
-            <div className="text-[10px] text-slate-400 leading-tight">{business?.name}</div>
-          </div>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ id, label, icon }) => {
-            const active  = view === id
-            const pending = id === 'bookings' ? pendingCount : 0
-            return (
-              <button key={id} onClick={() => setView(id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${active ? 'bg-[#31393C] text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}>
-                <Icon d={icon} size={17} stroke={active ? '#AAFF00' : 'currentColor'} />
-                <span className="flex-1 text-left">{label}</span>
-                {pending > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
-                    {pending}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Bottom actions */}
-        <div className="p-3 border-t border-slate-100 space-y-1 shrink-0">
-          <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-            <Icon d={Icons.copy} size={17} /> Copiar link de reservas
-          </button>
-          <button onClick={() => navigate(`/b/${business?.slug}`)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-            <Icon d={Icons.eye} size={17} /> Ver página pública
-          </button>
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-600 transition-all">
-            <Icon d={Icons.logout} size={17} /> Cerrar sesión
-          </button>
-        </div>
-      </aside>
-
-      {/* ══ MOBILE HEADER (< md) ═══════════════════════════════════════════════ */}
-      <header className="md:hidden sticky top-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3">
+      {/* ══ HEADER ═════════════════════════════════════════════════════════════ */}
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3">
         <Logo size={26} />
         <span className="font-bold text-slate-900 text-sm flex-1">{business?.name || 'turnoStick'}</span>
         <button onClick={() => navigate(`/b/${business?.slug}`)}
@@ -508,8 +459,8 @@ export default function Admin() {
       </header>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
-      <div className="md:ml-56">
-        <main className="min-h-screen p-4 md:p-6 pb-28 md:pb-8">
+      <div>
+        <main className="min-h-screen p-4 md:p-6 pb-28">
           {notification && (
             <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
               <Icon d={Icons.check} size={14} stroke="#AAFF00" /> {notification}
@@ -1390,13 +1341,13 @@ export default function Admin() {
         </main>
       </div>
 
-      {/* ══ MOBILE BOTTOM NAV (< md) ═══════════════════════════════════════════ */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        {/* "Más" sheet */}
+      {/* ══ BOTTOM NAV ═════════════════════════════════════════════════════════ */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        {/* "Más" sheet — z-50 para que quede encima del nav */}
         {showMoreMenu && (
           <>
-            <div className="fixed inset-0 bg-black/20 z-30 backdrop-blur-[2px]" onClick={() => setShowMoreMenu(false)} />
-            <div className="absolute bottom-full inset-x-0 bg-white rounded-t-3xl shadow-2xl z-40 p-3 pb-4">
+            <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px]" onClick={() => setShowMoreMenu(false)} />
+            <div className="fixed bottom-[60px] inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl p-3 pb-4">
               <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
               {navItems.slice(3).map(({ id, label, icon }) => {
                 const active = view === id
@@ -1411,13 +1362,15 @@ export default function Admin() {
                   </button>
                 )
               })}
-              <button onClick={handleLogout}
-                className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold text-red-400 active:bg-red-50 mt-1 border-t border-slate-100 pt-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50">
-                  <Icon d={Icons.logout} size={18} stroke="#f87171" />
-                </div>
-                Cerrar sesión
-              </button>
+              <div className="border-t border-slate-100 mt-1 pt-1">
+                <button onClick={handleLogout}
+                  className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-semibold text-red-400 active:bg-red-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50">
+                    <Icon d={Icons.logout} size={18} stroke="#f87171" />
+                  </div>
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -1440,7 +1393,7 @@ export default function Admin() {
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] leading-none transition-all ${active ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+                <span className={`text-[10px] leading-none ${active ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
                   {label}
                 </span>
               </button>
@@ -1451,10 +1404,10 @@ export default function Admin() {
           <button onClick={() => setShowMoreMenu(m => !m)}
             className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95">
             <div className={`w-12 h-8 flex items-center justify-center rounded-2xl transition-all duration-200
-              ${moreActive ? 'bg-[#31393C] shadow-sm' : ''}`}>
-              <Icon d={Icons.menu} size={21} stroke={moreActive ? '#AAFF00' : '#aab4b8'} />
+              ${moreActive || showMoreMenu ? 'bg-[#31393C] shadow-sm' : ''}`}>
+              <Icon d={Icons.menu} size={21} stroke={moreActive || showMoreMenu ? '#AAFF00' : '#aab4b8'} />
             </div>
-            <span className={`text-[10px] leading-none transition-all ${moreActive ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
+            <span className={`text-[10px] leading-none ${moreActive || showMoreMenu ? 'font-bold text-[#31393C]' : 'text-slate-400 font-medium'}`}>
               Más
             </span>
           </button>
