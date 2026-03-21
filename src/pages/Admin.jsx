@@ -87,6 +87,7 @@ export default function Admin() {
   const [blockMode, setBlockMode]             = useState('date')   // 'date' | 'recurring'
   const [blockDate, setBlockDate]             = useState(today())
   const [blockDow, setBlockDow]               = useState(1)        // 1=Lunes por defecto
+  const [horariosTab, setHorariosTab]           = useState('schedule') // 'schedule' | 'block' | 'exceptions'
   const blockDays = [...Array(30)].map((_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i)
     return d.toISOString().split('T')[0]
@@ -1172,9 +1173,28 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Mobile tab strip */}
+              <div className="flex md:hidden bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                {[
+                  { id: 'schedule',   label: 'Horarios',  icon: '🗓️' },
+                  { id: 'block',      label: 'Bloquear',  icon: '🚫' },
+                  { id: 'exceptions', label: 'Especiales', icon: '⭐' },
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => setHorariosTab(tab.id)}
+                    className={`flex-1 flex flex-col items-center gap-0.5 py-3 text-[11px] font-semibold transition-colors ${
+                      horariosTab === tab.id
+                        ? 'bg-[#31393C] text-indigo-600'
+                        : 'text-slate-500 hover:bg-slate-50'
+                    }`}>
+                    <span className="text-base leading-none">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+
               <div className="grid md:grid-cols-2 gap-4 items-start">
                 {/* ── Columna izquierda: Horario semanal ── */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'schedule' ? 'hidden md:block' : ''}`}>
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
                     {scheduleDirty && (
@@ -1218,7 +1238,7 @@ export default function Admin() {
                 {/* ── Columna derecha: Bloquear + Excepciones ── */}
                 <div className="space-y-4">
                   {/* Bloquear horarios */}
-                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
                     <div className="px-4 py-3 border-b border-slate-100">
                       <h3 className="font-semibold text-slate-900 text-sm">Bloquear turnos</h3>
                       <p className="text-xs text-slate-500 mt-0.5">Tocá para inhabilitar · tocá de nuevo para liberar</p>
@@ -1315,7 +1335,7 @@ export default function Admin() {
                   </div>
 
                   {/* Excepciones */}
-                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'exceptions' ? 'hidden md:block' : ''}`}>
                     <div className="px-4 py-3 border-b border-slate-100">
                       <h3 className="font-semibold text-slate-900 text-sm">Días especiales</h3>
                       <p className="text-xs text-slate-500 mt-0.5">Feriados o días con horario distinto</p>
