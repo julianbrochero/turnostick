@@ -692,7 +692,7 @@ export default function Admin() {
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
                         className={`flex flex-col items-center justify-center w-[56px] h-[58px] rounded-xl flex-shrink-0 transition-all
                           ${isSelected ? 'bg-[#31393C] shadow-sm' : 'bg-white border border-slate-200 hover:border-slate-300'}`}>
-                        <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-semibold capitalize leading-none ${isSelected ? 'text-indigo-500' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
                           {isToday ? 'Hoy' : dayLabel}
                         </span>
                         <span className={`text-xl font-bold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
