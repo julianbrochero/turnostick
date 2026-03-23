@@ -1239,7 +1239,7 @@ export default function Admin() {
                 {/* ── Columna derecha: Bloquear + Excepciones ── */}
                 <div className="space-y-4">
                   {/* Bloquear horarios */}
-                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
+                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
                     <div className="px-4 py-3 border-b border-slate-100">
                       <h3 className="font-semibold text-slate-900 text-sm">Bloquear turnos</h3>
                       <p className="text-xs text-slate-500 mt-0.5">Tocá para inhabilitar · tocá de nuevo para liberar</p>
