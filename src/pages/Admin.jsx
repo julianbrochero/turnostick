@@ -1239,7 +1239,7 @@ export default function Admin() {
                 {/* ── Columna derecha: Bloquear + Excepciones ── */}
                 <div className="space-y-4">
                   {/* Bloquear horarios */}
-                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
+                  <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
                     <div className="px-4 py-3 border-b border-slate-100">
                       <h3 className="font-semibold text-slate-900 text-sm">Bloquear turnos</h3>
                       <p className="text-xs text-slate-500 mt-0.5">Tocá para inhabilitar · tocá de nuevo para liberar</p>
@@ -1258,8 +1258,8 @@ export default function Admin() {
                     {blockMode === 'date' && (() => {
                       const slots = slotsForDate(blockDate)
                       return (
-                        <div className="px-4 py-3 space-y-3">
-                          <div className="overflow-x-auto -mx-4 pb-1">
+                        <div className="py-3 space-y-3">
+                          <div className="overflow-x-auto pb-1">
                             <div className="flex gap-1.5 px-4">
                             {blockDays.map(d => {
                               const { day, num, month } = fmtDay(d)
@@ -1278,7 +1278,8 @@ export default function Admin() {
                           </div>
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">Día cerrado</p>
-                            : <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                            : <div className="px-4">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                                 {slots.map(t => {
                                   const isBlocked = blockedSlots.some(b => b.date === blockDate && b.time === t)
                                   return (
@@ -1288,6 +1289,7 @@ export default function Admin() {
                                     </button>
                                   )
                                 })}
+                                </div>
                               </div>
                           }
                         </div>
