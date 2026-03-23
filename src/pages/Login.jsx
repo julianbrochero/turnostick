@@ -69,7 +69,7 @@ export default function Login() {
 
         <p className="text-center text-sm text-slate-500 mt-5">
           ¿No tenés cuenta?{' '}
-          <Link to="/register" className="text-indigo-600 font-medium hover:underline">Registrate gratis</Link>
+          <Link to="/register" className="text-slate-800 font-semibold hover:underline">Registrate gratis</Link>
         </p>
         <p className="text-center text-sm mt-2">
           <Link to="/" className="text-slate-400 hover:text-slate-600 text-xs">← Volver al inicio</Link>
