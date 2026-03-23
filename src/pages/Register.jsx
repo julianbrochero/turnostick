@@ -20,7 +20,7 @@ const GoogleIcon = () => (
 )
 
 export default function Register() {
-  const { user, business, loading: authLoading, signInWithGoogle, createBusiness, updateBusiness } = useAuth()
+  const { user, business, loading: authLoading, signInWithGoogle, createBusiness, updateBusiness, signOut } = useAuth()
   const navigate = useNavigate()
 
   const [biz, setBiz]               = useState({ name: '', slug: '', address: '', phone: '' })
@@ -207,6 +207,12 @@ export default function Register() {
             {loading ? 'Creando negocio...' : 'Continuar →'}
           </button>
         </form>
+
+        <p className="text-center mt-4">
+          <button onClick={signOut} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+            Cerrar sesión
+          </button>
+        </p>
       </div>
     </div>
   )
