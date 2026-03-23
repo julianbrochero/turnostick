@@ -1237,7 +1237,7 @@ export default function Admin() {
                 </div>
 
                 {/* ── Columna derecha: Bloquear + Excepciones ── */}
-                <div className="space-y-4">
+                <div className="space-y-4 min-w-0">
                   {/* Bloquear horarios */}
                   <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
                     <div className="px-4 py-3 border-b border-slate-100">
