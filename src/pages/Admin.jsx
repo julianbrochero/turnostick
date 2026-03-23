@@ -1176,20 +1176,21 @@ export default function Admin() {
               {/* Mobile tab strip */}
               <div className="flex md:hidden bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 {[
-                  { id: 'schedule',   label: 'Horarios',  icon: '🗓️' },
-                  { id: 'block',      label: 'Bloquear',  icon: '🚫' },
-                  { id: 'exceptions', label: 'Especiales', icon: '⭐' },
-                ].map(tab => (
-                  <button key={tab.id} onClick={() => setHorariosTab(tab.id)}
-                    className={`flex-1 flex flex-col items-center gap-0.5 py-3 text-[11px] font-semibold transition-colors ${
-                      horariosTab === tab.id
-                        ? 'bg-[#31393C] text-indigo-600'
-                        : 'text-slate-500 hover:bg-slate-50'
-                    }`}>
-                    <span className="text-base leading-none">{tab.icon}</span>
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
+                  { id: 'schedule',   label: 'Horarios',   iconD: Icons.clock },
+                  { id: 'block',      label: 'Bloquear',   iconD: Icons.lock },
+                  { id: 'exceptions', label: 'Especiales', iconD: Icons.calendarCheck },
+                ].map(tab => {
+                  const active = horariosTab === tab.id
+                  return (
+                    <button key={tab.id} onClick={() => setHorariosTab(tab.id)}
+                      className={`flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-semibold transition-colors ${
+                        active ? 'bg-[#31393C] text-indigo-600' : 'text-slate-500 hover:bg-slate-50'
+                      }`}>
+                      <Icon d={tab.iconD} size={16} stroke={active ? '#AAFF00' : 'currentColor'} />
+                      <span>{tab.label}</span>
+                    </button>
+                  )
+                })}
               </div>
 
               <div className="grid md:grid-cols-2 gap-4 items-start">
@@ -1245,12 +1246,12 @@ export default function Admin() {
                     </div>
                     <div className="px-4 pt-3 flex gap-2">
                       <button onClick={() => setBlockMode('date')}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${blockMode === 'date' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                        📅 Fecha
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${blockMode === 'date' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        <Icon d={Icons.calendar} size={13} stroke={blockMode === 'date' ? '#AAFF00' : 'currentColor'} /> Fecha
                       </button>
                       <button onClick={() => setBlockMode('recurring')}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${blockMode === 'recurring' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                        🔁 Siempre
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold rounded-xl transition-all ${blockMode === 'recurring' ? 'bg-[#31393C] text-indigo-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        <Icon d={Icons.repeat} size={13} stroke={blockMode === 'recurring' ? '#AAFF00' : 'currentColor'} /> Siempre
                       </button>
                     </div>
 
@@ -1277,12 +1278,12 @@ export default function Admin() {
                           </div>
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">Día cerrado</p>
-                            : <div className="grid grid-cols-4 gap-1.5">
+                            : <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                                 {slots.map(t => {
                                   const isBlocked = blockedSlots.some(b => b.date === blockDate && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleBlockSlot(blockDate, t)}
-                                      className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-3 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
@@ -1312,12 +1313,12 @@ export default function Admin() {
                           </div>
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">{dowLabel} está cerrado</p>
-                            : <div className="grid grid-cols-4 gap-1.5">
+                            : <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                                 {slots.map(t => {
                                   const isBlocked = recurringBlocked.some(b => b.day_of_week === blockDow && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleRecurringBlock(blockDow, t)}
-                                      className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-3 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
@@ -1344,25 +1345,30 @@ export default function Admin() {
                       <input type="date" value={newOverride.date} min={today()}
                         onChange={e => setNewOverride(p => ({ ...p, date: e.target.value }))}
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-                      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2.5">
-                        <span className="text-xs font-medium text-slate-700">
-                          {newOverride.is_open ? '🟢 Horario especial' : '🔴 Cerrado todo el día'}
+                      <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
+                        className="w-full flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2.5 hover:bg-slate-50 transition-colors">
+                        <span className="flex items-center gap-2 text-xs font-medium text-slate-700">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${newOverride.is_open ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                          {newOverride.is_open ? 'Horario especial' : 'Cerrado todo el día'}
                         </span>
-                        <button onClick={() => setNewOverride(p => ({ ...p, is_open: !p.is_open }))}
-                          className={`relative shrink-0 w-10 h-5 rounded-full transition-colors ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                        <span className={`relative shrink-0 w-10 h-5 rounded-full transition-colors ${newOverride.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                           <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${newOverride.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </button>
-                      </div>
+                        </span>
+                      </button>
                       {newOverride.is_open && (
                         <div className="grid grid-cols-2 gap-2">
-                          <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
-                            className="w-full px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                          <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
-                            className="w-full px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
+                          <div className="min-w-0">
+                            <select value={newOverride.open_time} onChange={e => setNewOverride(p => ({ ...p, open_time: e.target.value }))}
+                              className="w-full px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </div>
+                          <div className="min-w-0">
+                            <select value={newOverride.close_time} onChange={e => setNewOverride(p => ({ ...p, close_time: e.target.value }))}
+                              className="w-full px-2 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </div>
                         </div>
                       )}
                       <button onClick={addOverride}
