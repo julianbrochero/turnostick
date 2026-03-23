@@ -111,7 +111,7 @@ export default function Admin() {
 
   const fetchAll = async () => {
     const [bRes, sRes, schRes, ovRes, blRes, rbRes] = await Promise.all([
-      supabase.from('bookings').select('*').eq('business_id', business.id).order('date', { ascending: true }),
+      supabase.from('bookings').select('*').eq('business_id', business.id).gte('date', today()).order('date', { ascending: true }),
       supabase.from('services').select('*').eq('business_id', business.id).eq('active', true).order('name'),
       supabase.from('schedules').select('*').eq('business_id', business.id),
       supabase.from('schedule_overrides').select('*').eq('business_id', business.id).gte('date', today()).order('date'),
@@ -362,7 +362,9 @@ export default function Admin() {
     { id: 'settings',  label: 'Configuración',  icon: Icons.settings },
   ]
 
-  const statusFiltered = filterStatus === 'all' ? bookings : bookings.filter(b => b.status === filterStatus)
+  const todayStr = today()
+  const statusFiltered = (filterStatus === 'all' ? bookings : bookings.filter(b => b.status === filterStatus))
+    .filter(b => b.date >= todayStr)
   const filteredBookings = filterDate ? statusFiltered.filter(b => b.date === filterDate) : statusFiltered
   // Unique sorted dates from status-filtered bookings (for the day picker)
   const bookingDates = [...new Set(statusFiltered.map(b => b.date))].sort()
