@@ -48,8 +48,8 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  const signInWithGoogle = async () => {
-    const redirectTo = `${window.location.origin}/register`
+  const signInWithGoogle = async (redirectPath = '/register') => {
+    const redirectTo = `${window.location.origin}${redirectPath}`
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo },

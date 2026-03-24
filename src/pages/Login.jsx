@@ -14,22 +14,23 @@ const GoogleIcon = () => (
 )
 
 export default function Login() {
-  const { user, business, signInWithGoogle } = useAuth()
+  const { user, business, loading: authLoading, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
   useEffect(() => {
-    if (user && business)  navigate('/admin',    { replace: true })
+    if (authLoading) return
+    if (user && business)       navigate('/admin',    { replace: true })
     else if (user && !business) navigate('/register', { replace: true })
-  }, [user, business])
+  }, [user, business, authLoading])
 
   const handleGoogle = async () => {
     setError('')
     setLoading(true)
     try {
-      await signInWithGoogle()
-      // La redirección la maneja Supabase → vuelve a /register
+      await signInWithGoogle('/login')
+      // La redirección la maneja Supabase → vuelve a /login → useEffect redirige a /admin
     } catch (err) {
       setError('No se pudo conectar con Google. Intentá de nuevo.')
       setLoading(false)
