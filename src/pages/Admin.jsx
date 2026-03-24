@@ -813,7 +813,27 @@ export default function Admin() {
                                         </div>
                                       </div>
 
-                                      {/* Action row */}
+                                      {/* Action row — cancelados: solo eliminar */}
+                                      {b.status === 'cancelled' && (
+                                        <div className="flex items-stretch border-t border-slate-100">
+                                          <div className="flex-1" />
+                                          {confirmDelete === b.id
+                                            ? <div className="flex items-center gap-1 px-2 py-1.5">
+                                                <span className="text-xs text-slate-400">¿Eliminar?</span>
+                                                <button onClick={() => { deleteBooking(b.id); setConfirmDelete(null) }}
+                                                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sí</button>
+                                                <button onClick={() => setConfirmDelete(null)}
+                                                  className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">No</button>
+                                              </div>
+                                            : <button onClick={() => setConfirmDelete(b.id)}
+                                                className="flex items-center gap-1.5 px-3 py-2 text-xs text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-95">
+                                                <Icon d={Icons.trash} size={13} /> Eliminar
+                                              </button>
+                                          }
+                                        </div>
+                                      )}
+
+                                      {/* Action row — activos */}
                                       {b.status !== 'cancelled' && (
                                         <div className="flex items-stretch border-t border-slate-50">
                                           {/* Confirm */}
