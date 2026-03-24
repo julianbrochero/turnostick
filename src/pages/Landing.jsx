@@ -15,6 +15,12 @@ export default function Landing() {
   }
 
   useEffect(() => {
+    if (loading) return
+    if (user && business) navigate('/admin', { replace: true })
+    else if (user && !business) navigate('/register', { replace: true })
+  }, [user, business, loading])
+
+  useEffect(() => {
     const els = document.querySelectorAll('.reveal')
     const observer = new IntersectionObserver(
       entries => entries.forEach(e => {

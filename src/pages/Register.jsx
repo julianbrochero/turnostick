@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Icon, Icons } from '../components/Icon'
@@ -29,13 +29,13 @@ export default function Register() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showTrialModal, setShowTrialModal] = useState(false)
   const [startingTrial, setStartingTrial]   = useState(false)
+  const justCreated = useRef(false)
 
-  // Si ya tiene negocio → admin (cualquier estado excepto recién creado sin trial)
+  // Si ya tiene negocio → admin (salvo que acabe de crearlo en esta sesión)
   useEffect(() => {
     if (authLoading) return
-    if (user && business && (business.trial_ends_at || business.subscription_status === 'active' || business.subscription_status === 'blocked')) {
-      navigate('/admin', { replace: true })
-    }
+    if (justCreated.current) return
+    if (user && business) navigate('/admin', { replace: true })
   }, [user, business, authLoading])
 
   const handleGoogle = async () => {
@@ -55,6 +55,7 @@ export default function Register() {
     setError('')
     setLoading(true)
     try {
+      justCreated.current = true
       await createBusiness(biz)
       // Mostrar modal para iniciar prueba — NO navegar todavía
       setShowTrialModal(true)

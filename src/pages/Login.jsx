@@ -29,8 +29,8 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await signInWithGoogle('/login')
-      // La redirección la maneja Supabase → vuelve a /login → useEffect redirige a /admin
+      await signInWithGoogle('/register')
+      // La redirección la maneja Supabase → vuelve a /register o / → useEffect redirige a /admin
     } catch (err) {
       setError('No se pudo conectar con Google. Intentá de nuevo.')
       setLoading(false)
