@@ -162,6 +162,7 @@ export default function Landing() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-slate-600">
             <a href="#features" className="hover:text-indigo-600 transition-colors">Características</a>
+            <a href="#tutorial" className="hover:text-indigo-600 transition-colors">Tutorial</a>
             <a href="#demo"     className="hover:text-indigo-600 transition-colors">Demo</a>
             <a href="#pricing"  className="hover:text-indigo-600 transition-colors">Precios</a>
             <a href="#reviews"  className="hover:text-indigo-600 transition-colors">Reseñas</a>
@@ -230,6 +231,57 @@ export default function Landing() {
                 <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── VIDEO TUTORIAL ─────────────────────────────────────────────────── */}
+      <section id="tutorial" className="py-20 px-6 bg-slate-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="reveal inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4 shadow-sm">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+              Tutorial — 1 minuto
+            </div>
+            <h2 className="reveal text-3xl font-bold text-slate-900 mb-3">De cero a tu agenda online en 5 minutos</h2>
+            <p className="reveal text-slate-500 max-w-lg mx-auto" style={{ transitionDelay: '80ms' }}>
+              Mirá cómo se configura turnoStick desde cero hasta tener la agenda funcionando.
+            </p>
+          </div>
+
+          <div className="reveal flex flex-col md:flex-row items-center justify-center gap-10" style={{ transitionDelay: '120ms' }}>
+
+            {/* Video vertical (Short) */}
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-black flex-shrink-0" style={{ width: '300px', height: '533px' }}>
+              <iframe
+                src="https://www.youtube.com/embed/W4l30UfGFJ8?rel=0&modestbranding=1"
+                title="Tutorial turnoStick"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* Callouts */}
+            <div className="space-y-5 max-w-xs w-full">
+              {[
+                { step: '01', icon: Icons.settings, title: 'Configurá tu negocio',   desc: 'Nombre, servicios, horarios y medios de pago en minutos.' },
+                { step: '02', icon: Icons.link,     title: 'Compartí tu link',       desc: 'Tu página de reservas queda lista en turnostick.online/b/tu-negocio.' },
+                { step: '03', icon: Icons.calendar, title: 'Recibí turnos 24/7',     desc: 'Tus clientes reservan solos. Vos recibís el aviso al instante.' },
+                { step: '04', icon: Icons.dollar,   title: 'Cobrá por adelantado',   desc: 'Integrá Mercado Pago y eliminá las inasistencias.' },
+              ].map(({ step, icon, title, desc }) => (
+                <div key={step} className="flex items-start gap-4">
+                  <div className="w-9 h-9 bg-[#31393C] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Icon d={icon} size={17} stroke="#AAFF00" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-widest mb-0.5">PASO {step}</div>
+                    <div className="font-semibold text-slate-900 text-sm mb-0.5">{title}</div>
+                    <div className="text-xs text-slate-500 leading-relaxed">{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
