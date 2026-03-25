@@ -12,8 +12,10 @@ export default function Landing() {
   const [demoTab, setDemoTab]               = useState('admin')
   const [bookingStep, setBookingStep]       = useState(1)
   const [selectedService, setSelectedService] = useState(null)
-  const [selectedDate, setSelectedDate]     = useState(null)
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0)
   const [selectedTime, setSelectedTime]     = useState(null)
+  const [demoName, setDemoName]             = useState('')
+  const [demoEmail, setDemoEmail]           = useState('')
 
   const goToApp = () => {
     if (loading) return
@@ -30,8 +32,10 @@ export default function Landing() {
     if (tab === 'booking') {
       setBookingStep(1)
       setSelectedService(null)
-      setSelectedDate(null)
+      setSelectedDayIdx(0)
       setSelectedTime(null)
+      setDemoName('')
+      setDemoEmail('')
     }
   }
 
@@ -84,18 +88,25 @@ export default function Landing() {
   ]
 
   const mockServices = [
-    { name: 'Corte de cabello',     price: '$3.500',  duration: '45 min',  color: 'bg-blue-500'   },
-    { name: 'Coloración completa',  price: '$8.000',  duration: '120 min', color: 'bg-purple-500' },
-    { name: 'Manicura + Pedicura',  price: '$4.500',  duration: '60 min',  color: 'bg-pink-500'   },
+    { name: 'Corte de cabello',    price: '$3.500', duration: 45,  emoji: '✂️', hex: '#4A6C0E' },
+    { name: 'Coloración completa', price: '$8.000', duration: 120, emoji: '🎨', hex: '#7c3aed' },
+    { name: 'Manicura + Pedicura', price: '$4.500', duration: 60,  emoji: '💅', hex: '#ec4899' },
   ]
 
-  const mockTimes  = ['09:00', '09:45', '10:30', '11:15', '14:00', '15:30', '16:15']
-  const chartBars  = [42, 68, 55, 83, 61, 95, 72]
-  const chartDays  = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+  const mockDays = [
+    { day: 'mar', num: 25, closed: false },
+    { day: 'mié', num: 26, closed: false },
+    { day: 'jue', num: 27, closed: false },
+    { day: 'vie', num: 28, closed: false },
+    { day: 'sáb', num: 29, closed: false },
+    { day: 'dom', num: 30, closed: true  },
+    { day: 'lun', num: 31, closed: false },
+  ]
 
-  // March 2025 starts on Saturday → 6 leading empty cells
-  const calLeading = 6
-  const calAvailable = [26, 27, 28, 31]
+  const mockTimes    = ['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30']
+  const mockBooked   = new Set(['10:00', '14:00'])
+  const chartBars    = [42, 68, 55, 83, 61, 95, 72]
+  const chartDays    = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
   const sidebarNav = [
     { icon: Icons.home,     label: 'Dashboard',      active: true  },
@@ -253,8 +264,8 @@ export default function Landing() {
               </div>
               <div className="flex-1 bg-white rounded-md px-3 py-1.5 text-xs text-slate-400 font-mono border border-slate-200">
                 {demoTab === 'admin'
-                  ? '🔒 app.turnostick.com/admin'
-                  : '🔒 turnostick.com/b/peluqueria-valentina'}
+                  ? '🔒 app.turnostick.online/admin'
+                  : '🔒 turnostick.online/b/peluqueria-valentina'}
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
                 <div className="w-2 h-2 rounded-full bg-green-400" />
@@ -403,207 +414,213 @@ export default function Landing() {
 
             {/* ── BOOKING MOCKUP ──────────────────────────────────────────── */}
             {demoTab === 'booking' && (
-              <div className="bg-gradient-to-br from-slate-100 to-slate-200 flex items-start justify-center p-8" style={{ minHeight: '520px' }}>
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+              <div className="bg-slate-50" style={{ minHeight: '520px', maxHeight: '520px', overflowY: 'auto' }}>
 
-                  {/* Business header */}
-                  <div className="bg-[#31393C] px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">P</div>
+                {/* Header — idéntico al real */}
+                <div className="bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img src="/favicon2.png" alt="turnoStick" className="w-8 h-8 flex-shrink-0" />
                       <div>
-                        <div className="text-white font-bold text-sm">Peluquería Valentina</div>
-                        <div className="text-slate-400 text-xs mt-0.5">📍 Palermo, Buenos Aires · Lun–Sáb</div>
+                        <div className="font-bold text-slate-900 text-sm leading-tight">Peluquería Valentina</div>
+                        <div className="text-xs text-slate-800 font-semibold leading-tight tracking-wide">turnoStick</div>
                       </div>
                     </div>
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <Icon d={Icons.home} size={13} /> Inicio
+                    </span>
                   </div>
+                </div>
 
-                  {/* Steps indicator */}
-                  <div className="flex items-center px-5 py-3 border-b border-slate-100 bg-slate-50">
-                    {['Servicio', 'Fecha', 'Horario', 'Confirmar'].map((s, i) => (
-                      <div key={s} className="flex items-center flex-1">
-                        <div className="flex items-center gap-1">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all ${
-                            i < bookingStep - 1
-                              ? 'bg-indigo-600 text-white'
-                              : i === bookingStep - 1
-                              ? 'bg-[#31393C] text-white'
-                              : 'bg-slate-100 text-slate-400'
-                          }`}>
-                            {i < bookingStep - 1 ? '✓' : i + 1}
+                <div className="max-w-lg mx-auto px-4 py-6">
+                  {/* Stepper — idéntico al real */}
+                  {bookingStep < 4 && (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-2">
+                        {['Servicio','Fecha','Datos','Pago'].map((label, i) => (
+                          <div key={label} className={`flex items-center gap-1 text-xs font-medium ${i + 1 <= bookingStep ? 'text-[#31393C]' : 'text-slate-400'}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                              i + 1 < bookingStep  ? 'bg-[#31393C] text-indigo-600' :
+                              i + 1 === bookingStep ? 'bg-indigo-600 text-slate-900' :
+                              'bg-slate-100 text-slate-400'
+                            }`}>
+                              {i + 1 < bookingStep ? <Icon d={Icons.check} size={12} stroke="#AAFF00" /> : i + 1}
+                            </div>
+                            <span className="hidden sm:block">{label}</span>
                           </div>
-                          <span className={`text-[10px] font-semibold hidden sm:inline transition-colors ${
-                            i === bookingStep - 1 ? 'text-slate-900' : i < bookingStep - 1 ? 'text-indigo-600' : 'text-slate-300'
-                          }`}>{s}</span>
-                        </div>
-                        {i < 3 && (
-                          <div className={`flex-1 h-0.5 mx-1 transition-all ${i < bookingStep - 1 ? 'bg-indigo-600' : 'bg-slate-100'}`} />
-                        )}
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                      <div className="h-1 bg-slate-200 rounded-full">
+                        <div className="h-1 bg-indigo-600 rounded-full transition-all" style={{ width: `${((bookingStep - 1) / 3) * 100}%` }} />
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Step content */}
-                  <div className="p-5">
+                  {/* Card — idéntica al real */}
+                  <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
 
-                    {/* ── Step 1: Select service ── */}
+                    {/* Step 1 — Servicio */}
                     {bookingStep === 1 && (
                       <div>
-                        <p className="text-sm font-bold text-slate-900 mb-4">¿Qué servicio necesitás?</p>
-                        <div className="space-y-2.5">
+                        <h2 className="text-lg font-bold text-slate-900 mb-1">Elegí un servicio</h2>
+                        <p className="text-sm text-slate-500 mb-5">Seleccioná el servicio que querés reservar</p>
+                        <div className="grid gap-3">
                           {mockServices.map(s => (
-                            <button
-                              key={s.name}
+                            <button key={s.name}
                               onClick={() => { setSelectedService(s.name); setBookingStep(2) }}
-                              className="w-full flex items-center justify-between p-3.5 border-2 border-slate-100 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all text-left group"
-                            >
+                              className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${selectedService === s.name ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-300'}`}>
                               <div className="flex items-center gap-3">
-                                <div className={`w-2.5 h-2.5 rounded-full ${s.color} flex-shrink-0`} />
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: s.hex + '20' }}>
+                                  {s.emoji}
+                                </div>
                                 <div>
-                                  <div className="font-semibold text-slate-900 text-sm group-hover:text-indigo-700">{s.name}</div>
-                                  <div className="text-xs text-slate-400">{s.duration}</div>
+                                  <div className="font-semibold text-slate-900 text-sm">{s.name}</div>
+                                  <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <Icon d={Icons.clock} size={11} stroke="#94a3b8" /> {s.duration} min
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 text-sm">{s.price}</span>
-                                <Icon d={Icons.arrow} size={14} stroke="#6366f1" />
+                              <div className="text-right">
+                                <div className="font-bold text-slate-900">{s.price}</div>
+                                {selectedService === s.name && (
+                                  <div className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center ml-auto mt-1">
+                                    <Icon d={Icons.check} size={10} stroke="white" />
+                                  </div>
+                                )}
                               </div>
                             </button>
                           ))}
                         </div>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-slate-400 bg-slate-50 rounded-lg px-3 py-2">
-                          <Icon d={Icons.lock} size={12} />
-                          Pago seguro con Mercado Pago
-                        </div>
                       </div>
                     )}
 
-                    {/* ── Step 2: Select date ── */}
+                    {/* Step 2 — Fecha y hora */}
                     {bookingStep === 2 && (
                       <div>
-                        <p className="text-sm font-bold text-slate-900 mb-1">Elegí una fecha</p>
-                        <p className="text-xs text-slate-400 mb-4">{selectedService}</p>
+                        <h2 className="text-lg font-bold text-slate-900 mb-1">Elegí fecha y hora</h2>
+                        <p className="text-sm text-slate-500 mb-4">Seleccioná cuándo querés tu turno</p>
 
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-slate-800">Marzo 2025</span>
-                          <div className="flex gap-1">
-                            <button className="w-6 h-6 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 text-xs">‹</button>
-                            <button className="w-6 h-6 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 text-xs">›</button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-7 gap-0.5 text-center mb-1">
-                          {['Do','Lu','Ma','Mi','Ju','Vi','Sá'].map(d => (
-                            <div key={d} className="text-[10px] text-slate-400 font-semibold py-1">{d}</div>
+                        {/* Day picker — scroll horizontal igual al real */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1">
+                          {mockDays.map((d, i) => (
+                            <button key={i} disabled={d.closed}
+                              onClick={() => { if (!d.closed) { setSelectedDayIdx(i); setSelectedTime(null) } }}
+                              className={`flex flex-col items-center min-w-[52px] p-2 rounded-xl border-2 transition-all flex-shrink-0 ${
+                                d.closed ? 'border-slate-100 opacity-40 cursor-not-allowed' :
+                                selectedDayIdx === i ? 'border-indigo-500 bg-indigo-50' :
+                                'border-slate-100 hover:border-slate-200'
+                              }`}>
+                              <span className="text-xs text-slate-500 capitalize">{i === 0 ? 'HOY' : d.day}</span>
+                              <span className="text-lg font-bold text-slate-900">{d.num}</span>
+                              <span className="text-xs text-slate-400">mar</span>
+                            </button>
                           ))}
                         </div>
 
-                        <div className="grid grid-cols-7 gap-0.5 text-center">
-                          {[...Array(calLeading)].map((_, i) => <div key={`e${i}`} />)}
-                          {[...Array(31)].map((_, i) => {
-                            const day = i + 1
-                            const past = day <= 25
-                            const available = calAvailable.includes(day)
-                            const selected = selectedDate === day
-                            return (
-                              <button
-                                key={day}
-                                disabled={!available}
-                                onClick={() => { if (available) { setSelectedDate(day); setBookingStep(3) } }}
-                                className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                  selected
-                                    ? 'bg-[#31393C] text-white font-bold'
-                                    : available
-                                    ? 'hover:bg-indigo-100 hover:text-indigo-700 text-slate-900 cursor-pointer'
-                                    : past
-                                    ? 'text-slate-200 cursor-not-allowed'
-                                    : 'text-slate-300 cursor-not-allowed'
-                                }`}
-                              >{day}</button>
-                            )
-                          })}
-                        </div>
-
-                        <button
-                          onClick={() => setBookingStep(1)}
-                          className="mt-4 text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1"
-                        >
-                          ← Cambiar servicio
-                        </button>
+                        {/* Horarios — 4 columnas igual al real */}
+                        {mockDays[selectedDayIdx]?.closed
+                          ? <div className="text-center py-8 bg-slate-50 rounded-xl">
+                              <div className="text-2xl mb-2">🔒</div>
+                              <p className="text-slate-500 text-sm font-medium">No hay turnos disponibles este día</p>
+                              <p className="text-slate-400 text-xs mt-1">Seleccioná otra fecha</p>
+                            </div>
+                          : <div className="grid grid-cols-4 gap-2">
+                              {mockTimes.map(t => {
+                                const taken = mockBooked.has(t)
+                                return (
+                                  <button key={t} disabled={taken}
+                                    onClick={() => !taken && setSelectedTime(t)}
+                                    className={`py-2 rounded-lg text-sm font-medium border transition-all ${
+                                      taken ? 'border-slate-100 text-slate-300 cursor-not-allowed bg-slate-50' :
+                                      selectedTime === t ? 'bg-indigo-600 text-slate-900 font-bold border-indigo-600' :
+                                      'border-slate-200 text-slate-700 hover:border-indigo-600 hover:bg-indigo-50'
+                                    }`}>{t}</button>
+                                )
+                              })}
+                            </div>
+                        }
                       </div>
                     )}
 
-                    {/* ── Step 3: Select time ── */}
+                    {/* Step 3 — Datos */}
                     {bookingStep === 3 && (
                       <div>
-                        <p className="text-sm font-bold text-slate-900 mb-1">Elegí un horario</p>
-                        <p className="text-xs text-slate-400 mb-4">
-                          {['Jueves','Viernes','Sábado','','','','Martes'][calAvailable.indexOf(selectedDate)]} {selectedDate} de marzo · {selectedService}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {mockTimes.map(t => (
-                            <button
-                              key={t}
-                              onClick={() => { setSelectedTime(t); setBookingStep(4) }}
-                              className={`py-2.5 border-2 rounded-xl text-sm font-bold transition-all hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 ${
-                                selectedTime === t
-                                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                  : 'border-slate-100 text-slate-800'
-                              }`}
-                            >{t}</button>
-                          ))}
-                        </div>
-                        <div className="mt-3 text-xs text-slate-400 flex items-center gap-1">
-                          <Icon d={Icons.clock} size={11} />
-                          Los horarios en gris ya están reservados
-                        </div>
-                        <button
-                          onClick={() => setBookingStep(2)}
-                          className="mt-3 text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1"
-                        >
-                          ← Cambiar fecha
-                        </button>
-                      </div>
-                    )}
-
-                    {/* ── Step 4: Confirmed ── */}
-                    {bookingStep === 4 && (
-                      <div className="text-center py-2">
-                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Icon d={Icons.check} size={28} stroke="#16a34a" />
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-lg mb-1">¡Turno reservado!</h4>
-                        <p className="text-sm text-slate-500 mb-5">Te enviamos la confirmación por email 📧</p>
-
-                        <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2.5 mb-5">
+                        <h2 className="text-lg font-bold text-slate-900 mb-1">Tus datos</h2>
+                        <p className="text-sm text-slate-500 mb-5">Para enviarte la confirmación</p>
+                        <div className="space-y-4">
                           {[
-                            ['Servicio', selectedService],
-                            ['Fecha', `${['Jueves','Viernes','Sábado','','','','Martes'][calAvailable.indexOf(selectedDate)]} ${selectedDate} de marzo`],
-                            ['Horario', `${selectedTime} hs`],
-                            ['Profesional', 'Valentina G.'],
-                            ['Total abonado', mockServices.find(s => s.name === selectedService)?.price || ''],
-                          ].map(([k, v]) => (
-                            <div key={k} className="flex justify-between items-center text-sm">
-                              <span className="text-slate-400">{k}</span>
-                              <span className="font-semibold text-slate-900">{v}</span>
+                            { label: 'Nombre completo *', type: 'text',  placeholder: 'Ej: María García',    value: demoName,  set: setDemoName  },
+                            { label: 'Email *',           type: 'email', placeholder: 'tu@email.com',         value: demoEmail, set: setDemoEmail },
+                            { label: 'Teléfono',          type: 'tel',   placeholder: '+54 9 11 1234-5678',   value: '',        set: () => {}     },
+                          ].map(({ label, type, placeholder, value, set }) => (
+                            <div key={label}>
+                              <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+                              <input type={type} placeholder={placeholder} value={value}
+                                onChange={e => set(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent" />
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
 
-                        <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-4">
-                          <Icon d={Icons.bell} size={12} />
-                          Recordatorio automático 24 hs antes
+                    {/* Step 4 — Confirmado */}
+                    {bookingStep === 4 && (
+                      <div className="py-2">
+                        <div className="text-center mb-5">
+                          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Icon d={Icons.check} size={30} stroke="#10b981" />
+                          </div>
+                          <h2 className="text-2xl font-bold text-slate-900 mb-1">¡Turno reservado!</h2>
+                          <p className="text-slate-500 text-sm">
+                            El negocio te confirma el turno. Detalles enviados a <strong>{demoEmail || 'tu email'}</strong>
+                          </p>
                         </div>
-
+                        <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2 text-sm mb-5">
+                          {[
+                            ['Negocio',   'Peluquería Valentina'],
+                            ['Servicio',  selectedService],
+                            ['Fecha',     `${mockDays[selectedDayIdx]?.day} ${mockDays[selectedDayIdx]?.num} de marzo`],
+                            ['Hora',      `${selectedTime} hs`],
+                            ['Total',     mockServices.find(s => s.name === selectedService)?.price],
+                          ].map(([k, v]) => (
+                            <div key={k} className="flex justify-between">
+                              <span className="text-slate-500">{k}</span>
+                              <span className="font-medium">{v}</span>
+                            </div>
+                          ))}
+                        </div>
                         <button
-                          onClick={() => { setBookingStep(1); setSelectedService(null); setSelectedDate(null); setSelectedTime(null) }}
-                          className="w-full bg-[#31393C] font-bold py-3 rounded-xl text-sm hover:bg-slate-700 transition-colors"
-                          style={{ color: '#AAFF00' }}
-                        >
+                          onClick={() => { setBookingStep(1); setSelectedService(null); setSelectedDayIdx(0); setSelectedTime(null); setDemoName(''); setDemoEmail('') }}
+                          className="w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors mb-2">
                           Reservar otro turno
                         </button>
                       </div>
                     )}
                   </div>
+
+                  {/* Navegación — idéntica al real */}
+                  {bookingStep < 4 && bookingStep > 1 && (
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={() => { setBookingStep(s => s - 1); setSelectedTime(null) }}
+                        className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors">
+                        ← Volver
+                      </button>
+                      <button
+                        onClick={() => bookingStep === 3 ? setBookingStep(4) : setBookingStep(s => s + 1)}
+                        disabled={
+                          (bookingStep === 2 && !selectedTime) ||
+                          (bookingStep === 3 && (!demoName || !demoEmail))
+                        }
+                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${
+                          (bookingStep === 2 && selectedTime) || (bookingStep === 3 && demoName && demoEmail)
+                            ? 'bg-[#31393C] text-indigo-600 hover:bg-slate-700'
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        }`}>
+                        {bookingStep === 3 ? 'Confirmar reserva →' : 'Continuar →'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
