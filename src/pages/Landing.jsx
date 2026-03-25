@@ -73,10 +73,10 @@ export default function Landing() {
 
   // ─── Demo mock data ────────────────────────────────────────────────────────
   const mockStats = [
-    { label: 'Turnos hoy',        value: '12',     change: '+3 vs ayer',    color: 'text-indigo-600' },
-    { label: 'Ingresos del mes',  value: '$47.600', change: '+18% este mes', color: 'text-green-600' },
-    { label: 'Clientes nuevos',   value: '8',      change: 'esta semana',   color: 'text-blue-600' },
-    { label: 'Confirmados',       value: '94%',    change: '+2% promedio',  color: 'text-purple-600' },
+    { label: 'Total turnos',     value: '12',      icon: Icons.calendar, color: 'text-slate-900' },
+    { label: 'Confirmados',      value: '9',       icon: Icons.check,    color: 'text-slate-900' },
+    { label: 'Pendientes',       value: '2',       icon: Icons.clock,    color: 'text-slate-900' },
+    { label: 'Ingresos cobrados',value: '$47.600', icon: Icons.dollar,   color: 'text-slate-900' },
   ]
 
   const mockBookings = [
@@ -275,140 +275,192 @@ export default function Landing() {
 
             {/* ── ADMIN MOCKUP ────────────────────────────────────────────── */}
             {demoTab === 'admin' && (
-              <div className="flex bg-slate-100" style={{ height: '520px' }}>
+              <div className="bg-slate-50 flex flex-col" style={{ height: '520px' }}>
 
-                {/* Sidebar */}
-                <div className="bg-[#31393C] w-44 flex-shrink-0 flex flex-col py-4 overflow-hidden">
-                  <div className="px-4 pb-4 mb-2 border-b border-slate-700">
-                    <div className="flex items-center gap-2 mb-1">
-                      <img src="/favicon2.png" alt="turnoStick" className="w-7 h-7 flex-shrink-0" />
-                      <span className="text-white text-xs font-bold leading-tight">Peluquería<br/>Valentina</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="text-slate-400 text-[10px]">Prueba: 5 días restantes</span>
-                    </div>
-                  </div>
-                  <nav className="flex-1 px-2 space-y-0.5">
-                    {sidebarNav.map(({ icon, label, active }) => (
-                      <div
-                        key={label}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
-                          active
-                            ? 'bg-slate-700 text-white font-semibold'
-                            : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50'
-                        }`}
-                      >
-                        <Icon d={icon} size={13} stroke={active ? '#AAFF00' : 'currentColor'} />
-                        {label}
+                {/* Mobile header (< md) — igual al real */}
+                <header className="md:hidden bg-white border-b border-slate-100 h-14 flex items-center px-4 gap-3 flex-shrink-0">
+                  <img src="/favicon2.png" alt="turnoStick" className="w-6 h-6 flex-shrink-0" />
+                  <span className="font-bold text-slate-900 text-sm flex-1">Peluquería Valentina</span>
+                  <span className="flex items-center gap-1.5 text-xs border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium">
+                    <Icon d={Icons.eye} size={13} stroke="#9ca3af" /> Ver
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs bg-[#31393C] px-3 py-1.5 rounded-lg font-medium" style={{ color: '#AAFF00' }}>
+                    <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Link
+                  </span>
+                </header>
+
+                {/* Middle: sidebar (desktop) + content */}
+                <div className="flex flex-1 overflow-hidden">
+
+                  {/* Desktop sidebar (md+) */}
+                  <aside className="hidden md:flex bg-[#31393C] w-44 flex-shrink-0 flex-col py-4">
+                    <div className="px-4 pb-4 mb-2 border-b border-slate-700">
+                      <div className="flex items-center gap-2 mb-1">
+                        <img src="/favicon2.png" alt="turnoStick" className="w-7 h-7 flex-shrink-0" />
+                        <span className="text-white text-xs font-bold leading-tight">Peluquería<br/>Valentina</span>
                       </div>
-                    ))}
-                  </nav>
-                  <div className="px-4 pt-3 border-t border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[9px] font-bold">VG</div>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-slate-400 text-[10px]">Prueba: 5 días restantes</span>
+                      </div>
+                    </div>
+                    <nav className="flex-1 px-2 space-y-0.5">
+                      {sidebarNav.map(({ icon, label, active }) => (
+                        <div key={label} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
+                          active ? 'bg-slate-700 text-white font-semibold' : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50'
+                        }`}>
+                          <Icon d={icon} size={13} stroke={active ? '#AAFF00' : 'currentColor'} />
+                          {label}
+                        </div>
+                      ))}
+                    </nav>
+                    <div className="px-4 pt-3 border-t border-slate-700">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[9px] font-bold">VG</div>
+                        <div>
+                          <div className="text-white text-[10px] font-semibold">Valentina G.</div>
+                          <div className="text-slate-500 text-[9px]">Admin</div>
+                        </div>
+                      </div>
+                    </div>
+                  </aside>
+
+                  {/* Main content — scrollable */}
+                  <div className="flex-1 overflow-y-auto p-4 md:p-5">
+
+                    {/* Top bar */}
+                    <div className="flex items-center justify-between mb-4 md:mb-5">
                       <div>
-                        <div className="text-white text-[10px] font-semibold">Valentina G.</div>
-                        <div className="text-slate-500 text-[9px]">Admin</div>
+                        <h3 className="font-bold text-slate-900 text-base">Dashboard</h3>
+                        <p className="text-xs text-slate-400">Miércoles, 25 de marzo 2025</p>
+                      </div>
+                      <button className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors" style={{ color: '#AAFF00' }}>
+                        <Icon d={Icons.plus} size={12} stroke="#AAFF00" />
+                        <span className="hidden sm:inline">Nuevo turno</span>
+                        <span className="sm:hidden">Nuevo</span>
+                      </button>
+                    </div>
+
+                    {/* Stat cards: 2-col mobile, 4-col desktop */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-5">
+                      {mockStats.map(s => (
+                        <div key={s.label} className="bg-white rounded-2xl p-3 md:p-3.5 shadow-sm border border-slate-100">
+                          <Icon d={s.icon} size={16} stroke="#aab4b8" />
+                          <div className={`text-2xl font-bold mt-2 mb-0.5 ${s.color}`}>{s.value}</div>
+                          <div className="text-xs text-slate-500">{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop: tabla + gráfico */}
+                    <div className="hidden md:grid grid-cols-3 gap-3">
+                      <div className="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
+                          <span className="font-semibold text-slate-900 text-sm">Turnos de hoy</span>
+                          <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full font-semibold">12 turnos</span>
+                        </div>
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-slate-50">
+                              {['Cliente','Servicio','Hora','Estado'].map(h => (
+                                <th key={h} className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {mockBookings.map((b, i) => (
+                              <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
+                                <td className="px-4 py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 flex-shrink-0">{b.name[0]}</div>
+                                    <span className="text-xs font-medium text-slate-800">{b.name}</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2.5 text-xs text-slate-500">{b.service}</td>
+                                <td className="px-4 py-2.5 text-xs font-mono font-semibold text-slate-700">{b.time}</td>
+                                <td className="px-4 py-2.5">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
+                                    {statusLabel[b.status]}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-semibold text-slate-700">Ingresos 7 días</span>
+                          <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full">+18%</span>
+                        </div>
+                        <div className="flex items-end gap-1.5 flex-1">
+                          {chartBars.map((h, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                              <div className={`w-full rounded-t-md ${i === 6 ? 'bg-indigo-600' : 'bg-slate-100'}`} style={{ height: `${h}%`, minHeight: '6px' }} />
+                              <span className="text-[9px] text-slate-400 font-semibold">{chartDays[i]}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-slate-50">
+                          <div className="text-lg font-extrabold text-slate-900">$47.600</div>
+                          <div className="text-[10px] text-slate-400">acumulado este mes</div>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Mobile: lista de próximos turnos (igual al dashboard real) */}
+                    <div className="md:hidden space-y-3">
+                      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+                        <h3 className="font-semibold text-slate-900 mb-4 text-sm">Próximos turnos</h3>
+                        <div className="space-y-3">
+                          {mockBookings.filter(b => b.status !== 'cancelled').map((b, i) => (
+                            <div key={i} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{b.name[0]}</div>
+                                <div>
+                                  <div className="font-medium text-slate-900 text-xs">{b.name}</div>
+                                  <div className="text-xs text-slate-400">{b.service} · {b.time}</div>
+                                </div>
+                              </div>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
+                                {statusLabel[b.status]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-semibold text-slate-900">Tu página está activa</div>
+                          <div className="text-[10px] text-slate-600 mt-0.5">turnostick.online/b/peluqueria-valentina</div>
+                        </div>
+                        <span className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ color: '#AAFF00' }}>
+                          <Icon d={Icons.copy} size={12} stroke="#AAFF00" /> Copiar
+                        </span>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
-                {/* Main content */}
-                <div className="flex-1 overflow-y-auto p-5">
-
-                  {/* Top bar */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-base">Dashboard</h3>
-                      <p className="text-xs text-slate-400">Miércoles, 25 de marzo 2025</p>
-                    </div>
-                    <button className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors" style={{ color: '#AAFF00' }}>
-                      <Icon d={Icons.plus} size={12} stroke="#AAFF00" />
-                      Nuevo turno
-                    </button>
-                  </div>
-
-                  {/* Stat cards */}
-                  <div className="grid grid-cols-4 gap-3 mb-5">
-                    {mockStats.map(s => (
-                      <div key={s.label} className="bg-white rounded-xl p-3.5 shadow-sm border border-slate-100">
-                        <div className="text-[10px] text-slate-400 mb-1 uppercase tracking-wide font-semibold">{s.label}</div>
-                        <div className={`text-xl font-extrabold ${s.color}`}>{s.value}</div>
-                        <div className="text-[10px] text-slate-400 mt-1">{s.change}</div>
+                {/* Mobile bottom nav (< md) — igual al real */}
+                <nav className="md:hidden bg-white/95 border-t border-slate-100 flex-shrink-0">
+                  <div className="flex items-stretch h-14">
+                    {[
+                      { icon: Icons.chart,    label: 'Dashboard', active: true  },
+                      { icon: Icons.calendar, label: 'Turnos',    active: false },
+                      { icon: Icons.clock,    label: 'Horarios',  active: false },
+                      { icon: Icons.menu,     label: 'Más',       active: false },
+                    ].map(({ icon, label, active }) => (
+                      <div key={label} className="flex-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:opacity-60">
+                        <Icon d={icon} size={22} stroke={active ? '#31393C' : '#c8d0d3'} />
+                        <span className={`text-[10px] leading-none tracking-wide ${active ? 'font-semibold text-[#31393C]' : 'text-slate-300'}`}>{label}</span>
+                        {active && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
                       </div>
                     ))}
                   </div>
+                </nav>
 
-                  {/* Table + Chart row */}
-                  <div className="grid grid-cols-3 gap-3">
-
-                    {/* Bookings table */}
-                    <div className="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                      <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 text-sm">Turnos de hoy</span>
-                        <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full font-semibold">12 turnos</span>
-                      </div>
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-slate-50">
-                            <th className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">Cliente</th>
-                            <th className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">Servicio</th>
-                            <th className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide hidden lg:table-cell">Profesional</th>
-                            <th className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">Hora</th>
-                            <th className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">Estado</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {mockBookings.map((b, i) => (
-                            <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
-                              <td className="px-4 py-2.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 flex-shrink-0">
-                                    {b.name[0]}
-                                  </div>
-                                  <span className="text-xs font-medium text-slate-800">{b.name}</span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-2.5 text-xs text-slate-500">{b.service}</td>
-                              <td className="px-4 py-2.5 text-xs text-slate-400 hidden lg:table-cell">{b.pro}</td>
-                              <td className="px-4 py-2.5 text-xs font-mono font-semibold text-slate-700">{b.time}</td>
-                              <td className="px-4 py-2.5">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
-                                  {statusLabel[b.status]}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Revenue chart */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-slate-700">Ingresos 7 días</span>
-                        <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full">+18%</span>
-                      </div>
-                      <div className="flex items-end gap-1.5 flex-1">
-                        {chartBars.map((h, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                            <div
-                              className={`w-full rounded-t-md transition-all ${i === 6 ? 'bg-indigo-600' : 'bg-slate-100'}`}
-                              style={{ height: `${h}%`, minHeight: '6px' }}
-                            />
-                            <span className="text-[9px] text-slate-400 font-semibold">{chartDays[i]}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-slate-50">
-                        <div className="text-lg font-extrabold text-slate-900">$47.600</div>
-                        <div className="text-[10px] text-slate-400">acumulado este mes</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
