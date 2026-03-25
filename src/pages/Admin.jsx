@@ -483,14 +483,28 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-50 flex">
 
       {/* ══ DESKTOP SIDEBAR (md+) ══════════════════════════════════════════════ */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 bg-white border-r border-slate-100 flex-col z-40">
-        <div className="h-16 flex items-center gap-3 px-5 border-b border-slate-100 shrink-0">
-          <Logo size={32} />
-          <div>
-            <div className="font-bold text-slate-900 text-sm leading-tight">turnoStick</div>
-            <div className="text-[11px] text-slate-400 leading-tight truncate max-w-[130px]">{business?.name}</div>
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 bg-[#31393C] flex-col z-40">
+        {/* Logo + negocio */}
+        <div className="h-16 flex items-center gap-3 px-5 border-b border-slate-700 shrink-0">
+          <img src="/favicon2.png" alt="turnoStick" className="w-8 h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <div className="font-bold text-white text-sm leading-tight truncate">{business?.name}</div>
+            <div className="text-[11px] text-slate-500 leading-tight">turnoStick</div>
           </div>
         </div>
+
+        {/* Estado suscripción */}
+        {(sub.status === 'trial' || sub.status === 'active') && (
+          <div className="px-5 py-2 border-b border-slate-700">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-[11px] text-slate-400 truncate">
+                {sub.status === 'trial' ? `Prueba: ${sub.daysLeft} días restantes` : 'Plan activo'}
+              </span>
+            </div>
+          </div>
+        )}
+
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {navItems.map(({ id, label, icon }) => {
             const active  = view === id
@@ -498,7 +512,9 @@ export default function Admin() {
             return (
               <button key={id} onClick={() => setView(id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
-                  ${active ? 'bg-[#31393C] text-white font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-medium'}`}>
+                  ${active
+                    ? 'bg-slate-700 text-white font-semibold'
+                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 font-medium'}`}>
                 <Icon d={icon} size={17} stroke={active ? '#AAFF00' : 'currentColor'} />
                 <span className="flex-1 text-left">{label}</span>
                 {pending > 0 && (
@@ -510,17 +526,18 @@ export default function Admin() {
             )
           })}
         </nav>
-        <div className="p-3 border-t border-slate-100 space-y-0.5 shrink-0">
+
+        <div className="p-3 border-t border-slate-700 space-y-0.5 shrink-0">
           <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
             <Icon d={Icons.copy} size={17} /> Copiar link
           </button>
           <button onClick={() => navigate(`/b/${business?.slug}`)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
             <Icon d={Icons.eye} size={17} /> Ver página
           </button>
           <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all">
             <Icon d={Icons.logout} size={17} /> Cerrar sesión
           </button>
         </div>
