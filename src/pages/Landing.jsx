@@ -10,6 +10,18 @@ export default function Landing() {
 
   // Demo state
   const [demoTab, setDemoTab]               = useState('admin')
+  const [demoAdminView, setDemoAdminView]   = useState('dashboard')
+  const [demoDayFilter, setDemoDayFilter]   = useState(null)
+  const [demoNotif, setDemoNotif]           = useState(null)
+  const [demoBookings, setDemoBookings]     = useState([
+    { id: 1, name: 'Ana García',  service: 'Corte + Peinado',  time: '10:00', status: 'confirmed', paid: true,  amount: '$3.500', date: 'hoy'    },
+    { id: 2, name: 'Marcos R.',   service: 'Coloración',        time: '11:30', status: 'pending',   paid: false, amount: '$8.000', date: 'hoy'    },
+    { id: 3, name: 'Lucía P.',    service: 'Manicura',          time: '12:00', status: 'confirmed', paid: true,  amount: '$4.500', date: 'hoy'    },
+    { id: 4, name: 'Julián T.',   service: 'Corte Hombre',      time: '14:00', status: 'confirmed', paid: false, amount: '$3.500', date: 'hoy'    },
+    { id: 5, name: 'Marta G.',    service: 'Barba + Corte',     time: '15:30', status: 'cancelled', paid: false, amount: '$3.500', date: 'hoy'    },
+    { id: 6, name: 'Carlos M.',   service: 'Coloración',        time: '10:00', status: 'pending',   paid: false, amount: '$8.000', date: 'manana' },
+    { id: 7, name: 'Sofía R.',    service: 'Manicura',          time: '11:00', status: 'confirmed', paid: true,  amount: '$4.500', date: 'manana' },
+  ])
   const [bookingStep, setBookingStep]       = useState(1)
   const [selectedService, setSelectedService] = useState(null)
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
@@ -29,6 +41,8 @@ export default function Landing() {
 
   const switchTab = (tab) => {
     setDemoTab(tab)
+    setDemoAdminView('dashboard')
+    setDemoDayFilter(null)
     if (tab === 'booking') {
       setBookingStep(1)
       setSelectedService(null)
@@ -37,6 +51,18 @@ export default function Landing() {
       setDemoName('')
       setDemoEmail('')
     }
+  }
+
+  const confirmDemoBooking = (id) => {
+    setDemoBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'confirmed' } : b))
+    setDemoNotif('¡Turno confirmado exitosamente!')
+    setTimeout(() => setDemoNotif(null), 3000)
+  }
+
+  const cancelDemoBooking = (id) => {
+    setDemoBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+    setDemoNotif('Turno cancelado.')
+    setTimeout(() => setDemoNotif(null), 3000)
   }
 
   useEffect(() => {
@@ -109,12 +135,12 @@ export default function Landing() {
   const chartDays    = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
   const sidebarNav = [
-    { icon: Icons.home,     label: 'Dashboard',      active: true  },
-    { icon: Icons.calendar, label: 'Turnos',          active: false },
-    { icon: Icons.scissors, label: 'Servicios',       active: false },
-    { icon: Icons.clock,    label: 'Agenda',          active: false },
-    { icon: Icons.dollar,   label: 'Pagos',           active: false },
-    { icon: Icons.settings, label: 'Configuración',   active: false },
+    { icon: Icons.home,     label: 'Dashboard',      view: 'dashboard' },
+    { icon: Icons.calendar, label: 'Turnos',          view: 'turnos'    },
+    { icon: Icons.scissors, label: 'Servicios',       view: null        },
+    { icon: Icons.clock,    label: 'Agenda',          view: null        },
+    { icon: Icons.dollar,   label: 'Pagos',           view: null        },
+    { icon: Icons.settings, label: 'Configuración',   view: null        },
   ]
 
   const statusStyle = {
@@ -305,14 +331,19 @@ export default function Landing() {
                       </div>
                     </div>
                     <nav className="flex-1 px-2 space-y-0.5">
-                      {sidebarNav.map(({ icon, label, active }) => (
-                        <div key={label} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs cursor-pointer transition-colors ${
-                          active ? 'bg-slate-700 text-white font-semibold' : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50'
-                        }`}>
-                          <Icon d={icon} size={13} stroke={active ? '#AAFF00' : 'currentColor'} />
-                          {label}
-                        </div>
-                      ))}
+                      {sidebarNav.map(({ icon, label, view }) => {
+                        const active = view !== null && demoAdminView === view
+                        return (
+                          <div key={label}
+                            onClick={() => view && setDemoAdminView(view)}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors ${view ? 'cursor-pointer' : 'cursor-default opacity-60'} ${
+                              active ? 'bg-slate-700 text-white font-semibold' : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50'
+                            }`}>
+                            <Icon d={icon} size={13} stroke={active ? '#AAFF00' : 'currentColor'} />
+                            {label}
+                          </div>
+                        )
+                      })}
                     </nav>
                     <div className="px-4 pt-3 border-t border-slate-700">
                       <div className="flex items-center gap-2">
@@ -326,119 +357,241 @@ export default function Landing() {
                   </aside>
 
                   {/* Main content — scrollable */}
-                  <div className="flex-1 overflow-y-auto p-4 md:p-5">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-5 relative">
 
-                    {/* Top bar */}
-                    <div className="flex items-center justify-between mb-4 md:mb-5">
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-base">Dashboard</h3>
-                        <p className="text-xs text-slate-400">Miércoles, 25 de marzo 2025</p>
+                    {/* Toast notification */}
+                    {demoNotif && (
+                      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-[#31393C] text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 whitespace-nowrap">
+                        <Icon d={Icons.check} size={13} stroke="#AAFF00" />
+                        {demoNotif}
                       </div>
-                      <button className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors" style={{ color: '#AAFF00' }}>
-                        <Icon d={Icons.plus} size={12} stroke="#AAFF00" />
-                        <span className="hidden sm:inline">Nuevo turno</span>
-                        <span className="sm:hidden">Nuevo</span>
-                      </button>
-                    </div>
+                    )}
 
-                    {/* Stat cards: 2-col mobile, 4-col desktop */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-5">
-                      {mockStats.map(s => (
-                        <div key={s.label} className="bg-white rounded-2xl p-3 md:p-3.5 shadow-sm border border-slate-100">
-                          <Icon d={s.icon} size={16} stroke="#aab4b8" />
-                          <div className={`text-2xl font-bold mt-2 mb-0.5 ${s.color}`}>{s.value}</div>
-                          <div className="text-xs text-slate-500">{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
+                    {/* ── DASHBOARD VIEW ── */}
+                    {demoAdminView === 'dashboard' && (<>
 
-                    {/* Desktop: tabla + gráfico */}
-                    <div className="hidden md:grid grid-cols-3 gap-3">
-                      <div className="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
-                          <span className="font-semibold text-slate-900 text-sm">Turnos de hoy</span>
-                          <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full font-semibold">12 turnos</span>
+                      {/* Top bar */}
+                      <div className="flex items-center justify-between mb-4 md:mb-5">
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-base">Dashboard</h3>
+                          <p className="text-xs text-slate-400">Miércoles, 25 de marzo 2025</p>
                         </div>
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-slate-50">
-                              {['Cliente','Servicio','Hora','Estado'].map(h => (
-                                <th key={h} className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">{h}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockBookings.map((b, i) => (
-                              <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
-                                <td className="px-4 py-2.5">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 flex-shrink-0">{b.name[0]}</div>
-                                    <span className="text-xs font-medium text-slate-800">{b.name}</span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2.5 text-xs text-slate-500">{b.service}</td>
-                                <td className="px-4 py-2.5 text-xs font-mono font-semibold text-slate-700">{b.time}</td>
-                                <td className="px-4 py-2.5">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
-                                    {statusLabel[b.status]}
-                                  </span>
-                                </td>
+                        <button className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors" style={{ color: '#AAFF00' }}>
+                          <Icon d={Icons.plus} size={12} stroke="#AAFF00" />
+                          <span className="hidden sm:inline">Nuevo turno</span>
+                          <span className="sm:hidden">Nuevo</span>
+                        </button>
+                      </div>
+
+                      {/* Stat cards: 2-col mobile, 4-col desktop */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-5">
+                        {mockStats.map(s => (
+                          <div key={s.label} className="bg-white rounded-2xl p-3 md:p-3.5 shadow-sm border border-slate-100">
+                            <Icon d={s.icon} size={16} stroke="#aab4b8" />
+                            <div className={`text-2xl font-bold mt-2 mb-0.5 ${s.color}`}>{s.value}</div>
+                            <div className="text-xs text-slate-500">{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop: tabla + gráfico */}
+                      <div className="hidden md:grid grid-cols-3 gap-3">
+                        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                          <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
+                            <span className="font-semibold text-slate-900 text-sm">Turnos de hoy</span>
+                            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full font-semibold">12 turnos</span>
+                          </div>
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b border-slate-50">
+                                {['Cliente','Servicio','Hora','Estado'].map(h => (
+                                  <th key={h} className="text-left text-[10px] text-slate-400 px-4 py-2 font-semibold uppercase tracking-wide">{h}</th>
+                                ))}
                               </tr>
+                            </thead>
+                            <tbody>
+                              {demoBookings.filter(b => b.date === 'hoy').map((b, i) => (
+                                <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
+                                  <td className="px-4 py-2.5">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 flex-shrink-0">{b.name[0]}</div>
+                                      <span className="text-xs font-medium text-slate-800">{b.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-2.5 text-xs text-slate-500">{b.service}</td>
+                                  <td className="px-4 py-2.5 text-xs font-mono font-semibold text-slate-700">{b.time}</td>
+                                  <td className="px-4 py-2.5">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
+                                      {statusLabel[b.status]}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-semibold text-slate-700">Ingresos 7 días</span>
+                            <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full">+18%</span>
+                          </div>
+                          <div className="flex items-end gap-1.5 flex-1">
+                            {chartBars.map((h, i) => (
+                              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                <div className={`w-full rounded-t-md ${i === 6 ? 'bg-indigo-600' : 'bg-slate-100'}`} style={{ height: `${h}%`, minHeight: '6px' }} />
+                                <span className="text-[9px] text-slate-400 font-semibold">{chartDays[i]}</span>
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-slate-700">Ingresos 7 días</span>
-                          <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full">+18%</span>
-                        </div>
-                        <div className="flex items-end gap-1.5 flex-1">
-                          {chartBars.map((h, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                              <div className={`w-full rounded-t-md ${i === 6 ? 'bg-indigo-600' : 'bg-slate-100'}`} style={{ height: `${h}%`, minHeight: '6px' }} />
-                              <span className="text-[9px] text-slate-400 font-semibold">{chartDays[i]}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-slate-50">
-                          <div className="text-lg font-extrabold text-slate-900">$47.600</div>
-                          <div className="text-[10px] text-slate-400">acumulado este mes</div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-slate-50">
+                            <div className="text-lg font-extrabold text-slate-900">$47.600</div>
+                            <div className="text-[10px] text-slate-400">acumulado este mes</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Mobile: lista de próximos turnos (igual al dashboard real) */}
-                    <div className="md:hidden space-y-3">
-                      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                        <h3 className="font-semibold text-slate-900 mb-4 text-sm">Próximos turnos</h3>
-                        <div className="space-y-3">
-                          {mockBookings.filter(b => b.status !== 'cancelled').map((b, i) => (
-                            <div key={i} className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{b.name[0]}</div>
-                                <div>
-                                  <div className="font-medium text-slate-900 text-xs">{b.name}</div>
-                                  <div className="text-xs text-slate-400">{b.service} · {b.time}</div>
+                      {/* Mobile: lista de próximos turnos (igual al dashboard real) */}
+                      <div className="md:hidden space-y-3">
+                        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+                          <h3 className="font-semibold text-slate-900 mb-4 text-sm">Próximos turnos</h3>
+                          <div className="space-y-3">
+                            {demoBookings.filter(b => b.date === 'hoy' && b.status !== 'cancelled').map((b, i) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs flex-shrink-0">{b.name[0]}</div>
+                                  <div>
+                                    <div className="font-medium text-slate-900 text-xs">{b.name}</div>
+                                    <div className="text-xs text-slate-400">{b.service} · {b.time}</div>
+                                  </div>
+                                </div>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
+                                  {statusLabel[b.status]}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center justify-between">
+                          <div>
+                            <div className="text-xs font-semibold text-slate-900">Tu página está activa</div>
+                            <div className="text-[10px] text-slate-600 mt-0.5">turnostick.online/b/peluqueria-valentina</div>
+                          </div>
+                          <span className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ color: '#AAFF00' }}>
+                            <Icon d={Icons.copy} size={12} stroke="#AAFF00" /> Copiar
+                          </span>
+                        </div>
+                      </div>
+
+                    </>)}
+
+                    {/* ── TURNOS VIEW ── */}
+                    {demoAdminView === 'turnos' && (() => {
+                      const filteredBookings = demoDayFilter
+                        ? demoBookings.filter(b => b.date === demoDayFilter)
+                        : demoBookings
+                      const pendingCount = demoBookings.filter(b => b.status === 'pending').length
+                      const borderColor = { confirmed: 'border-l-emerald-400', pending: 'border-l-amber-400', cancelled: 'border-l-red-400' }
+                      return (
+                        <>
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-slate-900 text-base">Turnos</h3>
+                              {pendingCount > 0 && (
+                                <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                                  {pendingCount} pendiente{pendingCount > 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                            <button className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors" style={{ color: '#AAFF00' }}>
+                              <Icon d={Icons.plus} size={12} stroke="#AAFF00" />
+                              <span className="hidden sm:inline">Nuevo turno</span>
+                              <span className="sm:hidden">Nuevo</span>
+                            </button>
+                          </div>
+
+                          {/* Day filter chips */}
+                          <div className="flex gap-2 mb-4">
+                            {[
+                              { label: 'Todos',   value: null,     hasPending: demoBookings.some(b => b.status === 'pending') },
+                              { label: 'HOY / 25', value: 'hoy',   hasPending: demoBookings.some(b => b.date === 'hoy'    && b.status === 'pending') },
+                              { label: 'JUE / 26', value: 'manana',hasPending: demoBookings.some(b => b.date === 'manana' && b.status === 'pending') },
+                            ].map(({ label, value, hasPending }) => (
+                              <button key={label}
+                                onClick={() => setDemoDayFilter(value)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                                  demoDayFilter === value
+                                    ? 'bg-[#31393C] text-white border-[#31393C]'
+                                    : hasPending
+                                      ? 'border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100'
+                                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                }`}>
+                                {label}
+                                {hasPending && demoDayFilter !== value && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Booking cards */}
+                          <div className="space-y-2">
+                            {filteredBookings.length === 0 && (
+                              <div className="text-center py-8 text-slate-400 text-sm">No hay turnos para mostrar</div>
+                            )}
+                            {filteredBookings.map(b => (
+                              <div key={b.id} className={`bg-white rounded-xl border border-slate-100 border-l-4 ${borderColor[b.status]} shadow-sm overflow-hidden`}>
+                                <div className="p-3">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600 flex-shrink-0">{b.name[0]}</div>
+                                      <div>
+                                        <div className="font-semibold text-slate-900 text-xs">{b.name}</div>
+                                        <div className="text-[10px] text-slate-400">{b.service}</div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right flex-shrink-0">
+                                      <div className="text-xs font-mono font-bold text-slate-700">{b.time}</div>
+                                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
+                                        {statusLabel[b.status]}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] text-slate-500 font-medium">{b.amount}</span>
+                                      {b.paid
+                                        ? <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1.5 py-0.5 rounded-full font-semibold">Pagado</span>
+                                        : <span className="text-[9px] bg-slate-50 text-slate-400 border border-slate-100 px-1.5 py-0.5 rounded-full font-semibold">Sin pago</span>
+                                      }
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      {b.status === 'pending' && (
+                                        <button
+                                          onClick={() => confirmDemoBooking(b.id)}
+                                          className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors">
+                                          <Icon d={Icons.check} size={10} stroke="white" /> Confirmar
+                                        </button>
+                                      )}
+                                      {!b.paid && b.status !== 'cancelled' && (
+                                        <button className="text-[10px] font-semibold text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                                          Cobrar
+                                        </button>
+                                      )}
+                                      {b.status !== 'cancelled' && (
+                                        <button
+                                          onClick={() => cancelDemoBooking(b.id)}
+                                          className="text-[10px] font-semibold text-red-500 border border-red-100 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">
+                                          Cancelar
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle[b.status]}`}>
-                                {statusLabel[b.status]}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center justify-between">
-                        <div>
-                          <div className="text-xs font-semibold text-slate-900">Tu página está activa</div>
-                          <div className="text-[10px] text-slate-600 mt-0.5">turnostick.online/b/peluqueria-valentina</div>
-                        </div>
-                        <span className="flex items-center gap-1.5 bg-[#31393C] text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ color: '#AAFF00' }}>
-                          <Icon d={Icons.copy} size={12} stroke="#AAFF00" /> Copiar
-                        </span>
-                      </div>
-                    </div>
+                            ))}
+                          </div>
+                        </>
+                      )
+                    })()}
 
                   </div>
                 </div>
@@ -447,17 +600,22 @@ export default function Landing() {
                 <nav className="md:hidden bg-white/95 border-t border-slate-100 flex-shrink-0">
                   <div className="flex items-stretch h-14">
                     {[
-                      { icon: Icons.chart,    label: 'Dashboard', active: true  },
-                      { icon: Icons.calendar, label: 'Turnos',    active: false },
-                      { icon: Icons.clock,    label: 'Horarios',  active: false },
-                      { icon: Icons.menu,     label: 'Más',       active: false },
-                    ].map(({ icon, label, active }) => (
-                      <div key={label} className="flex-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer active:opacity-60">
-                        <Icon d={icon} size={22} stroke={active ? '#31393C' : '#c8d0d3'} />
-                        <span className={`text-[10px] leading-none tracking-wide ${active ? 'font-semibold text-[#31393C]' : 'text-slate-300'}`}>{label}</span>
-                        {active && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
-                      </div>
-                    ))}
+                      { icon: Icons.chart,    label: 'Dashboard', view: 'dashboard' },
+                      { icon: Icons.calendar, label: 'Turnos',    view: 'turnos'    },
+                      { icon: Icons.clock,    label: 'Horarios',  view: null        },
+                      { icon: Icons.menu,     label: 'Más',       view: null        },
+                    ].map(({ icon, label, view }) => {
+                      const active = view !== null && demoAdminView === view
+                      return (
+                        <div key={label}
+                          onClick={() => view && setDemoAdminView(view)}
+                          className={`flex-1 flex flex-col items-center justify-center gap-1.5 ${view ? 'cursor-pointer active:opacity-60' : 'cursor-default opacity-40'}`}>
+                          <Icon d={icon} size={22} stroke={active ? '#31393C' : '#c8d0d3'} />
+                          <span className={`text-[10px] leading-none tracking-wide ${active ? 'font-semibold text-[#31393C]' : 'text-slate-300'}`}>{label}</span>
+                          {active && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
+                        </div>
+                      )
+                    })}
                   </div>
                 </nav>
 
