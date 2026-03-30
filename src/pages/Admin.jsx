@@ -483,13 +483,13 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-50 flex">
 
       {/* ══ DESKTOP SIDEBAR (md+) ══════════════════════════════════════════════ */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-60 bg-[#31393C] flex-col z-40">
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 bg-[#31393C] flex-col z-40">
         {/* Logo + negocio */}
-        <div className="h-16 flex items-center gap-3 px-5 border-b border-slate-700 shrink-0">
-          <img src="/favicon2.png" alt="turnoStick" className="w-8 h-8 flex-shrink-0" />
+        <div className="h-20 flex items-center gap-3 px-5 border-b border-slate-700 shrink-0">
+          <img src="/favicon2.png" alt="turnoStick" className="w-9 h-9 flex-shrink-0" />
           <div className="min-w-0">
-            <div className="font-bold text-white text-sm leading-tight truncate">{business?.name}</div>
-            <div className="text-[11px] text-slate-500 leading-tight">turnoStick</div>
+            <div className="font-bold text-white text-base leading-tight truncate">{business?.name}</div>
+            <div className="text-xs text-slate-500 leading-tight mt-0.5">turnoStick</div>
           </div>
         </div>
 
@@ -511,11 +511,11 @@ export default function Admin() {
             const pending = id === 'bookings' ? pendingCount : 0
             return (
               <button key={id} onClick={() => setView(id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all
                   ${active
                     ? 'bg-slate-700 text-white font-semibold'
                     : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 font-medium'}`}>
-                <Icon d={icon} size={17} stroke={active ? '#AAFF00' : 'currentColor'} />
+                <Icon d={icon} size={18} stroke={active ? '#AAFF00' : 'currentColor'} />
                 <span className="flex-1 text-left">{label}</span>
                 {pending > 0 && (
                   <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
@@ -529,16 +529,16 @@ export default function Admin() {
 
         <div className="p-3 border-t border-slate-700 space-y-0.5 shrink-0">
           <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
-            <Icon d={Icons.copy} size={17} /> Copiar link
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
+            <Icon d={Icons.copy} size={18} /> Copiar link
           </button>
           <button onClick={() => navigate(`/b/${business?.slug}`)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
-            <Icon d={Icons.eye} size={17} /> Ver página
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-all">
+            <Icon d={Icons.eye} size={18} /> Ver página
           </button>
           <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all">
-            <Icon d={Icons.logout} size={17} /> Cerrar sesión
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all">
+            <Icon d={Icons.logout} size={18} /> Cerrar sesión
           </button>
         </div>
       </aside>
@@ -558,7 +558,7 @@ export default function Admin() {
       </header>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
-      <div className="flex-1 md:ml-60">
+      <div className="flex-1 md:ml-64">
         <main className="min-h-screen p-4 md:p-8 pt-[72px] md:pt-8 pb-28 md:pb-8 overflow-x-hidden max-w-5xl mx-auto">
           {notification && (
             <div className="fixed top-4 right-4 z-50 bg-[#31393C] text-indigo-600 px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
@@ -611,51 +611,51 @@ export default function Admin() {
           {view === 'dashboard' && (
             <div>
               <div className="mb-6">
-                <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-                <p className="text-sm text-slate-500">{business?.name}</p>
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-sm md:text-base text-slate-500">{business?.name}</p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
                 {[
                   { label: 'Total turnos',      val: stats.total,          icon: Icons.calendar, color: 'indigo'  },
                   { label: 'Confirmados',        val: stats.confirmed,      icon: Icons.check,    color: 'emerald' },
                   { label: 'Pendientes',         val: stats.pending,        icon: Icons.clock,    color: 'amber'   },
                   { label: 'Ingresos cobrados',  val: fmt(stats.revenue),   icon: Icons.dollar,   color: 'violet'  },
                 ].map(({ label, val, icon }) => (
-                  <div key={label} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                    <Icon d={icon} size={16} stroke="#aab4b8" className="mb-3" />
-                    <div className="text-2xl font-bold text-slate-900 mb-0.5">{val}</div>
-                    <div className="text-xs text-slate-500">{label}</div>
+                  <div key={label} className="bg-white rounded-2xl border border-slate-100 p-4 md:p-6 shadow-sm">
+                    <Icon d={icon} size={16} stroke="#aab4b8" className="mb-3 md:mb-4" />
+                    <div className="text-2xl md:text-4xl font-bold text-slate-900 mb-0.5 md:mb-1">{val}</div>
+                    <div className="text-xs md:text-sm text-slate-500">{label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Link rápido */}
-              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-4 flex items-center justify-between">
+              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 md:p-6 mb-4 md:mb-6 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-slate-900">Tu página de reservas está activa</div>
-                  <div className="text-xs text-slate-700 mt-0.5">{bookingLink}</div>
+                  <div className="text-sm md:text-base font-semibold text-slate-900">Tu página de reservas está activa</div>
+                  <div className="text-xs md:text-sm text-slate-700 mt-0.5">{bookingLink}</div>
                 </div>
                 <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Link copiado') }}
-                  className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-medium px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                  className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs md:text-sm font-medium px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-slate-700 transition-colors">
                   <Icon d={Icons.copy} size={13} stroke="#AAFF00" /> Copiar
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Próximos turnos</h3>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-7 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm md:text-base">Próximos turnos</h3>
                   {bookings.filter(b => b.status !== 'cancelled').length === 0
                     ? <p className="text-sm text-slate-600">No hay turnos aún</p>
                     : <div className="space-y-3">
                         {bookings.filter(b => b.status !== 'cancelled').slice(0, 4).map(b => (
                           <div key={b.id} className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
+                            <div className="flex items-center gap-2.5 md:gap-3">
+                              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#31393C] rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs md:text-sm">
                                 {b.client_name?.[0]}
                               </div>
                               <div>
-                                <div className="font-medium text-slate-900 text-xs">{b.client_name}</div>
-                                <div className="text-xs text-slate-600">{svcName(b.service_id)} · {b.time}</div>
+                                <div className="font-medium text-slate-900 text-xs md:text-sm">{b.client_name}</div>
+                                <div className="text-xs md:text-sm text-slate-600">{svcName(b.service_id)} · {b.time}</div>
                               </div>
                             </div>
                             <StatusBadge status={b.status} />
@@ -664,8 +664,8 @@ export default function Admin() {
                       </div>
                   }
                 </div>
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Servicios más reservados</h3>
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-7 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm md:text-base">Servicios más reservados</h3>
                   {services.length === 0
                     ? <p className="text-sm text-slate-600">Aún no creaste servicios</p>
                     : <div className="space-y-3">
@@ -674,11 +674,11 @@ export default function Admin() {
                           const pct   = bookings.length ? Math.round((count / bookings.length) * 100) : 0
                           return (
                             <div key={s.id}>
-                              <div className="flex justify-between text-xs mb-1">
+                              <div className="flex justify-between text-xs md:text-sm mb-1">
                                 <span className="text-slate-700 font-medium">{s.name}</span>
                                 <span className="text-slate-500">{count} turnos</span>
                               </div>
-                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-2 md:h-2.5 bg-slate-100 rounded-full overflow-hidden">
                                 <div className="h-full rounded-full" style={{ width: pct + '%', backgroundColor: s.color }} />
                               </div>
                             </div>
@@ -693,10 +693,10 @@ export default function Admin() {
 
           {/* ── BOOKINGS ── */}
           {view === 'bookings' && (
-            <div className="max-w-2xl">
-              <div className="flex items-center justify-between mb-1">
+            <div>
+              <div className="flex items-center justify-between mb-1 md:mb-4">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Turnos</h1>
+                  <h1 className="text-xl md:text-3xl font-bold text-slate-900">Turnos</h1>
                   <div className="flex items-center gap-2 mt-1">
                     {bookings.filter(b => b.status === 'pending').length > 0 && (
                       <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -707,13 +707,13 @@ export default function Admin() {
                   </div>
                 </div>
                 <button onClick={() => setShowNewBooking(true)}
-                  className="flex items-center gap-2 bg-[#31393C] text-[#AAFF00] text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-700 transition-all shadow-sm">
+                  className="flex items-center gap-2 bg-[#31393C] text-[#AAFF00] text-sm md:text-base font-semibold px-4 md:px-6 py-2.5 md:py-3 rounded-xl hover:bg-slate-700 transition-all shadow-sm">
                   <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo turno
                 </button>
               </div>
               {/* Day picker */}
               {bookingDates.length > 0 && (
-                <div ref={dayPickerRef} className="flex gap-2 overflow-x-auto scrollbar-none py-1 mb-5 mt-4 -mx-1 px-1">
+                <div ref={dayPickerRef} className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-none py-1 mb-5 md:mb-7 mt-4 -mx-1 px-1">
                   {bookingDates.map(d => {
                     const dt         = new Date(d + 'T12:00')
                     const dayLabel   = dt.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
@@ -724,18 +724,18 @@ export default function Admin() {
                     const pendingN   = bookings.filter(b => b.date === d && b.status === 'pending').length
                     return (
                       <button key={d} onClick={() => setFilterDate(isSelected ? null : d)}
-                        className={`relative flex flex-col items-center justify-center w-[58px] h-[62px] rounded-2xl flex-shrink-0 transition-all
+                        className={`relative flex flex-col items-center justify-center w-[58px] h-[62px] md:w-[80px] md:h-[86px] rounded-2xl flex-shrink-0 transition-all
                           ${isSelected
                             ? 'bg-[#31393C] shadow-md'
                             : pendingN > 0
                               ? 'bg-white border-2 border-amber-400 hover:border-amber-500'
                               : 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm'}`}>
-                        <span className={`text-[10px] font-bold capitalize leading-none tracking-wide ${isSelected ? 'text-[#AAFF00]' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] md:text-[11px] font-bold capitalize leading-none tracking-wide ${isSelected ? 'text-[#AAFF00]' : isToday ? 'text-slate-500' : 'text-slate-400'}`}>
                           {isToday ? 'HOY' : dayLabel.toUpperCase()}
                         </span>
-                        <span className={`text-2xl font-extrabold leading-none mt-0.5 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
+                        <span className={`text-2xl md:text-4xl font-extrabold leading-none mt-0.5 md:mt-1 ${isSelected ? 'text-white' : 'text-slate-800'}`}>{num}</span>
                         {count > 0 && (
-                          <span className={`text-[9px] font-bold leading-none mt-0.5 ${isSelected ? 'text-slate-400' : pendingN > 0 ? 'text-amber-500' : 'text-slate-300'}`}>{count}</span>
+                          <span className={`text-[9px] md:text-[11px] font-bold leading-none mt-0.5 md:mt-1 ${isSelected ? 'text-slate-400' : pendingN > 0 ? 'text-amber-500' : 'text-slate-300'}`}>{count}</span>
                         )}
                         {pendingN > 0 && !isSelected && (
                           <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full text-[9px] font-extrabold text-white flex items-center justify-center shadow-sm">{pendingN}</span>
@@ -756,7 +756,7 @@ export default function Admin() {
                     }, {})
                     const sortedDates = Object.keys(groups).sort()
                     return (
-                      <div className="space-y-6">
+                      <div className="space-y-6 md:space-y-8">
                         {sortedDates.map(date => {
                           const isToday = date === todayStr
                           const isPast  = date < todayStr
@@ -775,9 +775,9 @@ export default function Admin() {
                           return (
                             <div key={date}>
                               {/* Day header */}
-                              <div className={`flex items-center gap-2.5 mb-3 min-w-0 ${isPast ? 'opacity-50' : ''}`}>
-                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isToday ? 'bg-[#AAFF00]' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
-                                <span className={`text-sm font-bold capitalize flex-1 min-w-0 truncate ${isToday ? 'text-slate-900' : 'text-slate-600'}`}>
+                              <div className={`flex items-center gap-2.5 mb-3 md:mb-4 min-w-0 ${isPast ? 'opacity-50' : ''}`}>
+                                <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full flex-shrink-0 ${isToday ? 'bg-[#AAFF00]' : isPast ? 'bg-slate-300' : 'bg-emerald-400'}`} />
+                                <span className={`text-sm md:text-base font-bold capitalize flex-1 min-w-0 truncate ${isToday ? 'text-slate-900' : 'text-slate-600'}`}>
                                   {isToday ? 'Hoy — ' : ''}{dateLabel}
                                 </span>
                                 {pendingForDay > 0 && (
@@ -789,7 +789,7 @@ export default function Admin() {
                               </div>
 
                               {/* Cards */}
-                              <div className="space-y-2">
+                              <div className="space-y-2 md:space-y-3">
                                 {dayBookings.map(b => {
                                   const nowMins   = new Date().getHours() * 60 + new Date().getMinutes()
                                   const [bh, bm]  = b.time.split(':').map(Number)
@@ -799,27 +799,27 @@ export default function Admin() {
                                   return (
                                     <div key={b.id} className={`rounded-2xl border border-slate-100 border-l-4 ${borderColor} ${cardBg} shadow-sm overflow-hidden transition-all hover:shadow-md`}>
                                       {/* Main row */}
-                                      <div className="flex items-center gap-3 px-4 py-3">
+                                      <div className="flex items-center gap-3 md:gap-5 px-4 md:px-6 py-3 md:py-4">
                                         {/* Time badge */}
-                                        <div className={`flex-shrink-0 flex items-center justify-center px-3 h-10 rounded-xl ${isToday ? 'bg-[#31393C]' : 'bg-slate-100'}`}>
-                                          <span className={`text-sm font-extrabold tabular-nums tracking-tight ${isToday ? 'text-[#AAFF00]' : 'text-slate-700'}`}>{b.time.slice(0,5)}</span>
+                                        <div className={`flex-shrink-0 flex items-center justify-center px-3 md:px-5 h-10 md:h-14 rounded-xl md:rounded-2xl ${isToday ? 'bg-[#31393C]' : 'bg-slate-100'}`}>
+                                          <span className={`text-sm md:text-lg font-extrabold tabular-nums tracking-tight ${isToday ? 'text-[#AAFF00]' : 'text-slate-700'}`}>{b.time.slice(0,5)}</span>
                                         </div>
                                         {/* Info */}
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-2 min-w-0">
-                                            <span className="font-bold text-slate-900 text-sm truncate leading-tight">
+                                            <span className="font-bold text-slate-900 text-sm md:text-base truncate leading-tight">
                                               {b.client_name || <span className="text-slate-400 font-medium italic">Sin nombre</span>}
                                             </span>
                                             {b.paid && <span className="flex-shrink-0 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">✓ Pagado</span>}
                                           </div>
-                                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                            <span className="text-xs text-slate-500 truncate">{svcName(b.service_id)}</span>
+                                          <div className="flex items-center gap-1.5 mt-0.5 md:mt-1 flex-wrap">
+                                            <span className="text-xs md:text-sm text-slate-500 truncate">{svcName(b.service_id)}</span>
                                             <span className="text-slate-300 text-xs">·</span>
-                                            <span className="text-xs font-semibold text-slate-700">{fmt(b.amount)}</span>
+                                            <span className="text-xs md:text-sm font-semibold text-slate-700">{fmt(b.amount)}</span>
                                             {b.client_phone && (
                                               <>
                                                 <span className="text-slate-300 text-xs hidden sm:inline">·</span>
-                                                <span className="text-xs text-slate-400 hidden sm:inline">{b.client_phone}</span>
+                                                <span className="text-xs md:text-sm text-slate-400 hidden sm:inline">{b.client_phone}</span>
                                               </>
                                             )}
                                           </div>
@@ -828,11 +828,60 @@ export default function Admin() {
                                         <div className="flex-shrink-0">
                                           <StatusBadge status={b.status} />
                                         </div>
+
+                                        {/* ── Acciones inline (solo desktop) ── */}
+                                        <div className="hidden md:flex items-center gap-1 pl-4 flex-shrink-0 border-l border-slate-200 ml-2">
+                                          {b.status === 'pending' && (
+                                            <button onClick={() => confirmAndNotify(b)} title="Confirmar"
+                                              className="p-2.5 rounded-xl text-emerald-600 hover:bg-emerald-50 transition-colors active:scale-95">
+                                              <Icon d={Icons.check} size={18} stroke="currentColor" />
+                                            </button>
+                                          )}
+                                          {whatsappLink(b) && (
+                                            <a href={whatsappLink(b)} target="_blank" rel="noreferrer" title="WhatsApp"
+                                              className="p-2.5 rounded-xl text-green-600 hover:bg-green-50 transition-colors active:scale-95">
+                                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                            </a>
+                                          )}
+                                          {b.status !== 'cancelled' && !b.paid && (
+                                            <button onClick={() => markPaid(b.id)} title="Cobrar"
+                                              className="p-2.5 rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors active:scale-95">
+                                              <Icon d={Icons.dollar} size={18} stroke="currentColor" />
+                                            </button>
+                                          )}
+                                          {b.status !== 'cancelled' && (
+                                            confirmCancel === b.id
+                                              ? <div className="flex items-center gap-1 px-1">
+                                                  <span className="text-xs text-slate-400">¿Anular?</span>
+                                                  <button onClick={() => { updateStatus(b.id, 'cancelled'); setConfirmCancel(null) }}
+                                                    className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sí</button>
+                                                  <button onClick={() => setConfirmCancel(null)}
+                                                    className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">No</button>
+                                                </div>
+                                              : <button onClick={() => setConfirmCancel(b.id)} title="Anular"
+                                                  className="p-2.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-95">
+                                                  <Icon d={Icons.x} size={18} stroke="currentColor" />
+                                                </button>
+                                          )}
+                                          {confirmDelete === b.id
+                                            ? <div className="flex items-center gap-1 px-1">
+                                                <span className="text-xs text-slate-400">¿Borrar?</span>
+                                                <button onClick={() => { deleteBooking(b.id); setConfirmDelete(null) }}
+                                                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">Sí</button>
+                                                <button onClick={() => setConfirmDelete(null)}
+                                                  className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">No</button>
+                                              </div>
+                                            : <button onClick={() => setConfirmDelete(b.id)} title="Eliminar"
+                                                className="p-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors active:scale-95">
+                                                <Icon d={Icons.trash} size={18} />
+                                              </button>
+                                          }
+                                        </div>
                                       </div>
 
-                                      {/* Action row — cancelados: solo eliminar */}
+                                      {/* Action row — cancelados: solo eliminar (mobile) */}
                                       {b.status === 'cancelled' && (
-                                        <div className="flex items-stretch border-t border-slate-100">
+                                        <div className="md:hidden flex items-stretch border-t border-slate-100">
                                           <div className="flex-1" />
                                           {confirmDelete === b.id
                                             ? <div className="flex items-center gap-1 px-2 py-1.5">
@@ -850,9 +899,9 @@ export default function Admin() {
                                         </div>
                                       )}
 
-                                      {/* Action row — activos */}
+                                      {/* Action row — activos (mobile) */}
                                       {b.status !== 'cancelled' && (
-                                        <div className="flex items-stretch border-t border-slate-50">
+                                        <div className="md:hidden flex items-stretch border-t border-slate-50">
                                           {/* Confirm */}
                                           {b.status === 'pending' && (
                                             <button onClick={() => confirmAndNotify(b)}
@@ -977,10 +1026,10 @@ export default function Admin() {
           {/* ── SERVICES ── */}
           {view === 'services' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl font-bold text-slate-900">Servicios</h1>
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900">Servicios</h1>
                 <button onClick={() => setShowNewService(true)}
-                  className="flex items-center gap-2 bg-[#31393C] text-indigo-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-slate-700 transition-colors">
+                  className="flex items-center gap-2 bg-[#31393C] text-indigo-600 text-sm md:text-base font-medium px-4 md:px-6 py-2 md:py-3 rounded-xl hover:bg-slate-700 transition-colors">
                   <Icon d={Icons.plus} size={16} stroke="#AAFF00" /> Nuevo servicio
                 </button>
               </div>
@@ -991,29 +1040,29 @@ export default function Admin() {
                       + Crear primer servicio
                     </button>
                   </div>
-                : <div className="grid sm:grid-cols-2 gap-4">
+                : <div className="grid sm:grid-cols-2 gap-4 md:gap-5">
                     {services.map(s => (
-                      <div key={s.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ backgroundColor: s.color + '20' }}>
+                      <div key={s.id} className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm flex items-start justify-between">
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl md:text-3xl" style={{ backgroundColor: s.color + '20' }}>
                             {s.emoji || '✂️'}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900">{s.name}</div>
-                            <div className="text-sm text-slate-500 flex items-center gap-3 mt-0.5">
+                            <div className="font-semibold text-slate-900 md:text-lg">{s.name}</div>
+                            <div className="text-sm text-slate-500 flex items-center gap-3 mt-0.5 md:mt-1">
                               <span className="flex items-center gap-1"><Icon d={Icons.clock} size={12} stroke="#94a3b8" /> {s.duration} min</span>
-                              <span className="font-medium text-slate-700">{fmt(s.price)}</span>
+                              <span className="font-medium text-slate-700 md:text-base">{fmt(s.price)}</span>
                               {s.quantity > 1 && <span className="flex items-center gap-1 text-indigo-600 font-medium">×{s.quantity}</span>}
                             </div>
-                            <div className="text-xs mt-1 text-slate-600">{bookings.filter(b => b.service_id === s.id).length} reservas</div>
+                            <div className="text-xs md:text-sm mt-1 text-slate-600">{bookings.filter(b => b.service_id === s.id).length} reservas</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <button onClick={() => setEditingService({ ...s, duration: String(s.duration), price: String(s.price), quantity: String(s.quantity || 1) })}
-                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
+                            className="p-2 md:p-2.5 rounded-lg md:rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
                             <Icon d={Icons.settings} size={15} />
                           </button>
-                          <button onClick={() => deleteService(s.id)} className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
+                          <button onClick={() => deleteService(s.id)} className="p-2 md:p-2.5 rounded-lg md:rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
                             <Icon d={Icons.trash} size={15} />
                           </button>
                         </div>
@@ -1155,39 +1204,39 @@ export default function Admin() {
           {/* ── PAYMENTS ── */}
           {view === 'payments' && (
             <div>
-              <h1 className="text-xl font-bold text-slate-900 mb-6">Pagos</h1>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-6 md:mb-8">Pagos</h1>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
                 {[
                   { label: 'Ingresos cobrados',   val: fmt(bookings.filter(b => b.paid).reduce((s, b) => s + b.amount, 0)),                            color: 'text-emerald-600' },
                   { label: 'Pendiente de cobro',  val: fmt(bookings.filter(b => !b.paid && b.status !== 'cancelled').reduce((s, b) => s + b.amount, 0)), color: 'text-amber-600'   },
                   { label: 'Cancelados',           val: fmt(bookings.filter(b => b.status === 'cancelled').reduce((s, b) => s + b.amount, 0)),           color: 'text-red-500'     },
                 ].map(({ label, val, color }) => (
-                  <div key={label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                    <div className="text-xs text-slate-500 mb-1">{label}</div>
-                    <div className={`text-2xl font-bold ${color}`}>{val}</div>
+                  <div key={label} className="bg-white rounded-2xl border border-slate-100 p-5 md:p-7 shadow-sm">
+                    <div className="text-xs md:text-sm text-slate-500 mb-1 md:mb-2">{label}</div>
+                    <div className={`text-2xl md:text-4xl font-bold ${color}`}>{val}</div>
                   </div>
                 ))}
               </div>
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-100">
-                  <h3 className="font-semibold text-slate-900 text-sm">Historial de pagos</h3>
+                <div className="px-5 md:px-7 py-4 md:py-5 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-900 text-sm md:text-base">Historial de pagos</h3>
                 </div>
                 <div className="divide-y divide-slate-50">
                   {bookings.length === 0
-                    ? <div className="text-center py-12 text-slate-600 text-sm">No hay pagos aún</div>
+                    ? <div className="text-center py-12 text-slate-600 text-sm md:text-base">No hay pagos aún</div>
                     : bookings.map(b => (
-                      <div key={b.id} className="flex items-center justify-between px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${b.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      <div key={b.id} className="flex items-center justify-between px-5 md:px-7 py-3.5 md:py-4">
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className={`w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center text-xs md:text-sm font-bold ${b.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                             {b.client_name?.[0]}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-slate-900">{b.client_name}</div>
-                            <div className="text-xs text-slate-600">{svcName(b.service_id)} · {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</div>
+                            <div className="text-sm md:text-base font-medium text-slate-900">{b.client_name}</div>
+                            <div className="text-xs md:text-sm text-slate-600">{svcName(b.service_id)} · {new Date(b.date + 'T12:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-semibold text-slate-900 text-sm">{fmt(b.amount)}</span>
+                          <span className="font-semibold text-slate-900 text-sm md:text-base">{fmt(b.amount)}</span>
                           {b.paid
                             ? <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full font-medium">Pagado</span>
                             : b.status === 'cancelled'
@@ -1207,8 +1256,8 @@ export default function Admin() {
             <div className="space-y-4 w-full max-w-5xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Horarios</h1>
-                  <p className="text-sm text-slate-500">Configurá cuándo abrís cada día</p>
+                  <h1 className="text-xl md:text-3xl font-bold text-slate-900">Horarios</h1>
+                  <p className="text-sm md:text-base text-slate-500">Configurá cuándo abrís cada día</p>
                 </div>
               </div>
 
@@ -1235,11 +1284,11 @@ export default function Admin() {
               <div className="grid md:grid-cols-2 gap-4 items-start">
                 {/* ── Columna izquierda: Horario semanal ── */}
                 <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'schedule' ? 'hidden md:block' : ''}`}>
-                  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900 text-sm">Horario semanal</h3>
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-900 text-sm md:text-base">Horario semanal</h3>
                     {scheduleDirty && (
                       <button onClick={saveSchedule}
-                        className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                        className="flex items-center gap-1.5 bg-[#31393C] text-indigo-600 text-xs md:text-sm font-semibold px-3 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-slate-700 transition-colors">
                         <Icon d={Icons.check} size={13} stroke="#AAFF00" /> Guardar
                       </button>
                     )}
@@ -1248,21 +1297,24 @@ export default function Admin() {
                     {DAYS.map(({ dow, label }) => {
                       const day = schedule.find(s => s.day_of_week === dow) || DEFAULT_SCHEDULE.find(s => s.day_of_week === dow)
                       return (
-                        <div key={dow} className="px-3 py-2.5 flex items-center gap-2.5">
+                        <div key={dow} className="px-3 md:px-6 py-2.5 md:py-3.5 flex items-center gap-2.5 md:gap-4">
                           <button onClick={() => updateDay(dow, 'is_open', !day.is_open)}
-                            className={`relative shrink-0 w-10 h-5 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5' : 'translate-x-0'}`} />
+                            className={`relative shrink-0 w-10 h-5 md:w-12 md:h-6 rounded-full transition-colors ${day.is_open ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 md:w-5 md:h-5 bg-white rounded-full shadow transition-transform ${day.is_open ? 'translate-x-5 md:translate-x-6' : 'translate-x-0'}`} />
                           </button>
-                          <span className={`text-sm font-medium w-9 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>{label.slice(0, 3)}</span>
+                          <span className={`text-sm md:text-base font-medium w-9 md:w-24 shrink-0 ${day.is_open ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className="md:hidden">{label.slice(0, 3)}</span>
+                            <span className="hidden md:inline">{label}</span>
+                          </span>
                           {day.is_open ? (
                             <div className="flex-1 min-w-0 grid items-center gap-1" style={{gridTemplateColumns:'1fr auto 1fr'}}>
                               <select value={day.open_time} onChange={e => updateDay(dow, 'open_time', e.target.value)}
-                                className="w-full px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                className="w-full px-1.5 md:px-3 py-1 md:py-2 border border-slate-200 rounded-lg text-xs md:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                               <span className="text-slate-400 text-xs text-center px-0.5">–</span>
                               <select value={day.close_time} onChange={e => updateDay(dow, 'close_time', e.target.value)}
-                                className="w-full px-1.5 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                className="w-full px-1.5 md:px-3 py-1 md:py-2 border border-slate-200 rounded-lg text-xs md:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
@@ -1279,9 +1331,9 @@ export default function Admin() {
                 <div className="space-y-4 min-w-0">
                   {/* Bloquear horarios */}
                   <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'block' ? 'hidden md:block' : ''}`}>
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <h3 className="font-semibold text-slate-900 text-sm">Bloquear turnos</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Tocá para inhabilitar · tocá de nuevo para liberar</p>
+                    <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100">
+                      <h3 className="font-semibold text-slate-900 text-sm md:text-base">Bloquear turnos</h3>
+                      <p className="text-xs md:text-sm text-slate-500 mt-0.5">Tocá para inhabilitar · tocá de nuevo para liberar</p>
                     </div>
                     <div className="px-4 pt-3 flex gap-2">
                       <button onClick={() => setBlockMode('date')}
@@ -1305,10 +1357,10 @@ export default function Admin() {
                               const hasBlocks = blockedSlots.some(b => b.date === d)
                               return (
                                 <button key={d} onClick={() => setBlockDate(d)}
-                                  className={`flex flex-col items-center min-w-[52px] py-2 px-1.5 rounded-xl border-2 transition-all shrink-0 ${blockDate === d ? 'border-red-400 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
-                                  <span className="text-[10px] text-slate-400 capitalize">{day}</span>
-                                  <span className={`text-base font-bold leading-tight ${blockDate === d ? 'text-red-600' : 'text-slate-800'}`}>{num}</span>
-                                  <span className="text-[10px] text-slate-400 capitalize">{month}</span>
+                                  className={`flex flex-col items-center min-w-[52px] md:min-w-[64px] py-2 md:py-3 px-1.5 rounded-xl border-2 transition-all shrink-0 ${blockDate === d ? 'border-red-400 bg-red-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                                  <span className="text-[10px] md:text-xs text-slate-400 capitalize">{day}</span>
+                                  <span className={`text-base md:text-xl font-bold leading-tight ${blockDate === d ? 'text-red-600' : 'text-slate-800'}`}>{num}</span>
+                                  <span className="text-[10px] md:text-xs text-slate-400 capitalize">{month}</span>
                                   {hasBlocks && <span className="w-1.5 h-1.5 bg-red-400 rounded-full mt-0.5" />}
                                 </button>
                               )
@@ -1318,12 +1370,12 @@ export default function Admin() {
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">Día cerrado</p>
                             : <div className="px-4">
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 md:gap-2">
                                 {slots.map(t => {
                                   const isBlocked = blockedSlots.some(b => b.date === blockDate && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleBlockSlot(blockDate, t)}
-                                      className={`py-3 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-3 md:py-4 rounded-xl text-xs md:text-sm font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
@@ -1345,7 +1397,7 @@ export default function Admin() {
                               const hasBlocks = recurringBlocked.some(b => b.day_of_week === dow)
                               return (
                                 <button key={dow} onClick={() => setBlockDow(dow)}
-                                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border-2 text-xs font-semibold transition-all ${blockDow === dow ? 'border-red-400 bg-red-50 text-red-600' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}>
+                                  className={`flex items-center gap-1 px-3 md:px-4 py-1.5 md:py-2 rounded-xl border-2 text-xs md:text-sm font-semibold transition-all ${blockDow === dow ? 'border-red-400 bg-red-50 text-red-600' : 'border-slate-100 text-slate-600 hover:border-slate-200'}`}>
                                   {label.slice(0,3)}
                                   {hasBlocks && <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />}
                                 </button>
@@ -1354,12 +1406,12 @@ export default function Admin() {
                           </div>
                           {slots.length === 0
                             ? <p className="text-center text-slate-500 text-xs py-3">{dowLabel} está cerrado</p>
-                            : <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                            : <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 md:gap-2">
                                 {slots.map(t => {
                                   const isBlocked = recurringBlocked.some(b => b.day_of_week === blockDow && b.time === t)
                                   return (
                                     <button key={t} onClick={() => toggleRecurringBlock(blockDow, t)}
-                                      className={`py-3 rounded-xl text-xs font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
+                                      className={`py-3 md:py-4 rounded-xl text-xs md:text-sm font-semibold border-2 transition-all ${isBlocked ? 'bg-red-500 text-white border-red-500' : 'border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50'}`}>
                                       {t}
                                     </button>
                                   )
@@ -1378,9 +1430,9 @@ export default function Admin() {
 
                   {/* Excepciones */}
                   <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden ${horariosTab !== 'exceptions' ? 'hidden md:block' : ''}`}>
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <h3 className="font-semibold text-slate-900 text-sm">Días especiales</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Feriados o días con horario distinto</p>
+                    <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100">
+                      <h3 className="font-semibold text-slate-900 text-sm md:text-base">Días especiales</h3>
+                      <p className="text-xs md:text-sm text-slate-500 mt-0.5">Feriados o días con horario distinto</p>
                     </div>
                     <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 space-y-2.5">
                       <input type="date" value={newOverride.date} min={today()}
@@ -1450,26 +1502,26 @@ export default function Admin() {
           {/* ── SETTINGS ── */}
           {view === 'settings' && (
             <div>
-              <h1 className="text-xl font-bold text-slate-900 mb-6">Configuración</h1>
-              <div className="grid gap-4 max-w-2xl">
+              <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-6 md:mb-8">Configuración</h1>
+              <div className="grid gap-4 md:gap-6 max-w-3xl">
 
                 {/* Cuenta */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Cuenta</h3>
-                  <div className="flex items-center gap-3">
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm md:text-base">Cuenta</h3>
+                  <div className="flex items-center gap-3 md:gap-4">
                     {user?.user_metadata?.avatar_url
-                      ? <img src={user.user_metadata.avatar_url} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
-                      : <div className="w-10 h-10 rounded-full bg-[#31393C] flex items-center justify-center text-indigo-600 font-bold text-sm">{user?.email?.[0]?.toUpperCase()}</div>
+                      ? <img src={user.user_metadata.avatar_url} className="w-10 h-10 md:w-14 md:h-14 rounded-full" referrerPolicy="no-referrer" />
+                      : <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#31393C] flex items-center justify-center text-indigo-600 font-bold text-sm md:text-lg">{user?.email?.[0]?.toUpperCase()}</div>
                     }
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">{user?.user_metadata?.full_name || 'Usuario'}</div>
-                      <div className="text-xs text-slate-500">{user?.email}</div>
+                      <div className="text-sm md:text-base font-semibold text-slate-900">{user?.user_metadata?.full_name || 'Usuario'}</div>
+                      <div className="text-xs md:text-sm text-slate-500">{user?.email}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Información del negocio</h3>
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm md:text-base">Información del negocio</h3>
                   <div className="space-y-3">
                     {[
                       { label: 'Nombre del negocio', key: 'name',    placeholder: 'Mi Peluquería' },
@@ -1485,16 +1537,16 @@ export default function Admin() {
                       </div>
                     ))}
                   </div>
-                  <button onClick={saveSettings} className="mt-4 px-4 py-2 bg-[#31393C] text-indigo-600 rounded-lg text-xs font-medium hover:bg-slate-700 transition-colors">
+                  <button onClick={saveSettings} className="mt-4 px-4 md:px-6 py-2 md:py-2.5 bg-[#31393C] text-indigo-600 rounded-lg text-xs md:text-sm font-medium hover:bg-slate-700 transition-colors">
                     Guardar cambios
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-4 text-sm">Enlace público de reservas</h3>
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-4 text-sm md:text-base">Enlace público de reservas</h3>
                   <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2.5">
                     <Icon d={Icons.link} size={14} stroke="#94a3b8" />
-                    <span className="text-sm text-slate-600 flex-1 break-all">{bookingLink}</span>
+                    <span className="text-sm md:text-base text-slate-600 flex-1 break-all">{bookingLink}</span>
                     <button onClick={() => { navigator.clipboard.writeText(bookingLink); notify('Copiado') }}
                       className="text-xs text-indigo-600 font-medium hover:underline whitespace-nowrap">Copiar</button>
                   </div>
@@ -1505,9 +1557,9 @@ export default function Admin() {
                 </div>
 
                 {/* Configuración de pagos */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-1 text-sm">Cobros y pagos</h3>
-                  <p className="text-xs text-slate-600 mb-4">Configurá cómo cobrar la seña de tus turnos</p>
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-1 text-sm md:text-base">Cobros y pagos</h3>
+                  <p className="text-xs md:text-sm text-slate-600 mb-4">Configurá cómo cobrar la seña de tus turnos</p>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">Monto de la seña (ARS)</label>
@@ -1548,13 +1600,13 @@ export default function Admin() {
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
                     </div>
                   </div>
-                  <button onClick={savePaySettings} className="mt-4 px-4 py-2 bg-[#31393C] text-indigo-600 rounded-lg text-xs font-medium hover:bg-slate-700 transition-colors">
+                  <button onClick={savePaySettings} className="mt-4 px-4 md:px-6 py-2 md:py-2.5 bg-[#31393C] text-indigo-600 rounded-lg text-xs md:text-sm font-medium hover:bg-slate-700 transition-colors">
                     Guardar configuración de pagos
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Plan actual</h3>
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 md:p-6 shadow-sm">
+                  <h3 className="font-semibold text-slate-900 mb-2 text-sm md:text-base">Plan actual</h3>
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-semibold text-slate-900 capitalize">{business?.plan || 'free'}</span>
