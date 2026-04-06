@@ -59,6 +59,7 @@ serve(async (req) => {
             business_phone:   booking.businesses?.phone,
             business_address: booking.businesses?.address,
             payment_method:   'mercadopago',
+            booking_id:       booking.id,
           },
         })
       }

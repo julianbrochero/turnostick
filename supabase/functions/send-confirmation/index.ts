@@ -20,8 +20,11 @@ serve(async (req) => {
     const {
       to, client_name, service, date, time, amount,
       business_name, business_phone, business_address,
-      payment_method,
+      payment_method, booking_id,
     } = await req.json()
+
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://turnostick.online'
+    const cancelUrl = booking_id ? siteUrl + '/cancelar/' + booking_id : null
 
     const paymentLabel = payment_method === 'mercadopago'
       ? 'Seña pagada con MercadoPago'
@@ -61,7 +64,13 @@ serve(async (req) => {
             rowsHtml +
           '</table>' +
         '</div>' +
-        '<p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;line-height:1.5;">Si necesitas cancelar o reprogramar, contactanos directamente.</p>' +
+        (cancelUrl
+          ? '<div style="text-align:center;margin-top:4px;">' +
+              '<a href="' + cancelUrl + '" style="display:inline-block;padding:10px 24px;background:#fee2e2;color:#dc2626;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">Cancelar turno</a>' +
+              '<p style="color:#94a3b8;font-size:11px;margin:10px 0 0;line-height:1.5;">La seña no se devuelve en caso de cancelación.</p>' +
+            '</div>'
+          : '<p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;line-height:1.5;">Si necesitas cancelar o reprogramar, contactanos directamente.</p>'
+        ) +
       '</div>' +
       '<div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 32px;text-align:center;">' +
         '<p style="color:#94a3b8;font-size:11px;margin:0;">Enviado por <strong style="color:#31393C;">turnoStick</strong></p>' +

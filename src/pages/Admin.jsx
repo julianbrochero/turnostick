@@ -325,6 +325,7 @@ export default function Admin() {
           business_phone:   business.phone,
           business_address: business.address,
           payment_method:   booking.payment_method || 'venue',
+          booking_id:       booking.id,
         },
       })
       if (error) {

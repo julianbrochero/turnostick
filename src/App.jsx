@@ -5,6 +5,7 @@ import Login    from './pages/Login'
 import Register from './pages/Register'
 import Admin    from './pages/Admin'
 import Booking  from './pages/Booking'
+import Cancel   from './pages/Cancel'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -24,8 +25,9 @@ function AppRoutes() {
       <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/admin"    element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-      <Route path="/b/:slug"  element={<Booking />} />
-      <Route path="*"         element={<Navigate to="/" replace />} />
+      <Route path="/b/:slug"              element={<Booking />} />
+      <Route path="/cancelar/:bookingId" element={<Cancel />} />
+      <Route path="*"                    element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
